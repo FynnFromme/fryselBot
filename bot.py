@@ -13,7 +13,8 @@ intents.members = True
 
 client = discord.Client(intents=intents)
 
-# Use from discord.ext import commands
+# TODO: Use from discord.ext import commands
+
 
 @client.event
 async def on_ready():
