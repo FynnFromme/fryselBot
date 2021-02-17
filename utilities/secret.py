@@ -1,0 +1,3 @@
+frysel_id = 170846965226012673
+bot_id = 800166662389104680
+bot_token = "ODAwMTY2NjYyMzg5MTA0Njgw.YAOLRg.GIHaZ3xjoRiL0cF8-9sifEyyISw"
