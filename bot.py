@@ -1,44 +1,54 @@
+# discord.py imports
 import discord
+from discord.ext import commands, tasks
+from discord.ext.commands import Context, Bot
+from discord import Guild, Member, Message
+
+# other imports
 import asyncio
+from itertools import cycle
 
-from discord.message import Message
-from discord import Guild, Member
-
+# fryselBot imports
 from fryselBot.utilities import style, secret
-from event_handler import message_handler, guild_handler, member_handler
+from fryselBot.event_handler import message_handler, guild_handler, member_handler
+from fryselBot import commands as cmd
 
-# Setup intents and create client
-intents = discord.Intents.default()
-intents.members = True
 
-client = discord.Client(intents=intents)
+async def get_prefix(bot: Bot, message: Message):
+    """Returns the prefix for the guild of the message"""
+    return style.get_prefix(guild_id=message.guild.id)
 
-# TODO: Use from discord.ext import commands
+
+# Setup intents and create bot client
+intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
+client = commands.Bot(command_prefix=get_prefix, intents=intents, help_command=None)
 
 
 @client.event
 async def on_ready():
+    await client.change_presence(status=discord.Status.online)
+    change_status.start()
     print("{} is logged in as user {}".format(style.bot_name, client.user.name))  # States, that the bot is ready
-    client.loop.create_task(status_task())  # Sets the status of the bot
     guild_handler.check_guilds(client)  # Checks for new / removed guilds after downtime
 
 
-async def status_task():
+# List of status for the bot
+status = cycle(["Hey there!", f"v. {style.version} | {style.default_prefix}help"])
+
+
+@tasks.loop(seconds=30)
+async def change_status():
     """Set the status of bot. Cycles through multiple status over time."""
-    # Cycles through different status over time
-    await client.change_presence(status=discord.Status.online)
-    while True:
-        await client.change_presence(activity=discord.Game("v. {} | {}help".format(style.version,
-                                                                                   style.default_prefix)))
-        await asyncio.sleep(60)
-        await client.change_presence(activity=discord.Game("Hey there!"))
-        await asyncio.sleep(60)
+    await client.change_presence(activity=discord.Game(next(status)))
 
 
 @client.event
 async def on_message(message: Message):
     """Is called when there is a new message in a text channel."""
+    if message.author.bot:
+        return
     await message_handler.new_message(message)
+    await client.process_commands(message)
 
 
 @client.event
@@ -63,6 +73,12 @@ async def on_member_join(member: Member):
 async def on_member_remove(member: Member):
     """Is called when a member leaves a guild"""
     await member_handler.member_left(member)
+
+
+@client.command(aliases=["help"])
+async def _help(cxt):
+    await cmd.help.response(cxt.message)
+
 
 # Starts the bot with given token
 client.run(secret.bot_token)
