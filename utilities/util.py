@@ -1,5 +1,30 @@
 from datetime import datetime
 import random
+from discord import Message, NotFound
+
+
+async def delete_message(message: Message) -> None:
+    """
+    Deletes the given message if it exists
+    :param message: Message to be deleted
+    """
+    # Delete message of member if it isn't already
+    try:
+        await message.delete()
+    except NotFound:  # Message already deleted
+        pass
+
+
+class InvalidInputError(Exception):
+    """
+    Attributes:
+        input: The input that was invalid
+    Arguments:
+        _input: The input that was invalid
+    """
+    def __init__(self, _input, *args):
+        self.input = _input
+        super().__init__(*args)
 
 
 def iso_to_datetime(s: str) -> datetime:

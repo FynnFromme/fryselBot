@@ -1,4 +1,4 @@
-from fryselBot.database import insert, select, delete, update
+from fryselBot.database import insert, select, delete
 
 from discord import Guild, Client
 

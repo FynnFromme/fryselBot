@@ -67,8 +67,7 @@ class DatabaseEntryError(DatabaseError):
         super().__init__(error_message, *args, **kwargs)
 
 
-# Database function for internal use
-
+# Database functions for internal use
 def _delete_database() -> None:
     """
     Deletes the db (only for test purpose)

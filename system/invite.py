@@ -1,8 +1,8 @@
-from fryselBot.utilities import permission, style
+from fryselBot.system import appearance
 from discord import Message, Guild, Member, TextChannel, Embed, Invite
 
 
-async def response(message: Message) -> None:
+async def invite_command(message: Message) -> None:
     """
     Sends server invite messages.
     :param message: Message that executed the command
@@ -13,7 +13,7 @@ async def response(message: Message) -> None:
     guild: Guild = message.guild
     member: Member = message.author
 
-    prefix = style.get_prefix(guild.id)
+    prefix = appearance.get_prefix(guild.id)
 
     # Fetch invite or create new one
     server_invite: Invite = await channel.create_invite(reason="Server invite by fryselBot", unique=False)
@@ -24,7 +24,7 @@ async def response(message: Message) -> None:
     embed.description = server_invite.url
 
     # Setup embed style
-    embed.colour = style.get_primary_color(guild.id)
+    embed.colour = appearance.get_primary_color(guild.id)
     embed.set_thumbnail(url=guild.icon_url)
     embed.set_footer(text=prefix + "invite", icon_url=member.avatar_url)
 

@@ -1,5 +1,5 @@
 from fryselBot.database import select
-from fryselBot.utilities import style
+from fryselBot.system import appearance
 from discord import Member, Guild, TextChannel, Embed
 import random
 
@@ -30,7 +30,7 @@ async def welcome_message(member: Member):
     embed.description = random.choice(welcome_messages).replace("{}", member.mention)
 
     # Setup embed style
-    embed.colour = style.get_primary_color(guild.id)
+    embed.colour = appearance.get_primary_color(guild.id)
 
     # Send embed to welcome_channel
     await welcome_channel.send(embed=embed)
@@ -50,7 +50,7 @@ async def leave_message(member: Member):
     embed.description = random.choice(welcome_messages).replace("{}", member.display_name)
 
     # Setup embed style
-    embed.colour = style.get_secondary_color(guild.id)
+    embed.colour = appearance.get_secondary_color(guild.id)
 
     # Send embed to welcome_channel
     await welcome_channel.send(embed=embed)
