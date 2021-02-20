@@ -5,6 +5,7 @@ import random
 
 # TODO: Setup commands for welcome/leave messages
 # TODO: Welcome DM
+# TODO: Add cog for welcome system
 
 
 async def welcome_message(member: Member):

@@ -43,4 +43,7 @@ def check_guilds(client: Client) -> None:
         if guild_id not in active_guild_ids:
             delete.all_entries_of_guild(guild_id=guild_id)
 
+    # Server count
+    print(f"The bot is currently on {len(active_guild_ids)} servers.")
+
 

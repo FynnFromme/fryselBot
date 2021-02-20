@@ -1,10 +1,9 @@
-import discord
 from discord import Embed
-from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, MissingRequiredArgument, CommandInvokeError, CheckFailure
 
 from fryselBot.system.description import Command
-from fryselBot.system import appearance
+from fryselBot.system import appearance, description
+from fryselBot.utilities import util
 
 
 async def syntax_error(ctx: Context, command: Command) -> None:
@@ -63,3 +62,39 @@ async def undefined_error(ctx: Context) -> None:
         embed=Embed(description="Ooops! Something went wrong :grimacing:",
                     colour=appearance.red_color))
     await error_message.delete(delay=10)
+
+
+async def error_handler(ctx: Context, error: Exception, command: Command,
+                        invalid_arg_title: str, invalid_arg_desc: str, delete_message: bool = False) -> None:
+    """
+    Handles following command errors:
+    - MissingRequiredArgument
+    - CheckFailure (interpreted as permission missing)
+    - CommandInvokeError (interpreted as invalid input)
+    :param ctx: Error context
+    :param error: Error object
+    :param command: Command which led to the error
+    :param invalid_arg_title: Title for invalid input message
+    :param invalid_arg_desc: Description for invalid input message
+    :param delete_message: Whether the message of the user should be deleted
+    """
+    if isinstance(error, MissingRequiredArgument):
+        # Arguments missing
+        await syntax_error(ctx, command)
+
+    elif isinstance(error, CheckFailure):
+        # Missing permissions
+        await permission_error(ctx, command)
+
+    elif isinstance(error, CommandInvokeError):
+        # Invalid arguments
+        await invalid_input_error(ctx, invalid_arg_title, invalid_arg_desc)
+
+    else:
+        # Other errors
+        print(f"Unexpected error while running the {command.name} command. Error: {type(error)}")
+        await undefined_error(ctx)
+
+    # Delete message
+    if delete_message:
+        await util.delete_message(ctx.message)

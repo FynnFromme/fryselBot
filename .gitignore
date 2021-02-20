@@ -1,2 +1,3 @@
-bot.db
+database/bot.db
 utilities/secret.py
+test

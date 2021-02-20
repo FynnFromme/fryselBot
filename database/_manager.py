@@ -74,9 +74,9 @@ def _delete_database() -> None:
     :return: None
     """
     # Path of db file
-    path = "/Users/fynn/Documents/Coding/PyCharm/fryselBot/bot.db"
+    path = "./database/bot.db"
     # Double check to not delete the wrong file
-    if path.endswith("/Coding/PyCharm/fryselBot/bot.db"):
+    if path.endswith("database/bot.db"):
         # Try to delete file
         try:
             os.remove(path)
@@ -94,7 +94,7 @@ def connection(func):
     def inner(*args, **kwargs):
         """Calls the function with db connection"""
         # Setup db connection
-        _conn: Connection = sqlite3.connect("/Users/fynn/Documents/Coding/PyCharm/fryselBot/bot.db")
+        _conn: Connection = sqlite3.connect("./database/bot.db")
 
         # Create cursor to execute statements
         _c: Cursor = _conn.cursor()

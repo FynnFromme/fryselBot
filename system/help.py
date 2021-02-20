@@ -45,7 +45,7 @@ async def _member_help(message: Message) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.member_cmd():
+        if cmd.member_cmd() and not cmd.hide:
             embed.add_field(name="`" + prefix + cmd.syntax + "`", value=cmd.description, inline=False)
 
     # Add fields for other bot functions
@@ -80,7 +80,7 @@ async def _mod_help(message: Message, footer: bool = True) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.mod_only:
+        if cmd.mod_only and not cmd.hide:
             embed.add_field(name="`" + prefix + cmd.syntax + "`", value=cmd.description, inline=False)
 
     # Setup embed style
@@ -110,7 +110,7 @@ async def _admin_help(message: Message) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.admin_only:
+        if cmd.admin_only and not cmd.hide:
             embed.add_field(name="`" + prefix + cmd.syntax + "`", value=cmd.description, inline=False)
 
     # Add fields for other bot functions

@@ -8,9 +8,9 @@ from discord import Guild, Member, Message
 import os
 
 # fryselBot imports
-from fryselBot.system import help, appearance
+from fryselBot.system import help, appearance, guilds, cogs
 from fryselBot.utilities import secret
-from fryselBot.event_handler import member_handler, guild_handler
+from fryselBot.event_handler import member_handler
 
 
 async def get_prefix(bot: Bot, message: Message):
@@ -23,35 +23,8 @@ intents = discord.Intents(messages=True, guilds=True, reactions=True, members=Tr
 client = commands.Bot(command_prefix=get_prefix, intents=intents, help_command=None, case_insensitive=True)
 
 
-# Cog functions
-@client.command()
-async def load(ctx: Context, extension):
-    if ctx.author.id != secret.frysel_id:
-        return
-    elif extension + ".py" not in os.listdir("./cogs"):
-        print("Didn't find cog")
-        return
-    else:
-        client.load_extension(f"cogs.{extension}")
-        print("Loaded following cog: ", extension)
-
-
-@client.command()
-async def unload(ctx: Context, extension):
-    if ctx.author.id != secret.frysel_id:
-        return
-    elif extension + ".py" not in os.listdir("./cogs"):
-        print("Didn't find cog")
-        return
-    else:
-        client.unload_extension(f"cogs.{extension}")
-        print("Unloaded following cog: ", extension)
-
-
-# Load all cogs
-for filename in os.listdir("./cogs"):
-    if filename.endswith(".py"):
-        client.load_extension(f"cogs.{filename[:-3]}")
+# Load all extensions
+cogs.load_all(client)
 
 
 @client.event
@@ -62,7 +35,7 @@ async def on_ready():
     change_status.start()
 
     # Checks for new / removed guilds after downtime
-    guild_handler.check_guilds(client)
+    guilds.check_guilds(client)
 
     # States, that the bot is ready
     print("{} is logged in as user {}".format(appearance.bot_name, client.user.name))
@@ -91,19 +64,7 @@ async def on_message(message: Message):
         await client.process_commands(message)
 
 
-# TODO: Add cogs for events
-@client.event
-async def on_guild_join(guild: Guild):
-    """Is called when the client joined a new guild"""
-    guild_handler.join_guild(guild)
-
-
-@client.event
-async def on_guild_remove(guild: Guild):
-    """Is called when the client is removed from a guild"""
-    guild_handler.remove_guild(guild)
-
-
+# TODO: Add the following functions to welcome cog
 @client.event
 async def on_member_join(member: Member):
     """Is called when a member joins a guild"""

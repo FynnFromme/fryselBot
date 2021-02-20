@@ -21,8 +21,8 @@ red_color: hex = 0xc94435
 green_color: hex = 0x3d9757
 
 
-# Status of the bot
-status = cycle(["Hey there!", f"v. {version} | {default_prefix}help"])
+# Status of the bot                                                   # Newest function of the bot
+status = cycle(["Hey there!", f"v. {version} | {default_prefix}help", "New Custom Prefixes!"])
 
 
 # Prefix functions
@@ -101,6 +101,7 @@ def set_primary_color(guild_id: int, primary_color) -> None:
     """
     if primary_color and type(primary_color) != int:
         raise util.InvalidInputError(primary_color, "primary_color has to be an integer")
+
     update.primary_color(value=primary_color, argument=guild_id)
 
 
@@ -123,8 +124,10 @@ async def primary_color_command(ctx: Context, primary_color: str) -> None:
             # Set primary_color to valid integer
             if primary_color.startswith("#"):
                 primary_color = int("0x" + primary_color[1:], 16)
+
             elif primary_color.startswith("0x"):
                 primary_color = int(primary_color, 16)
+
             else:
                 primary_color = int("0x" + primary_color, 16)
 
@@ -161,6 +164,7 @@ def set_secondary_color(guild_id: int, secondary_color) -> None:
     """
     if secondary_color and type(secondary_color) != int:
         raise util.InvalidInputError(secondary_color, "secondary_color has to be an integer")
+
     update.secondary_color(value=secondary_color, argument=guild_id)
 
 
@@ -178,13 +182,16 @@ async def secondary_color_command(ctx: Context, secondary_color: str) -> None:
         # Set secondary color to default value
         set_secondary_color(guild_id=ctx.guild.id, secondary_color=None)
         secondary_color = default_secondary_color
+
     else:
         try:
             # Set secondary_color to valid integer
             if secondary_color.startswith("#"):
                 secondary_color = int("0x" + secondary_color[1:], 16)
+
             elif secondary_color.startswith("0x"):
                 secondary_color = int(secondary_color, 16)
+
             else:
                 secondary_color = int("0x" + secondary_color, 16)
 

@@ -8,20 +8,26 @@ class Command:
         description  (str): Description of the command
         admin_only  (bool): Whether the command is for admins only
         mod_only    (bool): Whether the command is for moderators only
+        hide        (bool): Whether the command is only for internal use
     Attributes:
         name         (str): Name of the command
         syntax       (str): Syntax for calling the command
         description  (str): Description of the command
         admin_only  (bool): Whether the command is for admins only
         mod_only    (bool): Whether the command is for moderators only
+        hide        (bool): Whether the command is only for internal use
     """
-    def __init__(self, name: str, syntax: str, description: str, admin_only: bool = False, mod_only: bool = False):
+
+    # TODO: Add topics to commands and have a static attribute that keeps track of them
+    def __init__(self, name: str, syntax: str, description: str, admin_only: bool = False, mod_only: bool = False,
+                 hide = False):
         # Initializing attributes
         self._name = name
         self._syntax = syntax
         self._admin_only = admin_only
         self._mod_only = mod_only
         self._description = description
+        self._hide = hide
 
     # Adding properties
     name = property(lambda self: self._name)
@@ -29,6 +35,7 @@ class Command:
     admin_only = property(lambda self: self._admin_only)
     mod_only = property(lambda self: self._mod_only)
     description = property(lambda self: self._description)
+    hide = property(lambda self: self._hide)
 
     # Information methods
     def member_cmd(self):
@@ -53,7 +60,9 @@ commands = {Command("help", "help", "Sends a list of all commands."),
             Command("primary-color", "primary-color <hex-color or 'default'>",
                     "Sets the primary color of the server to <hex-color> or to the default color.", admin_only=True),
             Command("secondary-color", "secondary-color <hex-color or 'default'>",
-                    "Sets the secondary color of the server to <hex-color> or to the default color.", admin_only=True)
+                    "Sets the secondary color of the server to <hex-color> or to the default color.", admin_only=True),
+            Command("load", "load <extension>", "Loads the extension for the bot.", admin_only=True),
+            Command("unload", "unload <extension>", "Unloads the extension of the bot", hide=True)
             }
 
 
@@ -96,4 +105,3 @@ class Function:
 
 # Description of other functions
 functions = {}
-
