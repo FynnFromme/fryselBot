@@ -68,19 +68,19 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
 
 
 @connection
-def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, primary_color: hex = None,
-                   secondary_color: hex = None,
-                   welcome_messages: bool = False,
-                   leave_messages: bool = False) -> None:
+def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, color: hex = None,
+                   welcome_messages: bool = False, leave_messages: bool = False,
+                   welcome_dms: bool = False, welcome_dm: str = None) -> None:
     """
     Insert guild_settings to db.
     :param _c: Database cursor (provided by decorator)
     :param guild_id: Discord GuildID
     :param prefix: Prefix for the guild
-    :param primary_color: Primary color for the guild
-    :param secondary_color: Secondary color for the guild
+    :param color: Color for the guild
     :param welcome_messages: Whether welcome messages are activated
     :param leave_messages: Whether leave messages are activated
+    :param welcome_dms: Whether welcome direct messages are activated
+    :param welcome_dm: The text that will be send to new members
     :return: None
     """
     # Parse bool into int
@@ -88,14 +88,15 @@ def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, primary_color:
     leave_messages = int(leave_messages)
 
     # Insert into db
-    _c.execute("""INSERT INTO guild_settings VALUES (:setting_id, :prefix, :primary_color, :secondary_color, 
-                :welcome_messages, :leave_messages, :guild_id)""",
+    _c.execute("""INSERT INTO guild_settings VALUES (:setting_id, :prefix, :color, 
+                :welcome_messages, :leave_messages, :welcome_dms, :welcome_dm, :guild_id)""",
                {"setting_id": generate_new_id(table="guild_settings", identifier="setting_id"),
                 "prefix": prefix,
-                "primary_color": primary_color,
-                "secondary_color": secondary_color,
+                "color": color,
                 "welcome_messages": welcome_messages,
                 "leave_messages": leave_messages,
+                "welcome_dms": welcome_dms,
+                "welcome_dm": welcome_dm,
                 "guild_id": guild_id
                 })
 
@@ -106,13 +107,14 @@ def role(_c: Cursor, role_id: int, type_: str, guild_id: int):
     Insert role into db.
     :param _c: Database cursor (provided by decorator)
     :param role_id: Discord RoleID
-    :param type_: Type of role ("MOD", "ADMIN", "SUPPORT" or "MUTED")
+    :param type_: Type of role ("MODERATOR", "ADMIN", "SUPPORTER" or "MUTE")
     :param guild_id: Discord GuildID
     :return: None
     """
     # Check type_ for requirements
-    if not (type_ == "MOD" or type_ == "ADMIN" or type_ == "MUTED"):
-        raise DatabaseAttributeError("type_", False, type_, "type_ has to be 'MOD', 'ADMIN' or 'MUTED'.")
+    if not (type_ == "MODERATOR" or type_ == "ADMIN" or type_ == "MUTE" or type_ == "SUPPORTER"):
+        raise DatabaseAttributeError("type_", False, type_,
+                                     "type_ has to be 'MODERATOR', 'ADMIN', 'SUPPORTER' or 'MUTE'.")
 
     # Insert into db
     _c.execute("INSERT INTO roles VALUES (:role_id, :type, :guild_id)", {"role_id": role_id, "type": type_,

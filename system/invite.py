@@ -24,7 +24,7 @@ async def invite_command(message: Message) -> None:
     embed.description = server_invite.url
 
     # Setup embed style
-    embed.colour = appearance.get_primary_color(guild.id)
+    embed.colour = appearance.get_color(guild.id)
     embed.set_thumbnail(url=guild.icon_url)
     embed.set_footer(text=prefix + "invite", icon_url=member.avatar_url)
 

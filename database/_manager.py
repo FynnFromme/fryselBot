@@ -137,24 +137,27 @@ def _create_tables(c: Cursor) -> None:
                     ticket_category_id INTEGER
                     )""")
 
+    # TODO: Add welcome_dms und welcome_dm_message
     """
     TABLE: guild_settings
-    PRIMARY KEY: setting_id              # AUTOINCREMENT
+    PRIMARY KEY: setting_id           # AUTOINCREMENT
     ATTRIBUTE: prefix
-    ATTRIBUTE: primary_color             # hex as integer
-    ATTRIBUTE: secondary_color           # hex as integer
-    ATTRIBUTE: welcome_messages          # 0 or 1
-    ATTRIBUTE: leave_messages            # 0 or 1
+    ATTRIBUTE: color                  # hex as integer
+    ATTRIBUTE: welcome_messages       # 0 or 1
+    ATTRIBUTE: leave_messages         # 0 or 1
+    ATTRIBUTE: welcome_dms            # 0 or 1
+    ATTRIBUTE: welcome_dm
     FOREIGN KEY: guild_id  (guilds)
     """
     c.execute("""CREATE TABLE guild_settings (
                     setting_id TEXT PRIMARY KEY,
                     prefix TEXT,
-                    primary_color INTEGER,
-                    secondary_color INTEGER,
+                    color INTEGER,
                     welcome_messages INTEGER,
                     leave_messages INTEGER,
-                    guild_id TEXT NOT NULL,
+                    welcome_dms INTEGER,
+                    welcome_dm TEXT,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY(guild_id) 
                         REFERENCES guilds (guild_id)
                     )""")
@@ -162,13 +165,13 @@ def _create_tables(c: Cursor) -> None:
     """
     TABLE: roles
     PRIMARY KEY: role_id                 # Discord role id
-    ATTRIBUTE: type                      # "ADMIN", "MOD", "MUTED" or "SUPPORT"
+    ATTRIBUTE: type                      # "ADMIN", "MODERATOR", "MUTE" or "SUPPORTER"
     FOREIGN KEY: guild_id  (guilds)
     """
     c.execute("""CREATE TABLE roles (
-                    role_id INTEGER PRIMARY KEY,
+                    role_id INTEGER,
                     type TEXT NOT NULL,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")
@@ -192,7 +195,7 @@ def _create_tables(c: Cursor) -> None:
                     reason TEXT,
                     date DATE NOT NULL,
                     until_date DATE,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")
@@ -216,7 +219,7 @@ def _create_tables(c: Cursor) -> None:
                     reason TEXT,
                     date DATE NOT NULL,
                     until_date DATE,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")
@@ -236,7 +239,7 @@ def _create_tables(c: Cursor) -> None:
                     mod_id INTEGER NOT NULL,
                     reason TEXT,
                     date DATE NOT NULL,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")
@@ -256,7 +259,7 @@ def _create_tables(c: Cursor) -> None:
                     user_id INTEGER NOT NULL,
                     reason TEXT,
                     date DATE NOT NULL,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")
@@ -274,7 +277,7 @@ def _create_tables(c: Cursor) -> None:
                     room_channel_id INTEGER NOT NULL,
                     move_channel_id INTEGER NOT NULL,
                     owner_id INTEGER NOT NULL,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")
@@ -309,7 +312,7 @@ def _create_tables(c: Cursor) -> None:
                     text_channel_id INTEGER NOT NULL,
                     voice_channel_id INTEGER,
                     topic TEXT,
-                    guild_id TEXT NOT NULL,
+                    guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )""")

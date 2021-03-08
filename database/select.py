@@ -122,19 +122,21 @@ ticket_category_id = _select_by_guild_id_factory(table="guilds", attribute="tick
 
 prefix = _select_by_guild_id_factory(table="guild_settings", attribute="prefix")
 
-primary_color = _select_by_guild_id_factory(table="guild_settings", attribute="primary_color")
-
-secondary_color = _select_by_guild_id_factory(table="guild_settings", attribute="secondary_color")
+color = _select_by_guild_id_factory(table="guild_settings", attribute="color")
 
 welcome_messages = _select_by_guild_id_factory(table="guild_settings", attribute="welcome_messages")
 
 leave_messages = _select_by_guild_id_factory(table="guild_settings", attribute="leave_messages")
 
-mod_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="MOD")
+welcome_dms = _select_by_guild_id_factory(table="guild_settings", attribute="welcome_dms")
 
-muted_role = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=False, type="MUTED")
+welcome_dm = _select_by_guild_id_factory(table="guild_settings", attribute="welcome_dm")
 
-support_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="SUPPORT")
+moderator_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="MODERATOR")
+
+mute_role = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=False, type="MUTE")
+
+support_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="SUPPORTER")
 
 admin_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="ADMIN")
 
@@ -153,6 +155,38 @@ def all_guilds(_c: Cursor) -> list:
     guilds = list(map(lambda entry: entry[0], guilds))
 
     return guilds
+
+
+@connection
+def all_welcome_channels(_c: Cursor) -> list:
+    """
+    Creates a list of all pairs of welcome channel IDs and guild_ids in database
+    :param _c: Database cursor (provided by decorator)
+    :return: List of all pairs of welcome channel IDs and guild_ids in database
+    """
+    # Fetch all welcome channels and belonging guild_ids
+    _c.execute("SELECT welcome_channel_id, guild_id FROM guilds")
+    channels = _c.fetchall()
+    # Select pairs of welcome_channel_id and guild_id
+    channels = list(map(lambda entry: entry[:2], channels))
+
+    return channels
+
+
+@connection
+def all_roles(_c: Cursor) -> list:
+    """
+    Creates a list of all pairs of role IDs and guild_ids in database
+    :param _c: Database cursor (provided by decorator)
+    :return: List of all pairs of role IDs and guild_ids in database
+    """
+    # Fetch all role_ids and belonging guild_ids
+    _c.execute("SELECT role_id, guild_id FROM roles")
+    roles = _c.fetchall()
+    # Select pairs of role_id and guild_id
+    roles = list(map(lambda entry: entry[:2], roles))
+
+    return roles
 
 
 class Ban:
@@ -179,14 +213,24 @@ class Ban:
                                          operation_id=ban_id)
 
         # Create Attributes of Ban object
-        self.ban_id = ban[0]
-        self.temp = bool(ban[1])
-        self.user_id = ban[2]
-        self.mod_id = ban[3]
-        self.reason = ban[4]
-        self.date = util.iso_to_datetime(ban[5])
-        self.until_date = util.iso_to_datetime(ban[6])
-        self.guild_id = ban[7]
+        self._ban_id = ban[0]
+        self._temp = bool(ban[1])
+        self._user_id = ban[2]
+        self._mod_id = ban[3]
+        self._reason = ban[4]
+        self._date = util.iso_to_datetime(ban[5])
+        self._until_date = util.iso_to_datetime(ban[6])
+        self._guild_id = ban[7]
+
+    # Add properties
+    ban_id = property(lambda self: self._ban_id)
+    temp = property(lambda self: self._temp)
+    user_id = property(lambda self: self._user_id)
+    mod_id = property(lambda self: self._mod_id)
+    reason = property(lambda self: self._reason)
+    date = property(lambda self: self._date)
+    until_date = property(lambda self: self._until_date)
+    guild_id = property(lambda self: self._guild_id)
 
 
 @connection
@@ -236,14 +280,24 @@ class Mute:
                                           operation_id=mute_id)
 
         # Create Attributes of Mute object
-        self.mute_id = mute[0]
-        self.temp = bool(mute[1])
-        self.user_id = mute[2]
-        self.mod_id = mute[3]
-        self.reason = mute[4]
-        self.date = util.iso_to_datetime(mute[5])
-        self.until_date = util.iso_to_datetime(mute[6])
-        self.guild_id = mute[7]
+        self._mute_id = mute[0]
+        self._temp = bool(mute[1])
+        self._user_id = mute[2]
+        self._mod_id = mute[3]
+        self._reason = mute[4]
+        self._date = util.iso_to_datetime(mute[5])
+        self._until_date = util.iso_to_datetime(mute[6])
+        self._guild_id = mute[7]
+
+    # Add properties
+    mute_id = property(lambda self: self._mute_id)
+    temp = property(lambda self: self._temp)
+    user_id = property(lambda self: self._user_id)
+    mod_id = property(lambda self: self._mod_id)
+    reason = property(lambda self: self._reason)
+    date = property(lambda self: self._date)
+    until_date = property(lambda self: self._until_date)
+    guild_id = property(lambda self: self._guild_id)
 
 
 @connection
@@ -291,12 +345,20 @@ class Warn:
                                           operation_id=warn_id)
 
         # Create Attributes of Warn object
-        self.warn_id = warn[0]
-        self.user_id = warn[1]
-        self.mod_id = warn[2]
-        self.reason = warn[3]
-        self.date = util.iso_to_datetime(warn[4])
-        self.guild_id = warn[5]
+        self._warn_id = warn[0]
+        self._user_id = warn[1]
+        self._mod_id = warn[2]
+        self._reason = warn[3]
+        self._date = util.iso_to_datetime(warn[4])
+        self._guild_id = warn[5]
+
+    # Add properties
+    warn_id = property(lambda self: self._warn_id)
+    user_id = property(lambda self: self._user_id)
+    mod_id = property(lambda self: self._mod_id)
+    reason = property(lambda self: self._reason)
+    date = property(lambda self: self._date)
+    guild_id = property(lambda self: self._guild_id)
 
 
 @connection
@@ -343,12 +405,20 @@ class Report:
         report = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table="reports",
                                             id_identifier="report_id", operation_id=report_id)
 
-        self.report_id = report[0]
-        self.reporter_id = report[1]
-        self.user_id = report[2]
-        self.reason = report[3]
-        self.date = report[4]
-        self.guild_id = report[5]
+        self._report_id = report[0]
+        self._reporter_id = report[1]
+        self._user_id = report[2]
+        self._reason = report[3]
+        self._date = report[4]
+        self._guild_id = report[5]
+
+    # Add properties
+    report_id = property(lambda self: self._report_id)
+    reporter_id = property(lambda self: self._reporter_id)
+    user_id = property(lambda self: self._user_id)
+    reason = property(lambda self: self._reason)
+    date = property(lambda self: self._date)
+    guild_id = property(lambda self: self._guild_id)
 
 
 class PrivateRoom:
@@ -405,11 +475,11 @@ class PrivateRoom:
             room_channel_id has to be given""")
 
         # Initializing attributes
-        self.room_id = entry[0]
-        self.room_channel_id = entry[1]
-        self.move_channel_id = entry[2]
-        self.owner_id = entry[3]
-        self.guild_id = entry[4]
+        self._room_id = entry[0]
+        self._room_channel_id = entry[1]
+        self._move_channel_id = entry[2]
+        self._owner_id = entry[3]
+        self._guild_id = entry[4]
 
         # Fetch private room settings entry
         @connection
@@ -421,6 +491,13 @@ class PrivateRoom:
 
         # Initializing settings attributes
         # TODO: Add pr settings
+
+    # Add properties
+    room_id = property(lambda self: self._room_id)
+    room_channel_id = property(lambda self: self._room_channel_id)
+    move_channel_id = property(lambda self: self._move_channel_id)
+    owner_id = property(lambda self: self._owner_id)
+    guild_id = property(lambda self: self._guild_id)
 
 
 class Ticket:
@@ -493,12 +570,12 @@ class Ticket:
             voice_channel_id has to be given""")
 
         # Initializing attributes
-        self.ticket_id = entry[0]
-        self.main_user_id = entry[1]
-        self.text_channel_id = entry[2]
-        self.voice_channel_id = entry[3]
-        self.topic = entry[4]
-        self.guild_id = entry[5]
+        self._ticket_id = entry[0]
+        self._main_user_id = entry[1]
+        self._text_channel_id = entry[2]
+        self._voice_channel_id = entry[3]
+        self._topic = entry[4]
+        self._guild_id = entry[5]
 
         # Fetch users of ticket
         @connection
@@ -506,7 +583,7 @@ class Ticket:
             _c.execute("SELECT user_id FROM ticket_users WHERE ticket_id=='{}' AND is_mod==0".format(self.ticket_id))
             return _c.fetchall()
 
-        self.user_ids = list(map(lambda x: x[0], execution()))
+        self._user_ids = list(map(lambda x: x[0], execution()))
 
         # Fetch mods of ticket
         @connection
@@ -514,4 +591,14 @@ class Ticket:
             _c.execute("SELECT user_id FROM ticket_users WHERE ticket_id=='{}' AND is_mod==1".format(self.ticket_id))
             return _c.fetchall()
 
-        self.mod_ids = list(map(lambda x: x[0], execution()))
+        self._mod_ids = list(map(lambda x: x[0], execution()))
+
+    # Add properties
+    ticket_id = property(lambda self: self._ticket_id)
+    main_user_id = property(lambda self: self._main_user_id)
+    text_channel_id = property(lambda self: self._text_channel_id)
+    voice_channel_id = property(lambda self: self._voice_channel_id)
+    topic = property(lambda self: self._topic)
+    guild_id = property(lambda self: self._guild_id)
+    user_ids = property(lambda self: self._user_ids)
+    mod_ids = property(lambda self: self._mod_ids)

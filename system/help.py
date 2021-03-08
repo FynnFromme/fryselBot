@@ -7,7 +7,6 @@ async def help_command(message: Message) -> None:
     """
     Sends help messages.
     :param message: Message that executed the command
-    :return: None
     """
     # Initialize attributes of message
     member: Member = message.author
@@ -18,6 +17,7 @@ async def help_command(message: Message) -> None:
     if permission.is_admin(member=member):
         await _mod_help(message, footer=False)
         await _admin_help(message)
+
     elif permission.is_mod(member=member):
         await _mod_help(message)
 
@@ -29,7 +29,6 @@ async def _member_help(message: Message) -> None:
     """
     Sends help message for members in the text channel.
     :param message: Message that executed the command
-    :return: None
     """
 
     # Initialize attributes of message
@@ -45,7 +44,7 @@ async def _member_help(message: Message) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.member_cmd() and not cmd.hide:
+        if cmd.member_cmd() and cmd.in_help:
             embed.add_field(name="`" + prefix + cmd.syntax + "`", value=cmd.description, inline=False)
 
     # Add fields for other bot functions
@@ -53,7 +52,7 @@ async def _member_help(message: Message) -> None:
         embed.add_field(name="`" + func.name + "`", value=func.description, inline=False)
 
     # Setup embed style
-    embed.colour = appearance.get_primary_color(guild.id)
+    embed.colour = appearance.get_color(guild.id)
     embed.set_thumbnail(url=guild.get_member(secret.bot_id).avatar_url)
     embed.set_footer(text="Created by frysel | <>-Required | ()-Optional", icon_url=member.avatar_url)
 
@@ -66,7 +65,6 @@ async def _mod_help(message: Message, footer: bool = True) -> None:
     Sends help message for moderators via dm.
     :param message: Message that executed the command
     :param footer: Whether the embed should have a footer
-    :return: None
     """
     # Initialize attributes of message
     guild: Guild = message.guild
@@ -80,11 +78,11 @@ async def _mod_help(message: Message, footer: bool = True) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.mod_only and not cmd.hide:
+        if cmd.mod_only and cmd.in_help:
             embed.add_field(name="`" + prefix + cmd.syntax + "`", value=cmd.description, inline=False)
 
     # Setup embed style
-    embed.colour = appearance.get_primary_color(guild.id)
+    embed.colour = appearance.get_color(guild.id)
 
     if footer:
         embed.set_footer(text="Created by frysel | <>-Required | ()-Optional", icon_url=member.avatar_url)
@@ -110,7 +108,7 @@ async def _admin_help(message: Message) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.admin_only and not cmd.hide:
+        if cmd.admin_only and cmd.in_help:
             embed.add_field(name="`" + prefix + cmd.syntax + "`", value=cmd.description, inline=False)
 
     # Add fields for other bot functions
@@ -118,7 +116,7 @@ async def _admin_help(message: Message) -> None:
         embed.add_field(name="`" + func.name + "`", value=func.description, inline=False)
 
     # Setup embed style
-    embed.colour = appearance.get_primary_color(guild.id)
+    embed.colour = appearance.get_color(guild.id)
     embed.set_footer(text="Created by frysel | <>-Required | ()-Optional", icon_url=member.avatar_url)
 
     # Send message

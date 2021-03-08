@@ -2,7 +2,7 @@ from discord import Embed
 from discord.ext.commands import Context, MissingRequiredArgument, CommandInvokeError, CheckFailure
 
 from fryselBot.system.description import Command
-from fryselBot.system import appearance, description
+from fryselBot.system import appearance
 from fryselBot.utilities import util
 
 

@@ -11,15 +11,21 @@ def _delete_by_keyword_factory(table: str, keyword: str):
     """
 
     @connection
-    def _delete_by_keyword(_c: Cursor, argument: str) -> None:
+    def _delete_by_keyword(_c: Cursor, argument: str, **kwargs) -> None:
         """
         Deletes an entry in table by keyword
         :param _c: Database cursor (provided by decorator)
         :param argument: Value for keyword (search condition)
-        :return: None
+        :kwargs: Additional conditions
         """
+        # Set up statement
+        statement = "DELETE FROM {} WHERE {}=='{}'".format(table, keyword, argument)
+
+        for k, v in kwargs.items():
+            statement += " AND {}=='{}'".format(k, v)
+
         # Delete entry
-        _c.execute("DELETE FROM {} WHERE {}=='{}'".format(table, keyword, argument))
+        _c.execute(statement)
 
     return _delete_by_keyword
 

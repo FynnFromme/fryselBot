@@ -12,7 +12,7 @@ def _update_by_keyword_factory(table: str, attribute: str, keyword: str):
     """
 
     @connection
-    def update_by_keyword_id(_c: Cursor, value: str, argument) -> None:
+    def update_by_keyword_id(_c: Cursor, value, argument) -> None:
         """
         Updates the attribute in the table to value by guild_id.
         :param _c: Database cursor (provided by decorator)
@@ -20,11 +20,13 @@ def _update_by_keyword_factory(table: str, attribute: str, keyword: str):
         :param argument: Value for keyword (search condition)
         :return: None
         """
+        if type(value) == bool:
+            value = int(value)
         # Update the attribute in table
         if value:  # Set to value if value != None
-            _c.execute("UPDATE {} SET {}='{}' WHERE {}=='{}'".format(table, attribute, value, keyword, argument))
+            _c.execute("UPDATE {} SET {}='{}' WHERE {}=={}".format(table, attribute, value, keyword, argument))
         else:  # Set to NULL if value == None
-            _c.execute("UPDATE {} SET {}=NULL WHERE {}=='{}'".format(table, attribute, keyword, argument))
+            _c.execute("UPDATE {} SET {}=NULL WHERE {}=={}".format(table, attribute, keyword, argument))
 
     return update_by_keyword_id
 
@@ -43,13 +45,15 @@ ticket_category_id = _update_by_keyword_factory(table="guilds", attribute="ticke
 
 prefix = _update_by_keyword_factory(table="guild_settings", attribute="prefix", keyword="guild_id")
 
-primary_color = _update_by_keyword_factory(table="guild_settings", attribute="primary_color", keyword="guild_id")
-
-secondary_color = _update_by_keyword_factory(table="guild_settings", attribute="secondary_color", keyword="guild_id")
+color = _update_by_keyword_factory(table="guild_settings", attribute="color", keyword="guild_id")
 
 welcome_messages = _update_by_keyword_factory(table="guild_settings", attribute="welcome_messages", keyword="guild_id")
 
 leave_messages = _update_by_keyword_factory(table="guild_settings", attribute="leave_messages", keyword="guild_id")
+
+welcome_dms = _update_by_keyword_factory(table="guild_settings", attribute="welcome_dms", keyword="guild_id")
+
+welcome_dm = _update_by_keyword_factory(table="guild_settings", attribute="welcome_dm", keyword="guild_id")
 
 owner_id = _update_by_keyword_factory(table="private_rooms", attribute="owner_id", keyword="room_id")
 

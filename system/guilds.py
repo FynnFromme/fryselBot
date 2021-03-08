@@ -1,4 +1,5 @@
 from fryselBot.database import insert, select, delete
+from fryselBot.system import welcome
 
 from discord import Guild, Client
 
@@ -7,7 +8,6 @@ def join_guild(guild: Guild) -> None:
     """
     Handles joining a new guild.
     :param guild: Guild that is joined
-    :return: None
     """
     insert.guild(guild_id=guild.id)
     insert.guild_settings(guild_id=guild.id)
@@ -18,7 +18,6 @@ def remove_guild(guild: Guild) -> None:
     """
     Handles removing a guild.
     :param guild: Guild that is removed
-    :return: None
     """
     delete.all_entries_of_guild(guild_id=guild.id)
 
@@ -27,7 +26,6 @@ def check_guilds(client: Client) -> None:
     """
     Checks for guilds left / joined.
     :param client: Bot client
-    :return: None
     """
     # Get list of all active guild_ids and guild_ids in database
     active_guild_ids = list(map(lambda g: g.id, client.guilds))
@@ -47,3 +45,41 @@ def check_guilds(client: Client) -> None:
     print(f"The bot is currently on {len(active_guild_ids)} servers.")
 
 
+def check_channels(client: Client) -> None:
+    """
+    Checks for deleted channels.
+    :param client: Bot client
+    """
+    # List of pairs of channel_ids and guild_ids
+    channels = select.all_welcome_channels()
+
+    # Iterate through channels
+    for channel_id, guild_id in channels:
+        guild: Guild = client.get_guild(guild_id)
+        # Check if the channel exists
+        if channel_id not in list(map(lambda c: c.id, guild.channels)):
+            # Welcome System: Remove channel out of database and set welcome/leave messages to disabled
+            welcome.toggle_welcome(guild, disable=True)
+            welcome.toggle_leave(guild, disable=True)
+            welcome.set_welcome_channel(guild, channel_id=None)
+
+
+def check_roles(client: Client) -> None:
+    """
+    Checks for deleted roles.
+    :param client: Bot client
+    """
+    # List of pairs of role_ids and guild_ids
+    roles = select.all_roles()
+
+    # Iterate through channels
+    for role_id, guild_id in roles:
+        guild: Guild = client.get_guild(guild_id)
+        # Check if the role exists
+        if role_id not in list(map(lambda c: c.id, guild.roles)):
+            # Remove role out of database
+            delete.role(role_id)
+
+
+# Checks that can be done after rebooting to set database up to date
+checks = {check_guilds, check_channels, check_roles}

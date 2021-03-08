@@ -9,10 +9,11 @@ async def delete_message(message: Message) -> None:
     :param message: Message to be deleted
     """
     # Delete message of member if it isn't already
-    try:
-        await message.delete()
-    except NotFound:  # Message already deleted
-        pass
+    if message:
+        try:
+            await message.delete()
+        except NotFound:  # Message already deleted
+            pass
 
 
 class InvalidInputError(Exception):

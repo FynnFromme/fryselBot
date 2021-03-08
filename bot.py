@@ -1,16 +1,12 @@
 # discord.py imports
 import discord
 from discord.ext import commands, tasks
-from discord.ext.commands import Context, Bot
-from discord import Guild, Member, Message
-
-# other imports
-import os
+from discord.ext.commands import Bot
+from discord import Message
 
 # fryselBot imports
 from fryselBot.system import help, appearance, guilds, cogs
-from fryselBot.utilities import secret
-from fryselBot.event_handler import member_handler
+from fryselBot.utilities import secret, util
 
 
 async def get_prefix(bot: Bot, message: Message):
@@ -34,8 +30,9 @@ async def on_ready():
     await client.change_presence(status=discord.Status.online)
     change_status.start()
 
-    # Checks for new / removed guilds after downtime
-    guilds.check_guilds(client)
+    # Set database up to date
+    for check in guilds.checks:
+        check(client)
 
     # States, that the bot is ready
     print("{} is logged in as user {}".format(appearance.bot_name, client.user.name))
@@ -62,19 +59,6 @@ async def on_message(message: Message):
     else:
         # Guild messages
         await client.process_commands(message)
-
-
-# TODO: Add the following functions to welcome cog
-@client.event
-async def on_member_join(member: Member):
-    """Is called when a member joins a guild"""
-    await member_handler.member_joined(member)
-
-
-@client.event
-async def on_member_remove(member: Member):
-    """Is called when a member leaves a guild"""
-    await member_handler.member_left(member)
 
 
 # Starts the bot with given token
