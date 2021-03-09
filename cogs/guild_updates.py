@@ -3,7 +3,7 @@ from discord.ext.commands import Bot
 from discord import Guild, Role
 from discord.abc import GuildChannel
 
-from fryselBot.system import guilds, welcome
+from fryselBot.system import guilds, welcome, moderation
 from fryselBot.database import select, delete
 
 
@@ -35,6 +35,7 @@ class GuildUpdates(commands.Cog):
     async def on_guild_channel_delete(self, channel: GuildChannel):
         """Is called when a channel is deleted on a guild"""
         guild = channel.guild
+
         # Welcome System: Check whether the channel is a welcome Channel
         if (channel.id, guild.id) in select.all_welcome_channels():
             # Disable welcome/leave messages on the guild
@@ -42,12 +43,17 @@ class GuildUpdates(commands.Cog):
             welcome.toggle_leave(guild, disable=True)
             welcome.set_welcome_channel(guild, channel_id=None)
 
+        # Moderation System: Check whether the channel is the moderation log
+        if (channel.id, guild.id) in select.all_moderation_logs():
+            # Delete mod log out of database
+            moderation.set_mod_log(guild, channel_id=None)
+
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: Role):
         """Is called when a role is deleted on a guild"""
         guild = role.guild
         # Check whether the role is in database
-        if (role.id, guild.id) in select.all_roles():
+        if (role.id, guild.id) in select.all_moderation_roles():
             # Delete role out of database
             delete.role(role.id)
 

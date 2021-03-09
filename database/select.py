@@ -141,52 +141,103 @@ support_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", 
 admin_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="ADMIN")
 
 
-@connection
-def all_guilds(_c: Cursor) -> list:
-    """
-    Creates a list of all guilds IDs in database
-    :param _c: Database cursor (provided by decorator)
-    :return: List of all guild IDs in database
-    """
-    # Fetch all guilds
-    _c.execute("SELECT guild_id FROM guilds")
-    guilds = _c.fetchall()
-    # Select guild_ids
-    guilds = list(map(lambda entry: entry[0], guilds))
+def _select_all_factory(table: str, attributes: list):
+    @connection
+    def inner(_c:Cursor) -> list:
+        """
+        Creates a list of all tuples of values for attributes and guild_ids in database
+        :param _c: Database cursor (provided by decorator)
+        :return: List of all tuples of values for attributes and guild_ids in database
+        """
+        # Create statement
+        statement = f"SELECT {', '.join(attributes)}, guild_id FROM {table}"
 
-    return guilds
+        # Fetch all entries
+        _c.execute(statement)
+        entries = _c.fetchall()
 
+        # Select tuples
+        if len(attributes) == 1:
+            entries = list(map(lambda entry: entry[0], entries))
+        else:
+            entries = list(map(lambda entry: entry[:len(attributes)], entries))
 
-@connection
-def all_welcome_channels(_c: Cursor) -> list:
-    """
-    Creates a list of all pairs of welcome channel IDs and guild_ids in database
-    :param _c: Database cursor (provided by decorator)
-    :return: List of all pairs of welcome channel IDs and guild_ids in database
-    """
-    # Fetch all welcome channels and belonging guild_ids
-    _c.execute("SELECT welcome_channel_id, guild_id FROM guilds")
-    channels = _c.fetchall()
-    # Select pairs of welcome_channel_id and guild_id
-    channels = list(map(lambda entry: entry[:2], channels))
+        return entries
 
-    return channels
+    return inner
 
 
-@connection
-def all_roles(_c: Cursor) -> list:
-    """
-    Creates a list of all pairs of role IDs and guild_ids in database
-    :param _c: Database cursor (provided by decorator)
-    :return: List of all pairs of role IDs and guild_ids in database
-    """
-    # Fetch all role_ids and belonging guild_ids
-    _c.execute("SELECT role_id, guild_id FROM roles")
-    roles = _c.fetchall()
-    # Select pairs of role_id and guild_id
-    roles = list(map(lambda entry: entry[:2], roles))
+all_guilds = _select_all_factory("guilds", ["guild_id"])
 
-    return roles
+all_welcome_channels = _select_all_factory("guilds", ["welcome_channel_id", "guild_id"])
+
+all_moderation_logs = _select_all_factory("guilds", ["mod_log_id", "guild_id"])
+
+all_moderation_roles = _select_all_factory("roles", ["role_id", "guild_id"])
+
+
+# @connection
+# def all_guilds(_c: Cursor) -> list:
+#     """
+#     Creates a list of all guilds IDs in database
+#     :param _c: Database cursor (provided by decorator)
+#     :return: List of all guild IDs in database
+#     """
+#     # Fetch all guilds
+#     _c.execute("SELECT guild_id FROM guilds")
+#     guilds = _c.fetchall()
+#     # Select guild_ids
+#     guilds = list(map(lambda entry: entry[0], guilds))
+#
+#     return guilds
+#
+#
+# @connection
+# def all_welcome_channels(_c: Cursor) -> list:
+#     """
+#     Creates a list of all pairs of welcome channel IDs and guild_ids in database
+#     :param _c: Database cursor (provided by decorator)
+#     :return: List of all pairs of welcome channel IDs and guild_ids in database
+#     """
+#     # Fetch all welcome channels and belonging guild_ids
+#     _c.execute("SELECT welcome_channel_id, guild_id FROM guilds")
+#     channels = _c.fetchall()
+#     # Select pairs of welcome_channel_id and guild_id
+#     channels = list(map(lambda entry: entry[:2], channels))
+#
+#     return channels
+#
+#
+# @connection
+# def all_moderation_logs(_c: Cursor) -> list:
+#     """
+#     Creates a list of all pairs of moderation log IDs and guild_ids in database
+#     :param _c: Database cursor (provided by decorator)
+#     :return: List of all pairs of moderation log IDs and guild_ids in database
+#     """
+#     # Fetch all moderation logs and belonging guild_ids
+#     _c.execute("SELECT mod_log_id, guild_id FROM guilds")
+#     channels = _c.fetchall()
+#     # Select pairs of mod_log_id and guild_id
+#     channels = list(map(lambda entry: entry[:2], channels))
+#
+#     return channels
+#
+#
+# @connection
+# def all_roles(_c: Cursor) -> list:
+#     """
+#     Creates a list of all pairs of role IDs and guild_ids in database
+#     :param _c: Database cursor (provided by decorator)
+#     :return: List of all pairs of role IDs and guild_ids in database
+#     """
+#     # Fetch all role_ids and belonging guild_ids
+#     _c.execute("SELECT role_id, guild_id FROM roles")
+#     roles = _c.fetchall()
+#     # Select pairs of role_id and guild_id
+#     roles = list(map(lambda entry: entry[:2], roles))
+#
+#     return roles
 
 
 class Ban:

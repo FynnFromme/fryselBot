@@ -71,3 +71,22 @@ def clear(ctx: Context) -> bool:
     else:
         # No clear permission else
         return False
+
+
+def kick(ctx: Context) -> bool:
+    """
+    Checks whether the member has permission to kick in this context
+    :param ctx: Context of permission request
+    :return: Whether the member has permission to kick
+    """
+    member: Member = ctx.author
+
+    if is_mod(member=member):
+        # Has clear permission if he is a mod
+        return True
+    elif member.guild_permissions.kick_members:
+        # Has kick permission if the member can manage messages
+        return True
+    else:
+        # No clear permission else
+        return False

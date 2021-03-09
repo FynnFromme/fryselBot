@@ -1,5 +1,5 @@
 from discord import Member, Embed, TextChannel, Guild, Message, Role
-from fryselBot.system import appearance, description, welcome, roles
+from fryselBot.system import appearance, description, welcome, roles, moderation as mod
 from fryselBot.utilities import util, permission, secret
 from fryselBot.database import select
 
@@ -50,12 +50,15 @@ async def reactions(member: Member, guild: Guild, channel: TextChannel, message:
             elif emoji == '❗':
                 # Call prefix page
                 await prefix_page(channel, guild)
-            elif emoji == '👋':
-                # Call welcome page
-                await welcome_page(channel, guild)
             elif emoji == '👥':
                 # Call roles page
                 await roles_page(channel, guild)
+            elif emoji == '👋':
+                # Call welcome page
+                await welcome_page(channel, guild)
+            elif emoji == '👮🏽‍♂️':
+                # Call moderation page
+                await moderation_page(channel, guild)
 
         elif title == f'{bot_name} Setup - Prefix':
             if emoji == '❗':
@@ -80,6 +83,10 @@ async def reactions(member: Member, guild: Guild, channel: TextChannel, message:
             elif emoji == '📄':
                 # Send the welcome DM text
                 await welcome.welcome_dm(member, force=True)
+        elif title == f'{bot_name} Setup - Moderation':
+            if emoji == '📪':
+                # Deactivate moderation log
+                await setup_moderation_log(channel, guild, message)
 
 
 async def setup_page(channel: TextChannel, guild: Guild) -> None:
@@ -101,7 +108,7 @@ async def setup_page(channel: TextChannel, guild: Guild) -> None:
     embed.add_field(name='Color  🟧', value=f'`{prefix}setup color`', inline=True)
     embed.add_field(name='Roles  👥', value=f'`{prefix}setup roles`', inline=True)
     embed.add_field(name='Welcome  👋', value=f'`{prefix}setup welcome`', inline=True)
-    embed.add_field(name='Coming Soon  ❓', value=f'`{prefix}setup ...`', inline=True)
+    embed.add_field(name='Moderation  👮🏽‍♂️', value=f'`{prefix}setup moderation`', inline=True)
     embed.add_field(name='Coming Soon  ❓', value=f'`{prefix}setup ... `', inline=True)
 
     # Send embed and add reactions
@@ -110,6 +117,7 @@ async def setup_page(channel: TextChannel, guild: Guild) -> None:
     await message.add_reaction(emoji='🟧')
     await message.add_reaction(emoji='👥')
     await message.add_reaction(emoji='👋')
+    await message.add_reaction(emoji='👮🏽‍♂️')
 
 
 async def prefix_page(channel: TextChannel, guild: Guild) -> None:
@@ -127,11 +135,11 @@ async def prefix_page(channel: TextChannel, guild: Guild) -> None:
     embed.colour = appearance.get_color(guild.id)
 
     # Setup the fields
-    embed.add_field(name='Current prefix:', value=f'`{prefix}`', inline=False)
-    embed.add_field(name='Set prefix:', value=f'`{prefix}{description.get_command("prefix").syntax}`', inline=False)
+    embed.add_field(name='Current Prefix', value=f'`{prefix}`', inline=False)
+    embed.add_field(name='Set Prefix', value=f'`{prefix}{description.get_command("prefix").syntax}`', inline=False)
 
-    embed.add_field(name='Valid prefix:', value='A single character.', inline=False)
-    embed.add_field(name='Set to default:', value='React with ❗️', inline=False)
+    embed.add_field(name='Valid Prefix', value='A single character.', inline=False)
+    embed.add_field(name='Set To Default', value='React with ❗️', inline=False)
 
     # Send embed and add reactions
     message = await channel.send(embed=embed)
@@ -172,11 +180,11 @@ async def color_page(channel: TextChannel, guild: Guild) -> None:
     embed.colour = appearance.get_color(guild.id)
 
     # Setup the fields
-    embed.add_field(name='Current color:', value=f'`{hex(appearance.get_color(guild.id))}`', inline=False)
-    embed.add_field(name='Set color:', value=f'`{prefix}{description.get_command("color").syntax}`', inline=False)
+    embed.add_field(name='Current Color', value=f'`{hex(appearance.get_color(guild.id))}`', inline=False)
+    embed.add_field(name='Set Color', value=f'`{prefix}{description.get_command("color").syntax}`', inline=False)
 
-    embed.add_field(name='Valid color:', value='HEX color code', inline=False)
-    embed.add_field(name='Set to default:', value='React with 🟧️', inline=False)
+    embed.add_field(name='Valid Color', value='HEX color code', inline=False)
+    embed.add_field(name='Set To Default', value='React with 🟧️', inline=False)
 
     # Send embed and add reactions
     message = await channel.send(embed=embed)
@@ -244,33 +252,33 @@ async def welcome_page(channel: TextChannel, guild: Guild):
     welcome_dm = select.welcome_dm(guild.id)
 
     # Setup the fields
-    embed.add_field(name='Welcome messages set up?', value=welcome_emoji, inline=True)
-    embed.add_field(name='Toggle welcome messages:', value='React with 👋', inline=True)
+    embed.add_field(name='Welcome Messages Set Up?', value=welcome_emoji, inline=True)
+    embed.add_field(name='Toggle Welcome Messages', value='React with 👋', inline=True)
 
     embed.add_field(name='\u200b', value='\u200b', inline=False)
 
-    embed.add_field(name='Leave message set up?', value=leave_emoji, inline=True)
-    embed.add_field(name='Toggle leave messages:', value='React with 🚶‍♂️', inline=True)
+    embed.add_field(name='Leave Message Set Up?', value=leave_emoji, inline=True)
+    embed.add_field(name='Toggle Leave Messages', value='React with 🚶‍♂️', inline=True)
 
     embed.add_field(name='\u200b', value='\u200b', inline=False)
 
-    embed.add_field(name='Welcome DMs setup?', value=welcome_dm_emoji, inline=True)
-    embed.add_field(name='Toggle welcome DMs:', value='React with 📩', inline=True)
+    embed.add_field(name='Welcome DMs Set Up?', value=welcome_dm_emoji, inline=True)
+    embed.add_field(name='Toggle Welcome DMs', value='React with 📩', inline=True)
 
     embed.add_field(name='\u200b', value='\u200b', inline=False)
 
     if welcome_channel:
-        embed.add_field(name='Welcome channel:', value=welcome_channel.mention, inline=True)
+        embed.add_field(name='Welcome Channel', value=welcome_channel.mention, inline=True)
 
-    embed.add_field(name='Set welcome channel:', value=f'`{prefix}{description.get_command("welcome channel").syntax}`',
+    embed.add_field(name='Set Welcome Channel', value=f'`{prefix}{description.get_command("welcome channel").syntax}`',
                     inline=False)
 
     embed.add_field(name='\u200b', value='\u200b', inline=False)
 
     if welcome_dm:
-        embed.add_field(name='Preview welcome DM:', value='React with 📄', inline=False)
+        embed.add_field(name='Preview Welcome DM', value='React with 📄', inline=False)
 
-    embed.add_field(name='Set welcome DM text:', value=f'`{prefix}{description.get_command("welcome dm").syntax}`'
+    embed.add_field(name='Set Welcome DM Text', value=f'`{prefix}{description.get_command("welcome dm").syntax}`'
                                                        f"\n'<member>' will be replaced by the name"
                                                        f"\nof the member.",
                     inline=False)
@@ -515,3 +523,71 @@ async def remove_role(guild: Guild, role: Role, type_: str, channel: TextChannel
     embed: Embed = Embed(description=f'Removed {role.mention} from **{type_} roles**',
                          colour=appearance.get_color(guild.id))
     await channel.send(embed=embed)
+
+
+async def moderation_page(channel: TextChannel, guild: Guild):
+    """
+    Sends a page with all information about the setup of moderation.
+    :param guild: Guild of call
+    :param channel: TextChannel to send the message to
+    """
+    # Initialize important values
+    prefix = appearance.get_prefix(guild.id)
+
+    # Setup appearance of the embed
+    embed: Embed = Embed(title=f'{appearance.bot_name} Setup - Moderation',
+                         description='Setup the moderation system!',
+                         colour=appearance.get_color(guild.id))
+
+    mod_log: TextChannel = mod.get_mod_log(guild)
+
+    # Add information about the current moderation log
+    if mod_log:
+        embed.add_field(name='Moderation Log', value=mod_log.mention)
+
+    # Add information about the commands
+    embed.add_field(name='Set Moderation Log', value=f'`{prefix}{description.get_command("moderation log").syntax}`',
+                    inline=False)
+
+    # How to deactivate moderation log
+    if mod_log:
+        embed.add_field(name='Deactivate Moderation Log', value='React with 📪', inline=False)
+
+    msg = await channel.send(embed=embed)
+
+    # Add reactions
+    if mod_log:
+        await msg.add_reaction('📪')
+
+
+async def setup_moderation_log(channel: TextChannel, guild: Guild, message: Message, mod_log: TextChannel = None):
+    """
+    Set up th moderation log channel for the server
+    :param channel: Channel of message
+    :param guild: Guild for moderation log
+    :param message: Message of the command call
+    :param mod_log: The channel set as moderation log
+    """
+    if mod_log:
+        # Delete message of member
+        await util.delete_message(message)
+
+        # Throw exception if the mod_log isn't a channel of the guild
+        if mod_log not in guild.channels:
+            raise util.InvalidInputError(mod_log, 'The moderation log has to be a text-channel of the server.')
+
+        # Set moderation log
+        mod.set_mod_log(guild, mod_log.id)
+
+        # Send response to command
+        await channel.send(embed=Embed(description=f'The **moderation log** was set to {mod_log.mention}',
+                                       colour=appearance.get_color(guild.id)))
+    else:
+        # Deactivate moderation log
+        mod.set_mod_log(guild, None)
+
+        # Send response to command
+        await channel.send(embed=Embed(description='The **moderation log** was deactivated',
+                                       colour=appearance.get_color(guild.id)))
+
+

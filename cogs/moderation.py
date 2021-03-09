@@ -39,6 +39,11 @@ class Moderation(commands.Cog):
             await error_messages.error_handler(ctx, error, description.get_command('clear'), 'Amount',
                                                'The amount has to be a positive integer.', True)
 
+    @commands.command(name='kick')
+    @commands.check(permission.kick)
+    async def kick(self, ctx: Context, member: Member, *, reason: str = None):
+        """Kick command"""
+        await mod.kick(ctx.guild, ctx.channel, member, reason)
 
 def setup(client: Bot):
     client.add_cog(Moderation(client))

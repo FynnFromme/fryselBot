@@ -1,5 +1,5 @@
 from fryselBot.database import insert, select, delete
-from fryselBot.system import welcome
+from fryselBot.system import welcome, moderation
 
 from discord import Guild, Client
 
@@ -52,6 +52,7 @@ def check_channels(client: Client) -> None:
     """
     # List of pairs of channel_ids and guild_ids
     channels = select.all_welcome_channels()
+    channels.extend(select.all_moderation_logs())
 
     # Iterate through channels
     for channel_id, guild_id in channels:
@@ -63,6 +64,9 @@ def check_channels(client: Client) -> None:
             welcome.toggle_leave(guild, disable=True)
             welcome.set_welcome_channel(guild, channel_id=None)
 
+            # Moderation System: Check whether the channel is the moderation log
+            moderation.set_mod_log(guild, channel_id=None)
+
 
 def check_roles(client: Client) -> None:
     """
@@ -70,7 +74,7 @@ def check_roles(client: Client) -> None:
     :param client: Bot client
     """
     # List of pairs of role_ids and guild_ids
-    roles = select.all_roles()
+    roles = select.all_moderation_roles()
 
     # Iterate through channels
     for role_id, guild_id in roles:

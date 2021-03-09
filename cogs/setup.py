@@ -180,6 +180,38 @@ class Setup(commands.Cog):
                                                'The type must be either *admin*, *moderator* or *supporter*.',
                                                True)
 
+    ########################
+
+    @setup.group(name='moderation')
+    async def moderation(self, ctx: Context):
+        """Setup moderation command"""
+        if ctx.invoked_subcommand is None:
+            # Send welcome page if no args are given
+            await setup_sys.moderation_page(ctx.channel, ctx.guild)
+
+    @moderation.error
+    async def moderation_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the moderation command"""
+        # Handle the error messages
+        await error_messages.error_handler(ctx, error, description.get_command('moderation'), 'Moderation', '', True)
+
+    @moderation.command(name='log')
+    async def set_mod_log(self, ctx: Context, mod_log: TextChannel):
+        """Command to set the moderation log"""
+        await setup_sys.setup_moderation_log(ctx.channel, ctx.guild, ctx.message, mod_log)
+
+    @set_mod_log.error
+    async def mod_log_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the moderation log command"""
+        # Handle error messages
+        if isinstance(error, ChannelNotFound):
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Channel',
+                                                     description='Cannot find the channel.')
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('moderation log'), 'Channel',
+                                               'Cannot find the channel.', True)
+
 
 def setup(client: Bot):
     client.add_cog(Setup(client))

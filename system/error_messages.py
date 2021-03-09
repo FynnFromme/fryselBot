@@ -6,7 +6,7 @@ from fryselBot.system import appearance
 from fryselBot.utilities import util
 
 
-async def syntax_error(ctx: Context, command: Command) -> None:
+async def arguments_error(ctx: Context, command: Command) -> None:
     """
     Error message for the case f arguments were missing when calling an command.
     Gives instructions how to call the command.
@@ -15,7 +15,7 @@ async def syntax_error(ctx: Context, command: Command) -> None:
     """
     # Send error message and delete it after some time
     prefix = appearance.get_prefix(ctx.guild.id)
-    error_message = await ctx.send(embed=Embed(title="Syntax Error",
+    error_message = await ctx.send(embed=Embed(title="Missing Arguments",
                                                description=f"Use `{prefix}{command.syntax}`",
                                                colour=appearance.red_color))
     await error_message.delete(delay=10)
@@ -59,7 +59,7 @@ async def undefined_error(ctx: Context) -> None:
     """
     # Send error message and delete it after some time
     error_message = await ctx.send(
-        embed=Embed(description="Ooops! Something went wrong :grimacing:",
+        embed=Embed(description="Ooops! Something went wrong 😬",
                     colour=appearance.red_color))
     await error_message.delete(delay=10)
 
@@ -80,7 +80,7 @@ async def error_handler(ctx: Context, error: Exception, command: Command,
     """
     if isinstance(error, MissingRequiredArgument):
         # Arguments missing
-        await syntax_error(ctx, command)
+        await arguments_error(ctx, command)
 
     elif isinstance(error, CheckFailure):
         # Missing permissions
