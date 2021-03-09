@@ -112,12 +112,11 @@ class Setup(commands.Cog):
         if isinstance(error, ChannelNotFound):
             await util.delete_message(ctx.message)
             await error_messages.invalid_input_error(ctx, title='Welcome Channel',
-                                                     description='The welcome channel must be a text-channel of the '
-                                                                 'server.')
+                                                     description='Cannot find the channel.')
         else:
             await error_messages.error_handler(ctx, error, description.get_command('welcome channel'),
                                                'Welcome Channel',
-                                               'The welcome channel must be a text-channel of the server.', True)
+                                               'Cannot find the channel.', True)
 
     @welcome.command(name='dm')
     async def welcome_dm_text(self, ctx: Context, *, text: str):
@@ -157,7 +156,7 @@ class Setup(commands.Cog):
         if isinstance(error, RoleNotFound):
             await util.delete_message(ctx.message)
             await error_messages.invalid_input_error(ctx, title='Role',
-                                                     description='The role must be a role of the server.')
+                                                     description='Cannot find the role.')
         else:
             await error_messages.error_handler(ctx, error, description.get_command('roles add'), 'Type',
                                                'The type must be either *admin*, *moderator* or *supporter*.',
@@ -175,7 +174,7 @@ class Setup(commands.Cog):
         if isinstance(error, RoleNotFound):
             await util.delete_message(ctx.message)
             await error_messages.invalid_input_error(ctx, title='Role',
-                                                     description='The role must be a role of the server.')
+                                                     description='Cannot find the role.')
         else:
             await error_messages.error_handler(ctx, error, description.get_command('roles remove'), 'Type',
                                                'The type must be either *admin*, *moderator* or *supporter*.',

@@ -175,7 +175,7 @@ async def color_page(channel: TextChannel, guild: Guild) -> None:
     embed.add_field(name='Current color:', value=f'`{hex(appearance.get_color(guild.id))}`', inline=False)
     embed.add_field(name='Set color:', value=f'`{prefix}{description.get_command("color").syntax}`', inline=False)
 
-    embed.add_field(name='Valid color:', value='HEX color code.', inline=False)
+    embed.add_field(name='Valid color:', value='HEX color code', inline=False)
     embed.add_field(name='Set to default:', value='React with 🟧️', inline=False)
 
     # Send embed and add reactions

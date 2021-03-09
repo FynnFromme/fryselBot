@@ -54,7 +54,7 @@ async def _member_help(message: Message) -> None:
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
     embed.set_thumbnail(url=guild.get_member(secret.bot_id).avatar_url)
-    embed.set_footer(text="Created by frysel | <>-Required | ()-Optional", icon_url=member.avatar_url)
+    embed.set_footer(text="Created by frysel  |  <> Required  |  () Optional", icon_url=member.avatar_url)
 
     # Send message
     await channel.send(embed=embed)
@@ -85,7 +85,7 @@ async def _mod_help(message: Message, footer: bool = True) -> None:
     embed.colour = appearance.get_color(guild.id)
 
     if footer:
-        embed.set_footer(text="Created by frysel | <>-Required | ()-Optional", icon_url=member.avatar_url)
+        embed.set_footer(text="Created by frysel  |  <> Required  |  () Optional", icon_url=member.avatar_url)
 
     # Send message
     await member.send(embed=embed)
@@ -117,7 +117,7 @@ async def _admin_help(message: Message) -> None:
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
-    embed.set_footer(text="Created by frysel | <>-Required | ()-Optional", icon_url=member.avatar_url)
+    embed.set_footer(text="Created by frysel  |  <> Required  |  () Optional", icon_url=member.avatar_url)
 
     # Send message
     await member.send(embed=embed)

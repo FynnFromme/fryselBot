@@ -54,6 +54,9 @@ class Command:
 # Description of the bot commands
 commands = [Command('help', 'help', 'Sends a list of all commands.'),
             Command('invite', 'invite', 'Sends an invite of the server.'),
+
+            Command('clear', 'clear <amount> (member)', 'Clears messages in the channel.', mod_only=True),
+
             Command('setup', 'setup', 'Menu to set up the bot.', admin_only=True),
 
             Command('prefix', 'setup prefix <prefix>',

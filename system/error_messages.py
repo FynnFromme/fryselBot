@@ -1,5 +1,5 @@
 from discord import Embed
-from discord.ext.commands import Context, MissingRequiredArgument, CommandInvokeError, CheckFailure
+from discord.ext.commands import Context, MissingRequiredArgument, CommandInvokeError, CheckFailure, BadArgument
 
 from fryselBot.system.description import Command
 from fryselBot.system import appearance
@@ -86,7 +86,7 @@ async def error_handler(ctx: Context, error: Exception, command: Command,
         # Missing permissions
         await permission_error(ctx, command)
 
-    elif isinstance(error, CommandInvokeError):
+    elif isinstance(error, CommandInvokeError) or isinstance(error, BadArgument):
         # Invalid arguments
         await invalid_input_error(ctx, invalid_arg_title, invalid_arg_desc)
 
