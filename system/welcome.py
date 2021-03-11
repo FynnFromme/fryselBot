@@ -1,7 +1,7 @@
 from fryselBot.database import select, update
 from fryselBot.system import appearance, description
 from fryselBot.utilities import util, secret
-from discord import Member, Guild, TextChannel, Embed
+from discord import Member, Guild, TextChannel, Embed, Forbidden
 import random
 
 
@@ -19,20 +19,20 @@ async def welcome_message(member: Member) -> None:
     # Get welcome channel
     welcome_channel: TextChannel = guild.get_channel(select.welcome_channel_id(guild.id))
 
-    welcome_messages = ["{} joined. You must construct additional pylons.",
-                        "Never gonna give {} up. Never let {} down!",
-                        "Hey! Listen! {} has joined!",
-                        "Ha! {} has joined! You activated my trap card!",
+    welcome_messages = ['{} joined. You must construct additional pylons.',
+                        'Never gonna give {} up. Never let {} down!',
+                        'Hey! Listen! {} has joined!',
+                        'Ha! {} has joined! You activated my trap card!',
                         "We've been expecting you, {}.",
                         "It's dangerous to go alone, take {}!",
-                        "Swoooosh. {} just landed.",
-                        "Brace yourselves. {} just joined the Server.",
-                        "A wild {} appeared."
+                        'Swoooosh. {} just landed.',
+                        'Brace yourselves. {} just joined the Server.',
+                        'A wild {} appeared.'
                         ]
 
     # Setup embed
     embed: Embed = Embed()
-    embed.description = random.choice(welcome_messages).replace("{}", member.mention)
+    embed.description = random.choice(welcome_messages).replace('{}', member.mention)
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
@@ -59,7 +59,7 @@ async def leave_message(member: Member) -> None:
 
     # Setup embed
     embed: Embed = Embed()
-    embed.description = random.choice(welcome_messages).replace("{}", member.display_name)
+    embed.description = random.choice(welcome_messages).replace('{}', member.mention)
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
@@ -76,12 +76,12 @@ def toggle_welcome(guild: Guild, disable: bool = False) -> None:
     :raises Exception: if welcome messages are being enabled and the welcome channel is not set up
     """
     if select.welcome_messages(guild.id) or disable:
-        update.welcome_messages(value=False, argument=guild.id)
+        update.welcome_messages(argument=guild.id, value=False)
     else:
         if not select.welcome_channel_id:
-            raise Exception("Welcome Channel is not set up")
+            raise Exception('Welcome Channel is not set up')
         else:
-            update.welcome_messages(value=True, argument=guild.id)
+            update.welcome_messages(argument=guild.id, value=True)
 
 
 def toggle_leave(guild: Guild, disable: bool = False) -> None:
@@ -92,12 +92,12 @@ def toggle_leave(guild: Guild, disable: bool = False) -> None:
     :raises Exception: if leave messages are being enabled and the welcome channel is not set up
     """
     if select.leave_messages(guild.id) or disable:
-        update.leave_messages(value=False, argument=guild.id)
+        update.leave_messages(argument=guild.id, value=False)
     else:
         if not select.welcome_channel_id:
-            raise Exception("Welcome Channel is not set up")
+            raise Exception('Welcome Channel is not set up')
         else:
-            update.leave_messages(value=True, argument=guild.id)
+            update.leave_messages(argument=guild.id, value=True)
 
 
 def set_welcome_channel(guild: Guild, channel_id: int = None) -> None:
@@ -115,13 +115,14 @@ def set_welcome_channel(guild: Guild, channel_id: int = None) -> None:
             raise util.InvalidInputError(channel_id, "The given channel isn't a channel on the guild")
 
     # Set the channel to the welcome_channel
-    update.welcome_channel_id(value=channel_id, argument=guild.id)
+    update.welcome_channel_id(argument=guild.id, value=channel_id)
 
 
-async def welcome_dm(member: Member, force: bool = False):
+async def welcome_dm(member: Member, channel: TextChannel = None, force: bool = False):
     """
     Welcome members to the server via DM
     :param member: Member to welcome
+    :param channel: Channel of call
     :param force: Force the dm without checking whether they are enabled
     """
     guild: Guild = member.guild
@@ -143,7 +144,12 @@ async def welcome_dm(member: Member, force: bool = False):
                           f'{guild.name}',
                      icon_url=guild.get_member(secret.bot_id).avatar_url)
 
-    await member.send(embed=embed)
+    # Send direct message or in channel if dm is forbidden
+    try:
+        await member.send(embed=embed)
+    except Forbidden:
+        if channel:
+            await channel.send(embed=embed)
 
 
 def toggle_welcome_dm(guild: Guild, disable: bool = False) -> None:
@@ -154,12 +160,12 @@ def toggle_welcome_dm(guild: Guild, disable: bool = False) -> None:
     :raises Exception: if welcome messages are being enabled and the welcome channel is not set up
     """
     if select.welcome_dms(guild.id) or disable:
-        update.welcome_dms(value=False, argument=guild.id)
+        update.welcome_dms(argument=guild.id, value=False)
     else:
         if not select.welcome_dm:
-            raise Exception("Welcome dm text is not set up")
+            raise Exception('Welcome dm text is not set up')
         else:
-            update.welcome_dms(value=True, argument=guild.id)
+            update.welcome_dms(argument=guild.id, value=True)
 
 
 def set_welcome_dm(guild: Guild, text: str = None) -> None:
@@ -170,4 +176,4 @@ def set_welcome_dm(guild: Guild, text: str = None) -> None:
     """
 
     # Set the channel to the welcome_channel
-    update.welcome_dm(value=text, argument=guild.id)
+    update.welcome_dm(argument=guild.id, value=text)

@@ -1,9 +1,9 @@
 from discord.ext import commands
-from discord.ext.commands import Context, Bot, ChannelNotFound, RoleNotFound
+from discord.ext.commands import Context, Bot
 from discord import Message, Guild, TextChannel, Member, Role
 
 from fryselBot.system import error_messages, description, setup as setup_sys
-from fryselBot.utilities import permission, util
+from fryselBot.utilities import permission
 
 
 class Setup(commands.Cog):
@@ -109,14 +109,8 @@ class Setup(commands.Cog):
     async def welcome_channel_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the welcome channel command"""
         # Handle the error messages
-        if isinstance(error, ChannelNotFound):
-            await util.delete_message(ctx.message)
-            await error_messages.invalid_input_error(ctx, title='Welcome Channel',
-                                                     description='Cannot find the channel.')
-        else:
-            await error_messages.error_handler(ctx, error, description.get_command('welcome channel'),
-                                               'Welcome Channel',
-                                               'Cannot find the channel.', True)
+        await error_messages.error_handler(ctx, error, description.get_command('welcome channel'),
+                                           'Welcome Channel', 'Cannot find the channel.', True)
 
     @welcome.command(name='dm')
     async def welcome_dm_text(self, ctx: Context, *, text: str):
@@ -153,14 +147,8 @@ class Setup(commands.Cog):
     async def roles_add_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the roles add command"""
         # Handle error messages
-        if isinstance(error, RoleNotFound):
-            await util.delete_message(ctx.message)
-            await error_messages.invalid_input_error(ctx, title='Role',
-                                                     description='Cannot find the role.')
-        else:
-            await error_messages.error_handler(ctx, error, description.get_command('roles add'), 'Type',
-                                               'The type must be either *admin*, *moderator* or *supporter*.',
-                                               True)
+        await error_messages.error_handler(ctx, error, description.get_command('roles add'), 'Type',
+                                           'The type must be either *admin*, *moderator* or *supporter*.', True)
 
     @roles.command(name='remove')
     async def roles_remove(self, ctx: Context, type_: str, role: Role):
@@ -171,14 +159,8 @@ class Setup(commands.Cog):
     async def roles_remove_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the roles remove command"""
         # Handle error messages
-        if isinstance(error, RoleNotFound):
-            await util.delete_message(ctx.message)
-            await error_messages.invalid_input_error(ctx, title='Role',
-                                                     description='Cannot find the role.')
-        else:
-            await error_messages.error_handler(ctx, error, description.get_command('roles remove'), 'Type',
-                                               'The type must be either *admin*, *moderator* or *supporter*.',
-                                               True)
+        await error_messages.error_handler(ctx, error, description.get_command('roles remove'), 'Type',
+                                           'The type must be either *admin*, *moderator* or *supporter*.', True)
 
     ########################
 
@@ -204,13 +186,8 @@ class Setup(commands.Cog):
     async def mod_log_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the moderation log command"""
         # Handle error messages
-        if isinstance(error, ChannelNotFound):
-            await util.delete_message(ctx.message)
-            await error_messages.invalid_input_error(ctx, title='Channel',
-                                                     description='Cannot find the channel.')
-        else:
-            await error_messages.error_handler(ctx, error, description.get_command('moderation log'), 'Channel',
-                                               'Cannot find the channel.', True)
+        await error_messages.error_handler(ctx, error, description.get_command('moderation log'), 'Channel',
+                                           'Cannot find the channel.', True)
 
 
 def setup(client: Bot):

@@ -4,6 +4,8 @@ from sqlite3.dbapi2 import Connection, Cursor
 
 
 # Database errors
+from typing import Callable
+
 
 class DatabaseError(Exception):
     """Error within the database_manager"""
@@ -62,7 +64,7 @@ class DatabaseEntryError(DatabaseError):
 
     def __init__(self, table: str, attribute: str, keyword, conditions: dict = None, *args, **kwargs):
         error_message = "Did not found an entry '{}' for attribute(s) {}" \
-                        " in table {}.\n Further conditions were: {}". \
+                        ' in table {}.\n Further conditions were: {}'. \
             format(keyword, attribute, table, conditions)
         super().__init__(error_message, *args, **kwargs)
 
@@ -74,17 +76,17 @@ def _delete_database() -> None:
     :return: None
     """
     # Path of db file
-    path = "./database/bot.db"
+    path = './database/bot.db'
     # Double check to not delete the wrong file
-    if path.endswith("database/bot.db"):
+    if path.endswith('database/bot.db'):
         # Try to delete file
         try:
             os.remove(path)
         except FileNotFoundError:  # File not found
-            print("Database not deleted: FileNotFoundError")
+            print('Database not deleted: FileNotFoundError')
 
 
-def connection(func):
+def connection(func) -> Callable:
     """
     Handles db connection for functions
     :param func: Function that works with the db (first parameter should be for cursor)
@@ -94,7 +96,7 @@ def connection(func):
     def inner(*args, **kwargs):
         """Calls the function with db connection"""
         # Setup db connection
-        _conn: Connection = sqlite3.connect("./database/bot.db")
+        _conn: Connection = sqlite3.connect('./database/bot.db')
 
         # Create cursor to execute statements
         _c: Cursor = _conn.cursor()
@@ -117,7 +119,7 @@ def _create_tables(c: Cursor) -> None:
     :return: None
     """
 
-    """
+    '''
     TABLE: guilds
     PRIMARY KEY: guild_id         # Discord Guild ID
     ATTRIBUTE: welcome_channel_id # Discord TextChannelID
@@ -126,8 +128,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: mod_log_id         # Discord TextChannelID
     ATTRIBUTE: support_log_id     # Discord TextChannelID
     ATTRIBUTE: ticket_category_id # Discord CategoryID
-    """
-    c.execute("""CREATE TABLE guilds (
+    '''
+    c.execute('''CREATE TABLE guilds (
                     guild_id INTEGER PRIMARY KEY,
                     welcome_channel_id INTEGER,
                     cpr_channel_id INTEGER,
@@ -135,10 +137,10 @@ def _create_tables(c: Cursor) -> None:
                     mod_log_id INTEGER,
                     support_log_id INTEGER,
                     ticket_category_id INTEGER
-                    )""")
+                    )''')
 
     # TODO: Add welcome_dms und welcome_dm_message
-    """
+    '''
     TABLE: guild_settings
     PRIMARY KEY: setting_id           # AUTOINCREMENT
     ATTRIBUTE: prefix
@@ -148,8 +150,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: welcome_dms            # 0 or 1
     ATTRIBUTE: welcome_dm
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE guild_settings (
+    '''
+    c.execute('''CREATE TABLE guild_settings (
                     setting_id TEXT PRIMARY KEY,
                     prefix TEXT,
                     color INTEGER,
@@ -160,23 +162,23 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY(guild_id) 
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: roles
     PRIMARY KEY: role_id                 # Discord role id
-    ATTRIBUTE: type                      # "ADMIN", "MODERATOR", "MUTE" or "SUPPORTER"
+    ATTRIBUTE: type                      # 'ADMIN', 'MODERATOR', 'MUTE' or 'SUPPORTER'
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE roles (
+    '''
+    c.execute('''CREATE TABLE roles (
                     role_id INTEGER,
                     type TEXT NOT NULL,
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: bans
     PRIMARY KEY: ban_id                  # AUTOINCREMENT
     ATTRIBUTE: temp                      # 0 or 1
@@ -186,8 +188,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: until_date                # Until user is banned (if temp)
     ATTRIBUTE: reason
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE bans (
+    '''
+    c.execute('''CREATE TABLE bans (
                     ban_id TEXT PRIMARY KEY,
                     temp INTEGER NOT NULL,
                     user_id INTEGER NOT NULL,
@@ -198,9 +200,9 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: mutes
     PRIMARY KEY: mute_id                  # AUTOINCREMENT
     ATTRIBUTE: temp                      # 0 or 1
@@ -210,8 +212,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: date                      # Date of mute
     ATTRIBUTE: until_date                # Until user is muted (if temp)
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE mutes (
+    '''
+    c.execute('''CREATE TABLE mutes (
                     mute_id TEXT PRIMARY KEY,
                     temp INTEGER NOT NULL,
                     user_id INTEGER NOT NULL,
@@ -222,9 +224,9 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: warns
     PRIMARY KEY: warn_id                 # AUTOINCREMENT
     ATTRIBUTE: user_id                   # Discord user id
@@ -232,8 +234,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: reason
     ATTRIBUTE: date                      # Date of warn
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE warns (
+    '''
+    c.execute('''CREATE TABLE warns (
                     warn_id TEXT PRIMARY KEY,
                     user_id INTEGER NOT NULL,
                     mod_id INTEGER NOT NULL,
@@ -242,9 +244,9 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: reports
     PRIMARY KEY: report_id               # AUTOINCREMENT
     ATTRIBUTE: reporter_id               # Discord user id
@@ -252,8 +254,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: reason
     ATTRIBUTE: date                      # Date of reports
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE reports (
+    '''
+    c.execute('''CREATE TABLE reports (
                     report_id TEXT PRIMARY KEY,
                     reporter_id INTEGER NOT NULL,
                     user_id INTEGER NOT NULL,
@@ -262,17 +264,17 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: private_rooms                 # Create Private Room voice channels
     PRIMARY KEY: room_id                 # AUTOINCREMENT
     ATTRIBUTE: room_channel_id           # Discord voice channel id
     ATTRIBUTE: move_channel_id           # Discord voice channel id
     ATTRIBUTE: owner_id                  # Discord user id
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE private_rooms (
+    '''
+    c.execute('''CREATE TABLE private_rooms (
                     room_id TEXT PRIMARY KEY,
                     room_channel_id INTEGER NOT NULL,
                     move_channel_id INTEGER NOT NULL,
@@ -280,24 +282,24 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
     # TODO: Weitere Attribute zu pr_settings hinzufügen
-    """
+    '''
     TABLE: pr_settings                   # Settings for private rooms
     PRIMARY KEY: pr_settings_id          # AUTOINCREMENT
     ATTRIBUTE: ...
     FOREIGN KEY: room_id  (private_rooms)
-    """
-    c.execute("""CREATE TABLE pr_settings (
+    '''
+    c.execute('''CREATE TABLE pr_settings (
                     pr_settings_id TEXT PRIMARY KEY,
                     
                     room_id INTEGER NOT NULL,
                     FOREIGN KEY (room_id)
                         REFERENCES private_rooms (room_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: tickets                       # Support ticket
     PRIMARY KEY: ticket_id               # AUTOINCREMENT
     ATTRIBUTE: user_id                   # Discord user id
@@ -305,8 +307,8 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: voice_channel_id          # Discord voice channel id
     ATTRIBUTE: topic
     FOREIGN KEY: guild_id  (guilds)
-    """
-    c.execute("""CREATE TABLE tickets (
+    '''
+    c.execute('''CREATE TABLE tickets (
                     ticket_id TEXT PRIMARY KEY,
                     main_user_id INTEGER NOT NULL,
                     text_channel_id INTEGER NOT NULL,
@@ -315,19 +317,19 @@ def _create_tables(c: Cursor) -> None:
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
-                    )""")
+                    )''')
 
-    """
+    '''
     TABLE: ticket_users
     PRIMARY KEY: relation_id            # AUTOINCREMENT
     ATTRIBUTE: user_id                  # Discord UserID
     ATTRIBUTE: is_mod                   # 0 or 1
     ATTRIBUTE: ticket_id                # (Table tickets: ticket_id)
-    """
-    c.execute("""CREATE TABLE ticket_users (
+    '''
+    c.execute('''CREATE TABLE ticket_users (
                     user_id INTEGER,
                     is_mod INTEGER,
                     ticket_id TEXT,
                     FOREIGN KEY (ticket_id)
                         REFERENCES tickets (ticket_id)
-                    )""")
+                    )''')

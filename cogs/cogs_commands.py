@@ -7,17 +7,17 @@ from fryselBot.utilities import secret
 
 class Cogs(commands.Cog):
     """
-        Handles the utility commands of the bot
-        Attributes:
-            client  (Bot): The bot client
-        Arguments:
-             client (Bot): The bot client
-        """
+    Handles the utility commands of the bot
+    Attributes:
+        client  (Bot): The bot client
+    Arguments:
+         client (Bot): The bot client
+    """
     def __init__(self, client: Bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = client
 
-    @commands.command(name="load")
+    @commands.command(name='load')
     @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
     async def load(self, ctx: Context, extension: str):
         """Load command"""
@@ -31,10 +31,10 @@ class Cogs(commands.Cog):
         if isinstance(error, CheckFailure):
             return
         # Handles the error messages
-        await error_messages.error_handler(ctx, error, description.get_command("load"), "Extension",
+        await error_messages.error_handler(ctx, error, description.get_command('load'), 'Extension',
                                            "Didn't find the extension", True)
 
-    @commands.command(name="unload")
+    @commands.command(name='unload')
     @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
     async def unload(self, ctx: Context, extension: str):
         """Unload command"""
@@ -48,7 +48,7 @@ class Cogs(commands.Cog):
         if isinstance(error, CheckFailure):
             return
         # Handles the error messages
-        await error_messages.error_handler(ctx, error, description.get_command("unload"), "Extension",
+        await error_messages.error_handler(ctx, error, description.get_command('unload'), 'Extension',
                                            "Didn't find the extension", True)
 
 

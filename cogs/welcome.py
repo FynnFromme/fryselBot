@@ -1,18 +1,18 @@
 from discord import Member
 from discord.ext import commands
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Bot
 
 from fryselBot.system import welcome
 
 
 class Welcome(commands.Cog):
     """
-        Handles the welcome system of the bot
-        Attributes:
-            client  (Bot): The bot client
-        Arguments:
-             client (Bot): The bot client
-        """
+    Handles the welcome system of the bot
+    Attributes:
+        client  (Bot): The bot client
+    Arguments:
+         client (Bot): The bot client
+    """
     def __init__(self, client: Bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = client

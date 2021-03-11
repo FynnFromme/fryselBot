@@ -33,7 +33,7 @@ def generate_new_id(_c: Cursor, table: str, identifier: str) -> str:
         # No infinite loop
         count += 1
         if count >= 1000000:
-            raise DatabaseError("No unique code could be generated for table: {}".format(table))
+            raise DatabaseError('No unique code could be generated for table: {}'.format(table))
 
     return random_id
 
@@ -57,14 +57,14 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
     :return: None
     """
     # Insert into db
-    _c.execute("""INSERT INTO guilds VALUES (:guild_id, :welcome_channel_id, :cpr_channel_id, :pr_settings_id, :mod_log_id, 
-                :support_log_id, :ticket_category_id)""", {"guild_id": guild_id,
-                                                           "welcome_channel_id": welcome_channel_id,
-                                                           "cpr_channel_id": cpr_channel_id,
-                                                           "pr_settings_id": pr_settings_id,
-                                                           "mod_log_id": mod_log_id,
-                                                           "support_log_id": support_log_id,
-                                                           "ticket_category_id": ticket_category_id})
+    _c.execute('''INSERT INTO guilds VALUES (:guild_id, :welcome_channel_id, :cpr_channel_id, :pr_settings_id, 
+                :mod_log_id, :support_log_id, :ticket_category_id)''', {'guild_id': guild_id,
+                                                                        'welcome_channel_id': welcome_channel_id,
+                                                                        'cpr_channel_id': cpr_channel_id,
+                                                                        'pr_settings_id': pr_settings_id,
+                                                                        'mod_log_id': mod_log_id,
+                                                                        'support_log_id': support_log_id,
+                                                                        'ticket_category_id': ticket_category_id})
 
 
 @connection
@@ -88,21 +88,21 @@ def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, color: hex = N
     leave_messages = int(leave_messages)
 
     # Insert into db
-    _c.execute("""INSERT INTO guild_settings VALUES (:setting_id, :prefix, :color, 
-                :welcome_messages, :leave_messages, :welcome_dms, :welcome_dm, :guild_id)""",
-               {"setting_id": generate_new_id(table="guild_settings", identifier="setting_id"),
-                "prefix": prefix,
-                "color": color,
-                "welcome_messages": welcome_messages,
-                "leave_messages": leave_messages,
-                "welcome_dms": welcome_dms,
-                "welcome_dm": welcome_dm,
-                "guild_id": guild_id
+    _c.execute('''INSERT INTO guild_settings VALUES (:setting_id, :prefix, :color, 
+                :welcome_messages, :leave_messages, :welcome_dms, :welcome_dm, :guild_id)''',
+               {'setting_id': generate_new_id(table='guild_settings', identifier='setting_id'),
+                'prefix': prefix,
+                'color': color,
+                'welcome_messages': welcome_messages,
+                'leave_messages': leave_messages,
+                'welcome_dms': welcome_dms,
+                'welcome_dm': welcome_dm,
+                'guild_id': guild_id
                 })
 
 
 @connection
-def role(_c: Cursor, role_id: int, type_: str, guild_id: int):
+def role(_c: Cursor, role_id: int, type_: str, guild_id: int) -> None:
     """
     Insert role into db.
     :param _c: Database cursor (provided by decorator)
@@ -112,13 +112,13 @@ def role(_c: Cursor, role_id: int, type_: str, guild_id: int):
     :return: None
     """
     # Check type_ for requirements
-    if not (type_ == "MODERATOR" or type_ == "ADMIN" or type_ == "MUTE" or type_ == "SUPPORTER"):
-        raise DatabaseAttributeError("type_", False, type_,
+    if not (type_ == 'MODERATOR' or type_ == 'ADMIN' or type_ == 'MUTE' or type_ == 'SUPPORTER'):
+        raise DatabaseAttributeError('type_', False, type_,
                                      "type_ has to be 'MODERATOR', 'ADMIN', 'SUPPORTER' or 'MUTE'.")
 
     # Insert into db
-    _c.execute("INSERT INTO roles VALUES (:role_id, :type, :guild_id)", {"role_id": role_id, "type": type_,
-                                                                         "guild_id": guild_id})
+    _c.execute('INSERT INTO roles VALUES (:role_id, :type, :guild_id)', {'role_id': role_id, 'type': type_,
+                                                                         'guild_id': guild_id})
 
 
 @connection
@@ -145,15 +145,15 @@ def ban(_c: Cursor, temp: bool, user_id: int, mod_id: int, date: datetime.dateti
         until_date = until_date.strftime('%Y-%m-%d %H:%M:%S')
 
     # Insert into db
-    _c.execute("INSERT INTO bans VALUES (:ban_id, :temp, :user_id, :mod_id, :reason, :date, :until_date, :guild_id)",
-               {"ban_id": generate_new_id(table="bans", identifier="ban_id"),
-                "temp": temp,
-                "user_id": user_id,
-                "mod_id": mod_id,
-                "reason": reason,
-                "date": date,
-                "until_date": until_date,
-                "guild_id": guild_id
+    _c.execute('INSERT INTO bans VALUES (:ban_id, :temp, :user_id, :mod_id, :reason, :date, :until_date, :guild_id)',
+               {'ban_id': generate_new_id(table='bans', identifier='ban_id'),
+                'temp': temp,
+                'user_id': user_id,
+                'mod_id': mod_id,
+                'reason': reason,
+                'date': date,
+                'until_date': until_date,
+                'guild_id': guild_id
                 })
 
 
@@ -181,15 +181,15 @@ def mute(_c: Cursor, temp: bool, user_id: int, mod_id: int, date: datetime.datet
         until_date = until_date.strftime('%Y-%m-%d %H:%M:%S')
 
     # Insert into db
-    _c.execute("INSERT INTO mutes VALUES (:mute_id, :temp, :user_id, :mod_id, :reason, :date, :until_date, :guild_id)",
-               {"mute_id": generate_new_id(table="mutes", identifier="mute_id"),
-                "temp": temp,
-                "user_id": user_id,
-                "mod_id": mod_id,
-                "reason": reason,
-                "date": date,
-                "until_date": until_date,
-                "guild_id": guild_id
+    _c.execute('INSERT INTO mutes VALUES (:mute_id, :temp, :user_id, :mod_id, :reason, :date, :until_date, :guild_id)',
+               {'mute_id': generate_new_id(table='mutes', identifier='mute_id'),
+                'temp': temp,
+                'user_id': user_id,
+                'mod_id': mod_id,
+                'reason': reason,
+                'date': date,
+                'until_date': until_date,
+                'guild_id': guild_id
                 })
 
 
@@ -209,13 +209,13 @@ def warn(_c: Cursor, user_id: int, mod_id: int, date: datetime.datetime, guild_i
     date = date.strftime('%Y-%m-%d %H:%M:%S')
 
     # Insert into db
-    _c.execute("INSERT INTO warns VALUES (:warn_id, :user_id, :mod_id, :reason, :date, :guild_id)",
-               {"warn_id": generate_new_id(table="warns", identifier="warn_id"),
-                "user_id": user_id,
-                "mod_id": mod_id,
-                "reason": reason,
-                "date": date,
-                "guild_id": guild_id
+    _c.execute('INSERT INTO warns VALUES (:warn_id, :user_id, :mod_id, :reason, :date, :guild_id)',
+               {'warn_id': generate_new_id(table='warns', identifier='warn_id'),
+                'user_id': user_id,
+                'mod_id': mod_id,
+                'reason': reason,
+                'date': date,
+                'guild_id': guild_id
                 })
 
 
@@ -236,13 +236,13 @@ def report(_c: Cursor, reporter_id: int, user_id: int, date: datetime.datetime, 
     date = date.strftime('%Y-%m-%d %H:%M:%S')
 
     # Insert into db
-    _c.execute("INSERT INTO reports VALUES (:report_id, :reporter_id, :user_id, :reason, :date, :guild_id)",
-               {"report_id": generate_new_id(table="reports", identifier="report_id"),
-                "reporter_id": reporter_id,
-                "user_id": user_id,
-                "reason": reason,
-                "date": date,
-                "guild_id": guild_id
+    _c.execute('INSERT INTO reports VALUES (:report_id, :reporter_id, :user_id, :reason, :date, :guild_id)',
+               {'report_id': generate_new_id(table='reports', identifier='report_id'),
+                'reporter_id': reporter_id,
+                'user_id': user_id,
+                'reason': reason,
+                'date': date,
+                'guild_id': guild_id
                 })
 
 
@@ -259,12 +259,12 @@ def private_room(_c: Cursor, room_channel_id: int, move_channel_id: int, owner_i
     """
 
     # Insert into db
-    _c.execute("INSERT INTO private_rooms VALUES (:room_id, :room_channel_id, :move_channel_id, :owner_id, :guild_id)",
-               {"room_id": generate_new_id(table="private_rooms", identifier="room_id"),
-                "room_channel_id": room_channel_id,
-                "move_channel_id": move_channel_id,
-                "owner_id": owner_id,
-                "guild_id": guild_id
+    _c.execute('INSERT INTO private_rooms VALUES (:room_id, :room_channel_id, :move_channel_id, :owner_id, :guild_id)',
+               {'room_id': generate_new_id(table='private_rooms', identifier='room_id'),
+                'room_channel_id': room_channel_id,
+                'move_channel_id': move_channel_id,
+                'owner_id': owner_id,
+                'guild_id': guild_id
                 })
 
 
@@ -279,8 +279,8 @@ def pr_settings(_c: Cursor, room_id: str) -> None:
     # TODO: Weitere Attribute hinzufügen (Zuerst in _manager._create_tables() hinzufügen)
 
     # Insert into db
-    _c.execute("INSERT INTO pr_settings VALUES ({} , {})".format(
-        generate_new_id(table="pr_settings", identifier="pr_settings_id"),
+    _c.execute('INSERT INTO pr_settings VALUES ({} , {})'.format(
+        generate_new_id(table='pr_settings', identifier='pr_settings_id'),
         room_id))
     raise NotImplementedError()
 
@@ -300,14 +300,14 @@ def ticket(_c: Cursor, main_user_id: int, text_channel_id: int, guild_id: int, v
     """
 
     # Insert ticket into db
-    _c.execute("""INSERT INTO tickets VALUES (:ticket_id, :main_user_id, :text_channel_id, :voice_channel_id, 
-                :topic, :guild_id)""",
-               {"ticket_id": generate_new_id(table="tickets", identifier="ticket_id"),
-                "main_user_id": main_user_id,
-                "text_channel_id": text_channel_id,
-                "voice_channel_id": voice_channel_id,
-                "topic": topic,
-                "guild_id": guild_id
+    _c.execute('''INSERT INTO tickets VALUES (:ticket_id, :main_user_id, :text_channel_id, :voice_channel_id, 
+                :topic, :guild_id)''',
+               {'ticket_id': generate_new_id(table='tickets', identifier='ticket_id'),
+                'main_user_id': main_user_id,
+                'text_channel_id': text_channel_id,
+                'voice_channel_id': voice_channel_id,
+                'topic': topic,
+                'guild_id': guild_id
                 })
 
 
@@ -325,8 +325,8 @@ def ticket_user(_c: Cursor, user_id: int, ticket_id: str, is_mod: bool = False) 
     is_mod = int(is_mod)
 
     # Insert ticket user into db
-    _c.execute("INSERT INTO ticket_users VALUES (:user_id, :is_mod, :ticket_id)",
-               {"user_id": user_id,
-                "is_mod": is_mod,
-                "ticket_id": ticket_id
+    _c.execute('INSERT INTO ticket_users VALUES (:user_id, :is_mod, :ticket_id)',
+               {'user_id': user_id,
+                'is_mod': is_mod,
+                'ticket_id': ticket_id
                 })

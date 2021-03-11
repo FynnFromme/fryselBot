@@ -35,7 +35,7 @@ def iso_to_datetime(s: str) -> datetime:
     :return: Datetime object
     """
     if s is None:
-        raise Exception("Invalid Input (iso_to_datetime)")
+        raise Exception('Invalid Input (iso_to_datetime)')
 
     year_ = int(s[0:4])
     month_ = int(s[5:7])
@@ -51,5 +51,5 @@ def random_base_16_code() -> str:
     Generate random base 16 code that is 5 digits long
     :return:
     """
-    code = "".join(random.choice("0123456789abcdef") for _ in range(5))
+    code = ''.join(random.choice('0123456789abcdef') for _ in range(5))
     return code

@@ -42,7 +42,7 @@ def check_guilds(client: Client) -> None:
             delete.all_entries_of_guild(guild_id=guild_id)
 
     # Server count
-    print(f"The bot is currently on {len(active_guild_ids)} servers.")
+    print(f'The bot is currently on {len(active_guild_ids)} servers.')
 
 
 def check_channels(client: Client) -> None:
@@ -52,7 +52,6 @@ def check_channels(client: Client) -> None:
     """
     # List of pairs of channel_ids and guild_ids
     channels = select.all_welcome_channels()
-    channels.extend(select.all_moderation_logs())
 
     # Iterate through channels
     for channel_id, guild_id in channels:
@@ -64,6 +63,13 @@ def check_channels(client: Client) -> None:
             welcome.toggle_leave(guild, disable=True)
             welcome.set_welcome_channel(guild, channel_id=None)
 
+    # List of pairs of channel_ids and guild_ids
+    channels = select.all_moderation_logs()
+    # Iterate through channels
+    for channel_id, guild_id in channels:
+        guild: Guild = client.get_guild(guild_id)
+        # Check if the channel exists
+        if channel_id not in list(map(lambda c: c.id, guild.channels)):
             # Moderation System: Check whether the channel is the moderation log
             moderation.set_mod_log(guild, channel_id=None)
 

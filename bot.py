@@ -6,10 +6,10 @@ from discord import Message
 
 # fryselBot imports
 from fryselBot.system import help, appearance, guilds, cogs
-from fryselBot.utilities import secret, util
+from fryselBot.utilities import secret
 
 
-async def get_prefix(bot: Bot, message: Message):
+async def get_prefix(_: Bot, message: Message):
     """Returns the prefix for the guild of the message"""
     return appearance.get_prefix(guild_id=message.guild.id)
 
@@ -35,7 +35,7 @@ async def on_ready():
         check(client)
 
     # States, that the bot is ready
-    print("{} is logged in as user {}".format(appearance.bot_name, client.user.name))
+    print('{} is logged in as user {}'.format(appearance.bot_name, client.user.name))
 
 
 @tasks.loop(seconds=30)
@@ -50,7 +50,7 @@ async def on_message(message: Message):
     if message.author.bot:
         # Ignore messages from bots
         return
-    elif message.content == appearance.default_prefix + "help":
+    elif message.content == appearance.default_prefix + 'help':
         # Default help command
         await help.help_command(message)
     elif message.guild is None:

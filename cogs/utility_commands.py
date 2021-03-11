@@ -17,12 +17,15 @@ class UtilityCommands(commands.Cog):
         super().__init__(*args, **kwargs)
         self.client = client
 
-    @commands.command(name="help")
-    async def _help(self, ctx: Context):
+    @commands.command(name='help')
+    async def _help(self, ctx: Context, *, command: str = None):
         """Help command"""
-        await help.help_command(ctx.message)
+        if command:
+            await help.cmd_help(ctx.message, command)
+        else:
+            await help.help_command(ctx.message)
 
-    @commands.command(name="invite")
+    @commands.command(name='invite')
     async def invite(self, ctx: Context):
         """Invite command"""
         await invite.invite_command(ctx.message)

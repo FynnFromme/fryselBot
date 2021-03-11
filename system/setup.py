@@ -82,7 +82,7 @@ async def reactions(member: Member, guild: Guild, channel: TextChannel, message:
                 await toggle_leave_messages(channel, guild, message)
             elif emoji == '📄':
                 # Send the welcome DM text
-                await welcome.welcome_dm(member, force=True)
+                await welcome.welcome_dm(member, channel=channel, force=True)
         elif title == f'{bot_name} Setup - Moderation':
             if emoji == '📪':
                 # Deactivate moderation log
@@ -228,7 +228,7 @@ async def setup_color(channel: TextChannel, guild: Guild, message: Message = Non
                                    colour=appearance.get_color(guild.id)))
 
 
-async def welcome_page(channel: TextChannel, guild: Guild):
+async def welcome_page(channel: TextChannel, guild: Guild) -> None:
     """
     Sends a page with all information about the setup of the welcome system.
     :param guild: Guild of call
@@ -279,8 +279,8 @@ async def welcome_page(channel: TextChannel, guild: Guild):
         embed.add_field(name='Preview Welcome DM', value='React with 📄', inline=False)
 
     embed.add_field(name='Set Welcome DM Text', value=f'`{prefix}{description.get_command("welcome dm").syntax}`'
-                                                       f"\n'<member>' will be replaced by the name"
-                                                       f"\nof the member.",
+                                                      f"\n'<member>' will be replaced by the name"
+                                                      f"\nof the member.",
                     inline=False)
 
     # Send embed and add reactions
@@ -293,7 +293,8 @@ async def welcome_page(channel: TextChannel, guild: Guild):
         await message.add_reaction(emoji='📄')
 
 
-async def setup_welcome_channel(channel: TextChannel, guild: Guild, message: Message, welcome_channel: TextChannel):
+async def setup_welcome_channel(channel: TextChannel, guild: Guild, message: Message,
+                                welcome_channel: TextChannel) -> None:
     """
     Sets up the welcome channel for the server.
     :param channel: Channel of message
@@ -325,7 +326,7 @@ async def toggle_welcome_messages(channel: TextChannel, guild: Guild, setup_mess
         error_embed: Embed = Embed(title='Welcome channel has to be set',
                                    description=f'Set the welcome channel first using `{prefix}'
                                                f'{description.get_command("welcome channel").syntax}`',
-                                   colour=appearance.red_color)
+                                   colour=appearance.error_color)
         error_message = await channel.send(embed=error_embed)
         await error_message.delete(delay=10)
     else:
@@ -358,7 +359,7 @@ async def toggle_leave_messages(channel: TextChannel, guild: Guild, setup_messag
         error_embed: Embed = Embed(title='Welcome channel has to be set',
                                    description=f'Set the welcome channel first using `{prefix}'
                                                f'{description.get_command("welcome channel").syntax}`',
-                                   colour=appearance.red_color)
+                                   colour=appearance.error_color)
         error_message = await channel.send(embed=error_embed)
         await error_message.delete(delay=10)
     else:
@@ -391,7 +392,7 @@ async def toggle_welcome_dms(channel: TextChannel, guild: Guild, setup_message: 
         error_embed: Embed = Embed(title='Welcome DM text has to be set',
                                    description=f'Set the welcome DM text first using `{prefix}'
                                                f'{description.get_command("welcome dm").syntax}`',
-                                   colour=appearance.red_color)
+                                   colour=appearance.error_color)
         error_message = await channel.send(embed=error_embed)
         await error_message.delete(delay=10)
     else:
@@ -560,7 +561,8 @@ async def moderation_page(channel: TextChannel, guild: Guild):
         await msg.add_reaction('📪')
 
 
-async def setup_moderation_log(channel: TextChannel, guild: Guild, message: Message, mod_log: TextChannel = None):
+async def setup_moderation_log(channel: TextChannel, guild: Guild, message: Message,
+                               mod_log: TextChannel = None) -> None:
     """
     Set up th moderation log channel for the server
     :param channel: Channel of message
@@ -589,5 +591,3 @@ async def setup_moderation_log(channel: TextChannel, guild: Guild, message: Mess
         # Send response to command
         await channel.send(embed=Embed(description='The **moderation log** was deactivated',
                                        colour=appearance.get_color(guild.id)))
-
-

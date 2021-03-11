@@ -1,8 +1,10 @@
+from typing import Callable
+
 from fryselBot.database._manager import connection
 from sqlite3.dbapi2 import Cursor
 
 
-def _delete_by_keyword_factory(table: str, keyword: str):
+def _delete_by_keyword_factory(table: str, keyword: str) -> Callable[[Cursor, str], None]:
     """
     Creates a function that deletes an entry in table by keyword
     :param table: Table to delete entry in
@@ -30,25 +32,25 @@ def _delete_by_keyword_factory(table: str, keyword: str):
     return _delete_by_keyword
 
 
-guild = _delete_by_keyword_factory(table="guilds", keyword="guild_id")
+guild = _delete_by_keyword_factory(table='guilds', keyword='guild_id')
 
-guild_settings = _delete_by_keyword_factory(table="guild_settings", keyword="guild_id")
+guild_settings = _delete_by_keyword_factory(table='guild_settings', keyword='guild_id')
 
-role = _delete_by_keyword_factory(table="roles", keyword="role_id")
+role = _delete_by_keyword_factory(table='roles', keyword='role_id')
 
-ban = _delete_by_keyword_factory(table="bans", keyword="ban_id")
+ban = _delete_by_keyword_factory(table='bans', keyword='ban_id')
 
-mute = _delete_by_keyword_factory(table="mutes", keyword="mute_id")
+mute = _delete_by_keyword_factory(table='mutes', keyword='mute_id')
 
-warn = _delete_by_keyword_factory(table="warns", keyword="warn_id")
+warn = _delete_by_keyword_factory(table='warns', keyword='warn_id')
 
-report = _delete_by_keyword_factory(table="reports", keyword="report_id")
+report = _delete_by_keyword_factory(table='reports', keyword='report_id')
 
-private_room = _delete_by_keyword_factory(table="private_rooms", keyword="room_id")
+private_room = _delete_by_keyword_factory(table='private_rooms', keyword='room_id')
 
-pr_settings = _delete_by_keyword_factory(table="pr_settings", keyword="room_id")
+pr_settings = _delete_by_keyword_factory(table='pr_settings', keyword='room_id')
 
-ticket = _delete_by_keyword_factory(table="tickets", keyword="ticket_id")
+ticket = _delete_by_keyword_factory(table='tickets', keyword='ticket_id')
 
 
 @connection
@@ -65,7 +67,7 @@ def ticket_user(_c: Cursor, ticket_id: str, user_id: str) -> None:
 
 
 @connection
-def all_entries_of_guild(_c: Cursor, guild_id: str):
+def all_entries_of_guild(_c: Cursor, guild_id: str) -> None:
     """
     Deletes everything related to guild_id out of database.
     :param _c: Database cursor (provided by decorator)
@@ -74,23 +76,21 @@ def all_entries_of_guild(_c: Cursor, guild_id: str):
     """
 
     # Delete all pr_settings
-    _c.execute("""DELETE FROM pr_settings
+    _c.execute('''DELETE FROM pr_settings
                 WHERE room_id IN (
                     SELECT room_id FROM private_rooms
                     WHERE guild_id=='{}'
-                )""".format(guild_id))
+                )'''.format(guild_id))
 
     # Delete all ticket_users
-    _c.execute("""DELETE FROM ticket_users
+    _c.execute('''DELETE FROM ticket_users
                     WHERE ticket_id IN (
                         SELECT ticket_id FROM tickets
                         WHERE guild_id=='{}'
-                    )""".format(guild_id))
+                    )'''.format(guild_id))
 
     # Delete all entries of tables with guild_id attribute
-    tables = ["guilds", "guild_settings", "roles", "bans", "mutes", "warns", "reports", "private_rooms", "tickets"]
+    tables = ['guilds', 'guild_settings', 'roles', 'bans', 'mutes', 'warns', 'reports', 'private_rooms', 'tickets']
 
     for table in tables:
         _c.execute("DELETE FROM {} WHERE guild_id=='{}'".format(table, guild_id))
-
-

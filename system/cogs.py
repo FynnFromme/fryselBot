@@ -17,22 +17,23 @@ async def load_command(ctx: Context, extension: str, client: Bot) -> None:
     # Delete message
     await ctx.message.delete()
 
-    if extension == "cogs":
+    if extension == 'cogs':
         # Don't load the cogs extension
-        raise util.InvalidInputError("Cannot unload cogs extension")
+        raise util.InvalidInputError('Cannot unload cogs extension')
 
-    elif extension + ".py" not in os.listdir("./cogs/"):
+    elif extension + '.py' not in os.listdir('./cogs/'):
         # Extension doesn't exist
         raise util.InvalidInputError("Didn't find the cog to load")
 
     else:
         try:
-            client.load_extension(f"cogs.{extension}")
+            client.load_extension(f'cogs.{extension}')
         except ExtensionAlreadyLoaded:
             # Ignore if the extension was already loaded
             pass
 
-        msg = await ctx.send(embed=Embed(title="Extension Loaded", description=extension, color=appearance.green_color))
+        msg = await ctx.send(embed=Embed(title='Extension Loaded', description=extension,
+                                         color=appearance.success_color))
         await msg.delete(delay=10)
 
 
@@ -46,33 +47,32 @@ async def unload_command(ctx: Context, extension: str, client: Bot) -> None:
     # Delete message
     await ctx.message.delete()
 
-    if extension == "cogs":
+    if extension == 'cogs':
         # Don't unload the cogs extension
-        raise util.InvalidInputError("Cannot unload cogs extension")
+        raise util.InvalidInputError('Cannot unload cogs extension')
 
-    elif extension + ".py" not in os.listdir("./cogs/"):
+    elif extension + '.py' not in os.listdir('./cogs/'):
         # Extension doesn't exist
         raise util.InvalidInputError("Didn't find the cog to unload")
 
     else:
         try:
-            client.unload_extension(f"cogs.{extension}")
+            client.unload_extension(f'cogs.{extension}')
         except ExtensionNotLoaded:
             # Ignore if the extension was already unloaded
             pass
 
-        msg = await ctx.send(embed=Embed(title="Extension Unloaded", description=extension,
-                                         color=appearance.green_color))
+        msg = await ctx.send(embed=Embed(title='Extension Unloaded', description=extension,
+                                         color=appearance.success_color))
         await msg.delete(delay=10)
 
 
-def load_all(client: Bot):
+def load_all(client: Bot) -> None:
     """
-
-    :param client:
-    :return:
+    Load all extensions of the client
+    :param client: Client to load extensions
     """
     # Load all extensions
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            client.load_extension(f"cogs.{filename[:-3]}")
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            client.load_extension(f'cogs.{filename[:-3]}')

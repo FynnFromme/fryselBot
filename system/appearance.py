@@ -5,20 +5,21 @@ from itertools import cycle
 
 
 # Names
-bot_name = "fryselBot"
-version = "1.0"
+bot_name = 'fryselBot'
+version = '1.0'
 
 
 # Default values
-default_prefix = "+"
+default_prefix = '+'
 
 default_color: hex = 0xf5c140
-red_color: hex = 0xc94435
-green_color: hex = 0x3d9757
+error_color: hex = 0xd61313
+success_color: hex = 0x3d9757
+moderation_color: hex = 0xa82020
 
 
 # Status of the bot                                                   # Newest function of the bot
-status = cycle(["Hey there!", f"v. {version} | {default_prefix}help", "New Welcome System!"])
+status = cycle(['Hey there!', f'v. {version} | {default_prefix}help', 'New Welcome System!'])
 
 
 # Prefix functions
@@ -45,10 +46,10 @@ def set_prefix(guild_id: int, prefix=None) -> None:
     # Check whether the prefix is correct
     if prefix:
         if type(prefix) != str or len(prefix) != 1:
-            raise util.InvalidInputError(prefix, "Prefix must be a string of length 1")
+            raise util.InvalidInputError(prefix, 'Prefix must be a string of length 1')
 
     # Update prefix in database
-    update.prefix(value=prefix, argument=guild_id)
+    update.prefix(argument=guild_id, value=prefix)
 
 
 # Primary Color functions
@@ -73,8 +74,6 @@ def set_color(guild_id: int, color=None) -> None:
     :raises: InvalidInputError when the prefix is invalid
     """
     if color and type(color) != int:
-        raise util.InvalidInputError(color, "primary_color has to be an integer")
+        raise util.InvalidInputError(color, 'primary_color has to be an integer')
 
-    update.color(value=color, argument=guild_id)
-
-
+    update.color(argument=guild_id, value=color)

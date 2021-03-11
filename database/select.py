@@ -1,10 +1,13 @@
+from typing import Any, Callable
+
 from fryselBot.database._manager import connection, DatabaseEntryError, DatabaseError
 from sqlite3.dbapi2 import Cursor
 from datetime import datetime
-from fryselBot import utilities as util
+from fryselBot.utilities import util
 
 
-def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = False, **kwargs):
+def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = False,
+                                **kwargs) -> Callable[[Cursor, int], Any]:
     """
     Create functions that return a value or list of values (if all) out of the db by the conditions represented
     by kwargs.
@@ -16,13 +19,14 @@ def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = 
     """
 
     @connection
-    def _select_by_guild_id(_c: Cursor, guild_id: int):
+    def _select_by_guild_id(_c: Cursor, guild_id: int) -> Any:
         """
         Get first value out of db by the guild_id and further conditions
         Throws an error when a single value is required and there are no entries matching the conditions.
         :param _c: Database cursor (provided by decorator)
         :param guild_id: Value for GuildID
-        :return: Server invite
+        :return: Either list of entrys or a single value
+        :raises DatabaseEntryError: If couldn't find the entry
         """
         # Prepare sql statement
         statement = "SELECT {} FROM {} WHERE guild_id=='{}'".format(attribute, table, guild_id)
@@ -32,7 +36,7 @@ def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = 
             statement += " AND {}='{}'".format(k, v)
 
         if not all_entries:
-            statement += " LIMIT 1"
+            statement += ' LIMIT 1'
 
         # Fetch invite out of db
         _c.execute(statement)
@@ -81,17 +85,17 @@ def _fetch_mod_operation_entry(_c: Cursor, guild_id: int, user_id: int, table: s
         # Check if there was a operation on the user
         if not entry:
             raise DatabaseEntryError(table=table, attribute=id_identifier, keyword=operation_id,
-                                     conditions={"guild_id": guild_id, "user_id": user_id})
+                                     conditions={'guild_id': guild_id, 'user_id': user_id})
 
     else:
         # Fetch latest entry
-        _c.execute("""SELECT * FROM {} t
+        _c.execute('''SELECT * FROM {} t
                     inner join (
                         SELECT {}, MAX(date) as MaxDate
                         FROM {}
                         WHERE guild_id=='{}' AND user_id=='{}'
                         GROUP BY guild_id
-                     ) tm on t.{} = tm.{} AND t.date = tm.MaxDate""".format(table,
+                     ) tm on t.{} = tm.{} AND t.date = tm.MaxDate'''.format(table,
                                                                             id_identifier,
                                                                             table,
                                                                             guild_id,
@@ -102,48 +106,48 @@ def _fetch_mod_operation_entry(_c: Cursor, guild_id: int, user_id: int, table: s
 
         # Check if there was a operation on the user
         if not entry:
-            raise DatabaseEntryError(table=table, attribute="guild_id, user_id",
+            raise DatabaseEntryError(table=table, attribute='guild_id, user_id',
                                      keyword="{}', '{}".format(guild_id, user_id))
 
     return entry
 
 
-welcome_channel_id = _select_by_guild_id_factory(table="guilds", attribute="welcome_channel_id")
+welcome_channel_id = _select_by_guild_id_factory(table='guilds', attribute='welcome_channel_id')
 
-cpr_channel_id = _select_by_guild_id_factory(table="guilds", attribute="cpr_channel_id")
+cpr_channel_id = _select_by_guild_id_factory(table='guilds', attribute='cpr_channel_id')
 
-pr_settings_id = _select_by_guild_id_factory(table="guilds", attribute="pr_settings_id")
+pr_settings_id = _select_by_guild_id_factory(table='guilds', attribute='pr_settings_id')
 
-mod_log_id = _select_by_guild_id_factory(table="guilds", attribute="mod_log_id")
+mod_log_id = _select_by_guild_id_factory(table='guilds', attribute='mod_log_id')
 
-support_log_id = _select_by_guild_id_factory(table="guilds", attribute="support_log_id")
+support_log_id = _select_by_guild_id_factory(table='guilds', attribute='support_log_id')
 
-ticket_category_id = _select_by_guild_id_factory(table="guilds", attribute="ticket_category_id")
+ticket_category_id = _select_by_guild_id_factory(table='guilds', attribute='ticket_category_id')
 
-prefix = _select_by_guild_id_factory(table="guild_settings", attribute="prefix")
+prefix = _select_by_guild_id_factory(table='guild_settings', attribute='prefix')
 
-color = _select_by_guild_id_factory(table="guild_settings", attribute="color")
+color = _select_by_guild_id_factory(table='guild_settings', attribute='color')
 
-welcome_messages = _select_by_guild_id_factory(table="guild_settings", attribute="welcome_messages")
+welcome_messages = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_messages')
 
-leave_messages = _select_by_guild_id_factory(table="guild_settings", attribute="leave_messages")
+leave_messages = _select_by_guild_id_factory(table='guild_settings', attribute='leave_messages')
 
-welcome_dms = _select_by_guild_id_factory(table="guild_settings", attribute="welcome_dms")
+welcome_dms = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_dms')
 
-welcome_dm = _select_by_guild_id_factory(table="guild_settings", attribute="welcome_dm")
+welcome_dm = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_dm')
 
-moderator_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="MODERATOR")
+moderator_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='MODERATOR')
 
-mute_role = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=False, type="MUTE")
+mute_role = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=False, type='MUTE')
 
-support_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="SUPPORTER")
+support_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='SUPPORTER')
 
-admin_roles = _select_by_guild_id_factory(table="roles", attribute="role_id", all_entries=True, type="ADMIN")
+admin_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='ADMIN')
 
 
-def _select_all_factory(table: str, attributes: list):
+def _select_all_factory(table: str, attributes: list) -> Callable[[Cursor], list]:
     @connection
-    def inner(_c:Cursor) -> list:
+    def inner(_c: Cursor) -> list:
         """
         Creates a list of all tuples of values for attributes and guild_ids in database
         :param _c: Database cursor (provided by decorator)
@@ -167,77 +171,13 @@ def _select_all_factory(table: str, attributes: list):
     return inner
 
 
-all_guilds = _select_all_factory("guilds", ["guild_id"])
+all_guilds = _select_all_factory('guilds', ['guild_id'])
 
-all_welcome_channels = _select_all_factory("guilds", ["welcome_channel_id", "guild_id"])
+all_welcome_channels = _select_all_factory('guilds', ['welcome_channel_id', 'guild_id'])
 
-all_moderation_logs = _select_all_factory("guilds", ["mod_log_id", "guild_id"])
+all_moderation_logs = _select_all_factory('guilds', ['mod_log_id', 'guild_id'])
 
-all_moderation_roles = _select_all_factory("roles", ["role_id", "guild_id"])
-
-
-# @connection
-# def all_guilds(_c: Cursor) -> list:
-#     """
-#     Creates a list of all guilds IDs in database
-#     :param _c: Database cursor (provided by decorator)
-#     :return: List of all guild IDs in database
-#     """
-#     # Fetch all guilds
-#     _c.execute("SELECT guild_id FROM guilds")
-#     guilds = _c.fetchall()
-#     # Select guild_ids
-#     guilds = list(map(lambda entry: entry[0], guilds))
-#
-#     return guilds
-#
-#
-# @connection
-# def all_welcome_channels(_c: Cursor) -> list:
-#     """
-#     Creates a list of all pairs of welcome channel IDs and guild_ids in database
-#     :param _c: Database cursor (provided by decorator)
-#     :return: List of all pairs of welcome channel IDs and guild_ids in database
-#     """
-#     # Fetch all welcome channels and belonging guild_ids
-#     _c.execute("SELECT welcome_channel_id, guild_id FROM guilds")
-#     channels = _c.fetchall()
-#     # Select pairs of welcome_channel_id and guild_id
-#     channels = list(map(lambda entry: entry[:2], channels))
-#
-#     return channels
-#
-#
-# @connection
-# def all_moderation_logs(_c: Cursor) -> list:
-#     """
-#     Creates a list of all pairs of moderation log IDs and guild_ids in database
-#     :param _c: Database cursor (provided by decorator)
-#     :return: List of all pairs of moderation log IDs and guild_ids in database
-#     """
-#     # Fetch all moderation logs and belonging guild_ids
-#     _c.execute("SELECT mod_log_id, guild_id FROM guilds")
-#     channels = _c.fetchall()
-#     # Select pairs of mod_log_id and guild_id
-#     channels = list(map(lambda entry: entry[:2], channels))
-#
-#     return channels
-#
-#
-# @connection
-# def all_roles(_c: Cursor) -> list:
-#     """
-#     Creates a list of all pairs of role IDs and guild_ids in database
-#     :param _c: Database cursor (provided by decorator)
-#     :return: List of all pairs of role IDs and guild_ids in database
-#     """
-#     # Fetch all role_ids and belonging guild_ids
-#     _c.execute("SELECT role_id, guild_id FROM roles")
-#     roles = _c.fetchall()
-#     # Select pairs of role_id and guild_id
-#     roles = list(map(lambda entry: entry[:2], roles))
-#
-#     return roles
+all_moderation_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
 
 
 class Ban:
@@ -260,7 +200,7 @@ class Ban:
 
     def __init__(self, guild_id: int, user_id: int, ban_id: str = None):
         # Fetch ban entry out of database
-        ban = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table="bans", id_identifier="ban_id",
+        ban = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='bans', id_identifier='ban_id',
                                          operation_id=ban_id)
 
         # Create Attributes of Ban object
@@ -285,25 +225,24 @@ class Ban:
 
 
 @connection
-def expired_bans(_c: Cursor) -> list:
+def expired_bans(_c: Cursor) -> list[Ban]:
     """
     Creates a list of expired temporary bans
     :param _c: Database cursor (provided by decorator)
     :return: List of expired temporary bans
     """
     # Current datetime for comparison
-    now = datetime.now()
+    now = datetime.utcnow()
 
     # Fetch all bans that are expired
     _c.execute("SELECT guild_id, user_id, ban_id FROM bans WHERE temp==1 AND until_date <= Datetime('{}')".format(
-        now.strftime("%Y-%m-%d %H:%M:%S")))
+        now.strftime('%Y-%m-%d %H:%M:%S')))
     entries = _c.fetchall()
 
     # Create a list of expired Ban objects
     bans = []
     for ban in entries:
         bans.append(Ban(guild_id=ban[0], user_id=ban[1], ban_id=ban[2]))
-
     return bans
 
 
@@ -327,7 +266,7 @@ class Mute:
 
     def __init__(self, guild_id: int, user_id: int, mute_id: str = None):
         # Fetch mute entry out of database
-        mute = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table="mutes", id_identifier="mute_id",
+        mute = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='mutes', id_identifier='mute_id',
                                           operation_id=mute_id)
 
         # Create Attributes of Mute object
@@ -352,7 +291,7 @@ class Mute:
 
 
 @connection
-def expired_mutes(_c: Cursor) -> list:
+def expired_mutes(_c: Cursor) -> list[Mute]:
     """
     Creates a list of expired temporary mutes
     :param _c: Database cursor (provided by decorator)
@@ -363,7 +302,7 @@ def expired_mutes(_c: Cursor) -> list:
 
     # Fetch all mutes that are expired
     _c.execute("SELECT guild_id, user_id, mute_id FROM mutes WHERE temp==1 AND until_date <= Datetime('{}')".format(
-        now.strftime("%Y-%m-%d %H:%M:%S")))
+        now.strftime('%Y-%m-%d %H:%M:%S')))
     entries = _c.fetchall()
 
     # Create a list of expired Ban objects
@@ -392,7 +331,7 @@ class Warn:
 
     def __init__(self, guild_id: int, user_id: int, warn_id: str = None):
         # Fetch warn entry out of database
-        warn = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table="warns", id_identifier="warn_id",
+        warn = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='warns', id_identifier='warn_id',
                                           operation_id=warn_id)
 
         # Create Attributes of Warn object
@@ -413,18 +352,32 @@ class Warn:
 
 
 @connection
-def warns_of_user(_c: Cursor, user_id: int, guild_id: int, count: int = 5) -> list:
+def count_warns(_c: Cursor, user_id: int, guild_id: int) -> int:
+    """
+    Counts the warns of user on a guild
+    :param _c: Database cursor (provided by decorator)
+    :param user_id: Discord UserID
+    :param guild_id: Discord GuildID
+    """
+    # Fetch count
+    _c.execute("""SELECT COUNT(*) FROM warns WHERE guild_id=='{}' AND user_id=='{}'""".format(guild_id, user_id))
+
+    return _c.fetchone()[0]
+
+
+@connection
+def warns_of_user(_c: Cursor, user_id: int, guild_id: int, limit: int = 5) -> list[Warn]:
     """
     Selects the latest warns of user_id on guild_id
     :param _c: Database cursor (provided by decorator)
     :param user_id: Discord UserID
     :param guild_id: Discord GuildID
-    :param count: Count of warns that are selected
+    :param limit: Count of warns that are selected
     :return: List of the latest count warns of user_id on guild_id
     """
     # Fetch latest count warns of user_id on guild_id
-    _c.execute("""SELECT guild_id, user_id, warn_id FROM warns WHERE guild_id=='{}' AND user_id=='{}' 
-                ORDER BY warn_id DESC LIMIT {}""".format(guild_id, user_id, count))
+    _c.execute('''SELECT guild_id, user_id, warn_id FROM warns WHERE guild_id=='{}' AND user_id=='{}' 
+                ORDER BY warn_id DESC LIMIT {}'''.format(guild_id, user_id, limit))
 
     entries = _c.fetchall()
 
@@ -453,8 +406,8 @@ class Report:
     """
     def __init__(self, user_id: int, guild_id: int, report_id: str = None):
         # Fetch report entry out of database
-        report = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table="reports",
-                                            id_identifier="report_id", operation_id=report_id)
+        report = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='reports',
+                                            id_identifier='report_id', operation_id=report_id)
 
         self._report_id = report[0]
         self._reporter_id = report[1]
@@ -503,8 +456,8 @@ class PrivateRoom:
 
             # Check if there is a private room of the user
             if not entry:
-                raise DatabaseEntryError(table="private_rooms", attribute="owner_id", keyword=owner_id,
-                                         conditions={"guild_id": guild_id})
+                raise DatabaseEntryError(table='private_rooms', attribute='owner_id', keyword=owner_id,
+                                         conditions={'guild_id': guild_id})
         elif room_channel_id:
             # Get private room entry by room_channel_id
             @connection
@@ -518,12 +471,12 @@ class PrivateRoom:
 
             # Check if there is a private room with the channel_id
             if not entry:
-                raise DatabaseEntryError(table="private_rooms", attribute="room_channel_id", keyword=room_channel_id,
-                                         conditions={"guild_id": guild_id})
+                raise DatabaseEntryError(table='private_rooms', attribute='room_channel_id', keyword=room_channel_id,
+                                         conditions={'guild_id': guild_id})
         else:
             # Throw exception because there were not enough information about the room
-            raise DatabaseError("""Error while initializing PrivateRoom object. At least one of owner_id or 
-            room_channel_id has to be given""")
+            raise DatabaseError('''Error while initializing PrivateRoom object. At least one of owner_id or 
+            room_channel_id has to be given''')
 
         # Initializing attributes
         self._room_id = entry[0]
@@ -538,7 +491,7 @@ class PrivateRoom:
             _c.execute("SELECT * FROM pr_settings WHERE room_id=='{}'LIMIT 1".format(self.room_id))
             return _c.fetchone()
 
-        settings = execution()
+        # settings = execution()
 
         # Initializing settings attributes
         # TODO: Add pr settings
@@ -583,8 +536,8 @@ class Ticket:
 
             # Check if there is a ticket with the channel_id
             if not entry:
-                raise DatabaseEntryError(table="tickets", attribute="ticket_id", keyword=ticket_id,
-                                         conditions={"guild_id": guild_id})
+                raise DatabaseEntryError(table='tickets', attribute='ticket_id', keyword=ticket_id,
+                                         conditions={'guild_id': guild_id})
         elif text_channel_id:
             # Fetch ticket entry by text_channel_id
             @connection
@@ -598,8 +551,8 @@ class Ticket:
 
             # Check if there is a ticket with the channel_id
             if not entry:
-                raise DatabaseEntryError(table="tickets", attribute="text_channel_id", keyword=text_channel_id,
-                                         conditions={"guild_id": guild_id})
+                raise DatabaseEntryError(table='tickets', attribute='text_channel_id', keyword=text_channel_id,
+                                         conditions={'guild_id': guild_id})
         elif voice_channel_id:
             # Fetch ticket entry by voice_channel_id
             @connection
@@ -613,12 +566,12 @@ class Ticket:
 
             # Check if there is a ticket with the channel_id
             if not entry:
-                raise DatabaseEntryError(table="tickets", attribute="voice_channel_id", keyword=voice_channel_id,
-                                         conditions={"guild_id": guild_id})
+                raise DatabaseEntryError(table='tickets', attribute='voice_channel_id', keyword=voice_channel_id,
+                                         conditions={'guild_id': guild_id})
         else:
             # Throw exception because there were not enough information about the ticket
-            raise DatabaseError("""Error while initializing Ticket object. At least one of ticket_id, text_channel_id or 
-            voice_channel_id has to be given""")
+            raise DatabaseError('''Error while initializing Ticket object. At least one of ticket_id, text_channel_id or 
+            voice_channel_id has to be given''')
 
         # Initializing attributes
         self._ticket_id = entry[0]

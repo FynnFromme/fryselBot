@@ -16,17 +16,17 @@ async def invite_command(message: Message) -> None:
     prefix = appearance.get_prefix(guild.id)
 
     # Fetch invite or create new one
-    server_invite: Invite = await channel.create_invite(reason="Server invite by fryselBot", unique=False)
+    server_invite: Invite = await channel.create_invite(reason='Server invite by fryselBot', unique=False)
 
     # Setup embed content
     embed: Embed = Embed()
-    embed.title = "Invite - " + guild.name
+    embed.title = 'Invite - ' + guild.name
     embed.description = server_invite.url
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
     embed.set_thumbnail(url=guild.icon_url)
-    embed.set_footer(text=prefix + "invite", icon_url=member.avatar_url)
+    embed.set_footer(text=prefix + 'invite', icon_url=member.avatar_url)
 
     # Send embed & delete message
     await channel.send(embed=embed)
