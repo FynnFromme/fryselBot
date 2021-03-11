@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Union
 
 import discord
 from discord import TextChannel, Member, Embed, Guild, User, Client, Message
@@ -142,22 +143,7 @@ async def kick(message: Message, member: Member, reason: str = None) -> None:
     await chat_msg.delete(delay=10)
 
     # Send log message in moderation log
-    mod_log: TextChannel = get_mod_log(guild)
-    if mod_log:
-        # Create embed and set up style
-        log_embed: Embed = Embed(colour=appearance.moderation_color, timestamp=datetime.utcnow())
-
-        log_embed.set_author(name='Kick', icon_url=member.avatar_url)
-        log_embed.set_footer(text=moderator.display_name, icon_url=moderator.avatar_url)
-
-        log_embed.add_field(name='User', value=member.mention, inline=True)
-        log_embed.add_field(name='Moderator', value=moderator.mention, inline=True)
-
-        # Add reason in case it was given
-        if reason:
-            log_embed.add_field(name='Reason', value=reason, inline=False)
-
-        await mod_log.send(embed=log_embed)
+    await log_message('Kick', member, moderator, reason)
 
 
 async def ban(message: Message, member: Member, reason: str = None) -> None:
@@ -194,23 +180,7 @@ async def ban(message: Message, member: Member, reason: str = None) -> None:
     await chat_msg.delete(delay=10)
 
     # Send log message in moderation log
-    mod_log: TextChannel = get_mod_log(guild)
-    if mod_log:
-        # Create embed and set up style
-        log_embed: Embed = Embed(colour=appearance.moderation_color, timestamp=datetime.utcnow())
-
-        log_embed.set_author(name='Ban', icon_url=member.avatar_url)
-        log_embed.set_footer(text=moderator.display_name, icon_url=moderator.avatar_url)
-
-        log_embed.add_field(name='User', value=member.mention, inline=True)
-        log_embed.add_field(name='Moderator', value=moderator.mention, inline=True)
-        log_embed.add_field(name='Duration', value='∞')
-
-        # Add reason in case it was given
-        if reason:
-            log_embed.add_field(name='Reason', value=reason, inline=False)
-
-        await mod_log.send(embed=log_embed)
+    await log_message('Ban', member, moderator, reason, Duration='∞')
 
 
 async def tempban(message: Message, member: Member, duration_amount: int, duration_unit: str,
@@ -287,23 +257,7 @@ async def tempban(message: Message, member: Member, duration_amount: int, durati
     await chat_msg.delete(delay=10)
 
     # Send log message in moderation log
-    mod_log: TextChannel = get_mod_log(guild)
-    if mod_log:
-        # Create embed and set up style
-        log_embed: Embed = Embed(colour=appearance.moderation_color, timestamp=datetime.utcnow())
-
-        log_embed.set_author(name='Ban', icon_url=member.avatar_url)
-        log_embed.set_footer(text=moderator.display_name, icon_url=moderator.avatar_url)
-
-        log_embed.add_field(name='User', value=member.mention, inline=True)
-        log_embed.add_field(name='Moderator', value=moderator.mention, inline=True)
-        log_embed.add_field(name='Duration', value=f'{duration_amount} {unit}')
-
-        # Add reason in case it was given
-        if reason:
-            log_embed.add_field(name='Reason', value=reason, inline=False)
-
-        await mod_log.send(embed=log_embed)
+    await log_message('Ban', member, moderator, reason, Duration=f'{duration_amount} {unit}')
 
 
 async def check_tempban_expired(client: Client) -> None:
@@ -325,19 +279,7 @@ async def check_tempban_expired(client: Client) -> None:
         bot_user = client.get_user(secret.bot_id)
 
         # Send log message in moderation log
-        mod_log: TextChannel = get_mod_log(guild)
-        if mod_log:
-            # Create embed and set up style
-            log_embed: Embed = Embed(colour=appearance.success_color, timestamp=datetime.utcnow())
-
-            log_embed.set_author(name='Unban', icon_url=user.avatar_url)
-            log_embed.set_footer(text=bot_user.display_name, icon_url=bot_user.avatar_url)
-
-            log_embed.add_field(name='User', value=user.mention, inline=True)
-            log_embed.add_field(name='Moderator', value=bot_user.mention, inline=True)
-            log_embed.add_field(name='Reason', value='Temporary ban expired', inline=False)
-
-            await mod_log.send(embed=log_embed)
+        await log_message('Unban', user, bot_user, reason='Temporary ban expired')
 
 
 async def unban(message: Message, user: str) -> None:
@@ -389,18 +331,7 @@ async def unban(message: Message, user: str) -> None:
     await chat_msg.delete(delay=10)
 
     # Send log message in moderation log
-    mod_log: TextChannel = get_mod_log(guild)
-    if mod_log:
-        # Create embed and set up style
-        log_embed: Embed = Embed(colour=appearance.success_color, timestamp=datetime.utcnow())
-
-        log_embed.set_author(name='Unban', icon_url=user.avatar_url)
-        log_embed.set_footer(text=moderator.display_name, icon_url=moderator.avatar_url)
-
-        log_embed.add_field(name='User', value=user.mention, inline=True)
-        log_embed.add_field(name='Moderator', value=moderator.mention, inline=True)
-
-        await mod_log.send(embed=log_embed)
+    await log_message('Unban', user, moderator, reason=None)
 
 
 async def warn(message: Message, member: Member, reason: str = None) -> None:
@@ -436,62 +367,128 @@ async def warn(message: Message, member: Member, reason: str = None) -> None:
     chat_msg = await channel.send(embed=chat_embed)
     await chat_msg.delete(delay=10)
 
+    warn_count = select.count_warns(member.id, guild.id)
+
     # Send log message in moderation log
-    mod_log: TextChannel = get_mod_log(guild)
+    await log_message('Warn', member, moderator, reason, Count=str(warn_count))
+
+    # Warn consequence
+    await warn_consequence(member)
+
+
+async def warn_consequence(member: Member) -> None:
+    """
+    Handles consequences for warn
+    :param member: Member who got banned
+    """
+    guild: Guild = member.guild
+    bot_member: Member = guild.get_member(secret.bot_id)
+
+    # Longterm consequence
+    long_date = datetime.utcnow() - timedelta(weeks=4)
+    long_warns = select.warns_date(date=long_date, after=True, guild_id=member.guild.id, user_id=member.id)
+
+    if len(long_warns) > 3:
+        # Kick and mute member
+        await member.kick(reason='More than 3 warns within the last month')
+        # TODO: Mute for 1 day
+        # Send log messages
+        await log_message('Mute', member, moderator=bot_member, reason='More than 3 warns within the last month',
+                          Duration='1 day')
+        await log_message('Kick', member, moderator=bot_member, reason='More than 3 warns within the last month')
+        return
+
+    # Midterm consequence
+    mid_date = datetime.utcnow() - timedelta(weeks=1)
+    mid_warns = select.warns_date(date=mid_date, after=True, guild_id=member.guild.id, user_id=member.id)
+
+    if len(mid_warns) > 2:
+        # Mute member
+        # TODO: Mute for 2 hours
+        # Send log message
+        await log_message('Mute', member, moderator=bot_member, reason='More than 2 warns within the last week',
+                          Duration='2 hours')
+        return
+
+    # Instant consequence
+    # Mute member
+    # TODO: Mute for 30 minutes
+    # Send log message
+    await log_message('Mute', member, moderator=bot_member, reason='Warn',
+                      Duration='30 minutes')
+
+
+async def warns_of_member(client: Client, message: Message, member: Member) -> None:
+    """
+    Get a list of the warns of the member on a guild
+    :param client: Bot client
+    :param message: Message of command execution
+    :param member: Member to get warns of
+    """
+    # Initialize varaibles
+    channel: TextChannel = message.channel
+    guild: Guild = message.guild
+
+    # Delete message of member
+    await util.delete_message(message)
+
+    # Get count of warns of member
+    count = select.count_warns(member.id, guild.id)
+
+    # Fetch warns
+    warns: list[Warn] = select.warns_of_user(member.id, guild.id, limit=5)
+
+    # Create embed
+    desc = f'{member.mention} has **{count} warns** total.'
+    if count > 0:
+        desc += '\n\u200b'
+    if count > 5:
+        desc += '\n**Here are the latest 5 warns:**'
+
+    embed = Embed(title=f'Warns - {member.display_name}', description=desc, colour=appearance.moderation_color)
+
+    # Add warns to embed
+    for w in warns:
+        moderator: User = await client.fetch_user(w.mod_id)
+        date: datetime = w.date
+
+        if w.reason:
+            embed.add_field(name=date.strftime("%Y.%m.%d"), value=f'• Moderator: {moderator.mention}'
+                                                                  f'\n• Reason: {w.reason}', inline=False)
+        else:
+            embed.add_field(name=date.strftime("%Y.%m.%d"), value=f'• Moderator: {moderator.mention}',
+                            inline=False)
+
+    await channel.send(embed=embed)
+
+
+async def log_message(operation: str, member: Union[User, Member], moderator: Member, reason: str = None,
+                      **kwargs) -> None:
+    """
+    Create a log message if the log message is set
+    :param operation: Operation that is logged
+    :param member: Member of operation
+    :param moderator: Moderator of operation
+    :param reason: Reason for operation
+    :kwargs: Additional fields for embed
+    """
+    # Send log message in moderation log
+    mod_log: TextChannel = get_mod_log(member.guild)
     if mod_log:
         # Create embed and set up style
         log_embed: Embed = Embed(colour=appearance.moderation_color, timestamp=datetime.utcnow())
 
-        log_embed.set_author(name='Warn', icon_url=member.avatar_url)
+        log_embed.set_author(name=operation, icon_url=member.avatar_url)
         log_embed.set_footer(text=moderator.display_name, icon_url=moderator.avatar_url)
 
         log_embed.add_field(name='User', value=member.mention, inline=True)
         log_embed.add_field(name='Moderator', value=moderator.mention, inline=True)
 
-        log_embed.add_field(name='Count', value=str(select.count_warns(member.id, guild.id)), inline=True)
+        for k, v in kwargs.items():
+            log_embed.add_field(name=k, value=v, inline=True)
 
         # Add reason in case it was given
         if reason:
             log_embed.add_field(name='Reason', value=reason, inline=False)
 
         await mod_log.send(embed=log_embed)
-
-
-async def warns_of_member(client: Client, message: Message, member: Member) -> None:
-    """
-
-    :param client:
-    :param message:
-    :param member:
-    :return:
-    """
-    # Initialize varaibles
-    channel: TextChannel = message.channel
-    guild: Guild = message.guild
-    moderator: Member = message.author
-
-    # Delete message of member
-    await util.delete_message(message)
-
-    count = select.count_warns(member.id, guild.id)
-
-    if count == 0:
-        # No warns
-        return
-
-    # Fetch warns
-    warns: list[Warn] = select.warns_of_user(member.id, guild.id, limit=10)
-
-    embed = Embed(title=f'Warns - {member.display_name}',
-                  description=f'{member.display_name} has **{count} warns total.**',
-                  colour=appearance.moderation_color)
-
-    for w in warns:
-        if w.reason:
-            embed.add_field(name=f'Warn - {w.date}', value=f'• **Moderator:** {await client.fetch_user(moderator.id)}'
-                                                           f'\n• **Reason:** {w.reason}', inline=False)
-        else:
-            embed.add_field(name=f'Warn - {w.date}', value=f'• **Moderator:** {await client.fetch_user(moderator.id)}',
-                            inline=False)
-
-    await channel.send(embed=embed)

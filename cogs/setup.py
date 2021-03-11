@@ -68,7 +68,7 @@ class Setup(commands.Cog):
 
     #####################
 
-    @setup.command(name='color')
+    @setup.command(name='color', aliases=['colour'])
     async def color(self, ctx: Context, color: str = None):
         """Set color command"""
         if color:

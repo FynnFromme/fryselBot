@@ -62,8 +62,8 @@ def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = 
 
 
 @connection
-def _fetch_mod_operation_entry(_c: Cursor, guild_id: int, user_id: int, table: str, id_identifier: str,
-                               operation_id: str = None) -> tuple:
+def _fetch_mod_operation_entry(_c: Cursor,  table: str, guild_id: int = None, user_id: int = None,
+                               id_identifier: str = None, operation_id: str = None) -> tuple:
     """
     Fetch the latest mod operation of the user_id on the guild_id or by operation_id
     :param _c: Database Cursor (provided by decorator)
@@ -76,11 +76,7 @@ def _fetch_mod_operation_entry(_c: Cursor, guild_id: int, user_id: int, table: s
     """
     if operation_id:
         # Fetch entry by operation_id out of database
-        _c.execute("SELECT * FROM {} WHERE guild_id=='{}' AND user_id=='{}' AND {}=='{}' LIMIT 1".format(table,
-                                                                                                         guild_id,
-                                                                                                         user_id,
-                                                                                                         id_identifier,
-                                                                                                         operation_id))
+        _c.execute("SELECT * FROM {} WHERE {}=='{}' LIMIT 1".format(table, id_identifier, operation_id))
         entry = _c.fetchone()
         # Check if there was a operation on the user
         if not entry:
@@ -198,7 +194,10 @@ class Ban:
         guild_id         (int): ID of the guild where the ban took place
     """
 
-    def __init__(self, guild_id: int, user_id: int, ban_id: str = None):
+    def __init__(self, guild_id: int = None, user_id: int = None, ban_id: str = None):
+        # Check for parameters
+        if (not guild_id or not user_id) and not ban_id:
+            raise DatabaseError('Ban: Provide either guild_id and user_id or the ban_id')
         # Fetch ban entry out of database
         ban = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='bans', id_identifier='ban_id',
                                          operation_id=ban_id)
@@ -264,7 +263,11 @@ class Mute:
         guild_id         (int): ID of the guild where the mute took place
     """
 
-    def __init__(self, guild_id: int, user_id: int, mute_id: str = None):
+    def __init__(self, guild_id: int = None, user_id: int = None, mute_id: str = None):
+        # Check for parameters
+        if (not guild_id or not user_id) and not mute_id:
+            raise DatabaseError('Mute: Provide either guild_id and user_id or the mute_id')
+
         # Fetch mute entry out of database
         mute = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='mutes', id_identifier='mute_id',
                                           operation_id=mute_id)
@@ -298,7 +301,7 @@ def expired_mutes(_c: Cursor) -> list[Mute]:
     :return: List of expired temporary mutes
     """
     # Current datetime for comparison
-    now = datetime.now()
+    now = datetime.utcnow()
 
     # Fetch all mutes that are expired
     _c.execute("SELECT guild_id, user_id, mute_id FROM mutes WHERE temp==1 AND until_date <= Datetime('{}')".format(
@@ -329,7 +332,10 @@ class Warn:
         guild_id         (int): ID of the guild where the warn took place
     """
 
-    def __init__(self, guild_id: int, user_id: int, warn_id: str = None):
+    def __init__(self, guild_id: int = None, user_id: int = None, warn_id: str = None):
+        # Check for parameters
+        if (not guild_id or not user_id) and not warn_id:
+            raise DatabaseError('Warn: Provide either guild_id and user_id or the warn_id')
         # Fetch warn entry out of database
         warn = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='warns', id_identifier='warn_id',
                                           operation_id=warn_id)
@@ -349,6 +355,41 @@ class Warn:
     reason = property(lambda self: self._reason)
     date = property(lambda self: self._date)
     guild_id = property(lambda self: self._guild_id)
+
+
+@connection
+def warns_date(_c: Cursor, date: datetime, after: bool = True, guild_id: int = None,
+                      user_id: int = None) -> list[Warn]:
+    """
+    Creates a list of warns created before the date given
+    :param _c: Database cursor (Provided by Decorator)
+    :param date: Datetime object
+    :param guild_id: Discord GuildID
+    :param user_id: Discord UserID
+    """
+    # Prepare statement
+    if after:
+        # Fetch entries after date
+        statement = "SELECT warn_id FROM warns WHERE date >= Datetime('{}')".format(date.strftime('%Y-%m-%d %H:%M:%S'))
+    else:
+        # Fetch entries after date
+        statement = "SELECT warn_id FROM warns WHERE date <= Datetime('{}')".format(date.strftime('%Y-%m-%d %H:%M:%S'))
+
+    if guild_id:
+        statement += " AND guild_id == '{}'".format(guild_id)
+    if user_id:
+        statement += " AND user_id == '{}'".format(user_id)
+
+    # Fetch all IDs
+    _c.execute(statement)
+    warn_ids = list(map(lambda x: x[0], _c.fetchall()))
+
+    # Get list of warns by IDs
+    warns = []
+    for warn_id in warn_ids:
+        warns.append(Warn(warn_id=warn_id))
+
+    return warns
 
 
 @connection
@@ -377,7 +418,7 @@ def warns_of_user(_c: Cursor, user_id: int, guild_id: int, limit: int = 5) -> li
     """
     # Fetch latest count warns of user_id on guild_id
     _c.execute('''SELECT guild_id, user_id, warn_id FROM warns WHERE guild_id=='{}' AND user_id=='{}' 
-                ORDER BY warn_id DESC LIMIT {}'''.format(guild_id, user_id, limit))
+                ORDER BY Datetime(date) DESC LIMIT {}'''.format(guild_id, user_id, limit))
 
     entries = _c.fetchall()
 
@@ -404,6 +445,7 @@ class Report:
         date        (datetime): Date of the report
         guild_id         (int): ID of the guild where the report took place
     """
+
     def __init__(self, user_id: int, guild_id: int, report_id: str = None):
         # Fetch report entry out of database
         report = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='reports',
@@ -441,6 +483,7 @@ class PrivateRoom:
         guild_id         (int): ID of the guild of the private room
         ...
     """
+
     def __init__(self, guild_id: int, owner_id: int = None, room_channel_id: int = None):
         # Fetch private room entry out of database
         if owner_id:
@@ -522,6 +565,7 @@ class Ticket:
         user_ids       (list[int]): List of userIDs who have access to the ticket
         mod_ids        (list[int]): List of modIDs responsible for the ticket
     """
+
     def __init__(self, guild_id: int, ticket_id: str = None, text_channel_id: int = None, voice_channel_id: int = None):
         if ticket_id:
             # Fetch ticket entry by ticket_id

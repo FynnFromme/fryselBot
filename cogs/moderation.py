@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta
+
 from discord import Member
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
+from fryselBot.database import delete, select
 from fryselBot.utilities import permission, util
 from fryselBot.system import moderation as mod, error_messages, description
 
@@ -19,6 +22,7 @@ class Moderation(commands.Cog):
         super().__init__(*args, **kwargs)
         self.client = client
         self.check_expired_bans.start()
+        self.check_old_warns.start()
 
     @commands.command(name='clear')
     @commands.check(permission.clear)
@@ -131,14 +135,9 @@ class Moderation(commands.Cog):
         """Checks for expired temporary bans"""
         await mod.check_tempban_expired(self.client)
 
-    @check_expired_bans.before_loop
-    async def before_check_expired_bans(self):
-        """Let the check_expired_bans loop begin after the bot is ready"""
-        await self.client.wait_until_ready()
-
     @commands.command(name='warn')
     @commands.check(permission.is_mod)
-    async def warn(self, ctx: Context, member: Member, reason: str = None):
+    async def warn(self, ctx: Context, member: Member, *, reason: str = None):
         """Warn command"""
         await mod.warn(ctx.message, member, reason)
 
@@ -164,6 +163,20 @@ class Moderation(commands.Cog):
     async def warns(self, ctx: Context, member: Member):
         """Warns command"""
         await mod.warns_of_member(self.client, ctx.message, member)
+
+    @warns.error
+    async def warns_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the warns command"""
+        await error_messages.error_handler(ctx, error, description.get_command('warns'), 'Member',
+                                           'Cannot find the member.', True)
+
+    @tasks.loop(hours=1)
+    async def check_old_warns(self):
+        """Checks for old warns"""
+        # Get date of 1 year ago
+        date = datetime.utcnow() - timedelta(days=365)
+        for warn in select.warns_date(date=date, after=False):
+            delete.warn(warn.warn_id)
 
 
 def setup(client: Bot):

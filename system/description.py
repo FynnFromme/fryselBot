@@ -113,6 +113,9 @@ commands = [  # User commands
             {'member': 'User mention or name',
              'reason': 'Any text'},
             mod_only=True),
+    Command('warns', 'warns <member>', 'Get the latest warns of the member.',
+            {'member': 'User mention or name'},
+            mod_only=True),
 
     # Admin commands
     Command('setup', 'setup', 'Menu to set up the bot.', admin_only=True),

@@ -13,7 +13,7 @@ def _delete_by_keyword_factory(table: str, keyword: str) -> Callable[[Cursor, st
     """
 
     @connection
-    def _delete_by_keyword(_c: Cursor, argument: str, **kwargs) -> None:
+    def _delete_by_keyword(_c: Cursor, argument, **kwargs) -> None:
         """
         Deletes an entry in table by keyword
         :param _c: Database cursor (provided by decorator)
@@ -60,10 +60,21 @@ def ticket_user(_c: Cursor, ticket_id: str, user_id: str) -> None:
     :param _c: Database cursor (provided by decorator)
     :param ticket_id: TicketID of the ticket_user
     :param user_id: UserID of the ticket_user
-    :return: None
     """
     # Delete entry
     _c.execute("DELETE FROM ticket_users WHERE ticket_id=='{}' AND user_id=='{}'".format(ticket_id, user_id))
+
+
+@connection
+def warns_of_member(_c: Cursor, user_id: str, guild_id: str) -> None:
+    """
+    Deletes all warns of user on guild
+    :param _c: Database cursor (provided by decorator)
+    :param user_id: UserID of the warns
+    :param guild_id: GuildID of the warns
+    """
+    # Delete entries
+    _c.execute("DELETE FROM warns WHERE user_id=='{}' AND guild_id=='{}'".format(user_id, guild_id))
 
 
 @connection
@@ -72,7 +83,6 @@ def all_entries_of_guild(_c: Cursor, guild_id: str) -> None:
     Deletes everything related to guild_id out of database.
     :param _c: Database cursor (provided by decorator)
     :param guild_id: ID of guild that should be deleted
-    :return: None
     """
 
     # Delete all pr_settings
