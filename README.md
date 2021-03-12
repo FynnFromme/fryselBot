@@ -1,3 +1,3 @@
 # fryselBot
 
-Servus Freunde. Hier zu sehen der SourceCode des wohl besten Discord Bots, den die Welt je gesehen hat. 
+Hello friends! Here you can see the source code of what is probably the best Discord bot the world has ever seen.
