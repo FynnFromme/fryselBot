@@ -1,7 +1,8 @@
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 
-from fryselBot.system import help, invite
+from fryselBot.system import help, invite, moderation
+from fryselBot.utilities import secret
 
 
 class UtilityCommands(commands.Cog):
@@ -29,6 +30,12 @@ class UtilityCommands(commands.Cog):
     async def invite(self, ctx: Context):
         """Invite command"""
         await invite.invite_command(ctx.message)
+
+    @commands.command(name='test')
+    @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
+    async def test(self, ctx: Context):
+        """Test command that can onyl be executed by frysel"""
+        await moderation.setup_mute_in_guild(ctx.guild)
 
 
 def setup(client: Bot):

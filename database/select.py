@@ -62,7 +62,7 @@ def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = 
 
 
 @connection
-def _fetch_mod_operation_entry(_c: Cursor,  table: str, guild_id: int = None, user_id: int = None,
+def _fetch_mod_operation_entry(_c: Cursor, table: str, guild_id: int = None, user_id: int = None,
                                id_identifier: str = None, operation_id: str = None) -> tuple:
     """
     Fetch the latest mod operation of the user_id on the guild_id or by operation_id
@@ -120,6 +120,8 @@ support_log_id = _select_by_guild_id_factory(table='guilds', attribute='support_
 
 ticket_category_id = _select_by_guild_id_factory(table='guilds', attribute='ticket_category_id')
 
+mute_role_id = _select_by_guild_id_factory(table='guilds', attribute='mute_role_id')
+
 prefix = _select_by_guild_id_factory(table='guild_settings', attribute='prefix')
 
 color = _select_by_guild_id_factory(table='guild_settings', attribute='color')
@@ -133,8 +135,6 @@ welcome_dms = _select_by_guild_id_factory(table='guild_settings', attribute='wel
 welcome_dm = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_dm')
 
 moderator_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='MODERATOR')
-
-mute_role = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=False, type='MUTE')
 
 support_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='SUPPORTER')
 
@@ -359,11 +359,12 @@ class Warn:
 
 @connection
 def warns_date(_c: Cursor, date: datetime, after: bool = True, guild_id: int = None,
-                      user_id: int = None) -> list[Warn]:
+               user_id: int = None) -> list[Warn]:
     """
     Creates a list of warns created before the date given
     :param _c: Database cursor (Provided by Decorator)
     :param date: Datetime object
+    :param after: Whether to fetch warns before or after date
     :param guild_id: Discord GuildID
     :param user_id: Discord UserID
     """
@@ -445,8 +446,10 @@ class Report:
         date        (datetime): Date of the report
         guild_id         (int): ID of the guild where the report took place
     """
-
-    def __init__(self, user_id: int, guild_id: int, report_id: str = None):
+    def __init__(self, guild_id: int = None, user_id: int = None, report_id: str = None):
+        # Check for parameters
+        if (not guild_id or not user_id) and not report_id:
+            raise DatabaseError('Report: Provide either guild_id and user_id or the report_id')
         # Fetch report entry out of database
         report = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='reports',
                                             id_identifier='report_id', operation_id=report_id)
@@ -455,7 +458,7 @@ class Report:
         self._reporter_id = report[1]
         self._user_id = report[2]
         self._reason = report[3]
-        self._date = report[4]
+        self._date = util.iso_to_datetime(report[4])
         self._guild_id = report[5]
 
     # Add properties
@@ -465,6 +468,82 @@ class Report:
     reason = property(lambda self: self._reason)
     date = property(lambda self: self._date)
     guild_id = property(lambda self: self._guild_id)
+
+
+@connection
+def reports_date(_c: Cursor, date: datetime, after: bool = True, guild_id: int = None,
+                 user_id: int = None) -> list[Report]:
+    """
+    Creates a list of reports created before the date given
+    :param _c: Database cursor (Provided by Decorator)
+    :param date: Datetime object
+    :param after: Whether to fetch warns before or after date
+    :param guild_id: Discord GuildID
+    :param user_id: Discord UserID
+    """
+    # Prepare statement
+    if after:
+        # Fetch entries after date
+        statement = "SELECT report_id FROM reports WHERE date >= Datetime('{}')".format(
+            date.strftime('%Y-%m-%d %H:%M:%S'))
+    else:
+        # Fetch entries after date
+        statement = "SELECT report_id FROM reports WHERE date <= Datetime('{}')".format(
+            date.strftime('%Y-%m-%d %H:%M:%S'))
+
+    if guild_id:
+        statement += " AND guild_id == '{}'".format(guild_id)
+    if user_id:
+        statement += " AND user_id == '{}'".format(user_id)
+
+    # Fetch all IDs
+    _c.execute(statement)
+    report_ids = list(map(lambda x: x[0], _c.fetchall()))
+
+    # Get list of warns by IDs
+    reports = []
+    for report_id in report_ids:
+        reports.append(Report(report_id=report_id))
+
+    return reports
+
+
+@connection
+def count_reports(_c: Cursor, user_id: int, guild_id: int) -> int:
+    """
+    Counts the reports of user on a guild
+    :param _c: Database cursor (provided by decorator)
+    :param user_id: Discord UserID
+    :param guild_id: Discord GuildID
+    """
+    # Fetch count
+    _c.execute("""SELECT COUNT(*) FROM reports WHERE guild_id=='{}' AND user_id=='{}'""".format(guild_id, user_id))
+
+    return _c.fetchone()[0]
+
+
+@connection
+def reports_of_user(_c: Cursor, user_id: int, guild_id: int, limit: int = 5) -> list[Report]:
+    """
+    Selects the latest reports of user_id on guild_id
+    :param _c: Database cursor (provided by decorator)
+    :param user_id: Discord UserID
+    :param guild_id: Discord GuildID
+    :param limit: Count of reports that are selected
+    :return: List of the latest limit reports of user_id on guild_id
+    """
+    # Fetch latest count warns of user_id on guild_id
+    _c.execute('''SELECT guild_id, user_id, report_id FROM reports WHERE guild_id=='{}' AND user_id=='{}' 
+                ORDER BY Datetime(date) DESC LIMIT {}'''.format(guild_id, user_id, limit))
+
+    entries = _c.fetchall()
+
+    # Create list of Warn objects
+    reports = []
+    for report in entries:
+        reports.append(Report(guild_id=report[0], user_id=report[1], report_id=report[2]))
+
+    return reports
 
 
 class PrivateRoom:

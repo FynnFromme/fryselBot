@@ -1,4 +1,9 @@
 from difflib import SequenceMatcher
+from typing import Union, Callable, Any
+
+from discord import Guild
+
+from fryselBot.system import moderation
 
 
 class Command:
@@ -11,7 +16,7 @@ class Command:
         args_description (dict[str: str]): Description of arguments
         admin_only     (bool): Whether the command is for admins only
         mod_only       (bool): Whether the command is for moderators only
-        in_help        (bool): Whether the command is only for internal use
+        in_help        (bool/Callable): Whether the command is in help
     Attributes:
         name            (str): Name of the command
         syntax          (str): Syntax for calling the command
@@ -19,11 +24,12 @@ class Command:
         args_description (dict[str: str]): Description of arguments
         admin_only     (bool): Whether the command is for admins only
         mod_only       (bool): Whether the command is for moderators only
-        in_help        (bool): Whether the command is only for internal use
+        in_help    (Guild -> bool): Whether the command is in help
     """
 
     def __init__(self, name: str, syntax: str, description: str, args_description: dict[str: str] = None,
-                 admin_only: bool = False, mod_only: bool = False, support_only: bool = False, in_help: bool = True):
+                 admin_only: bool = False, mod_only: bool = False, support_only: bool = False,
+                 in_help: Union[Callable[[Guild], bool], bool] = True):
         # Initializing attributes
         self._name = name
         self._syntax = syntax
@@ -32,7 +38,10 @@ class Command:
         self._support_only = support_only
         self._description = description
         self._args_description = args_description
-        self._in_help = in_help
+        if type(in_help) == bool:
+            self._in_help = lambda x: in_help
+        else:
+            self._in_help = in_help
 
     # Information methods
     def member_cmd(self) -> bool:
@@ -85,13 +94,25 @@ class Command:
 
 commands = [  # User commands
     Command('help', 'help (command)', 'Get a list of all commands or help for a specific command.',
-            {'command': 'Name of the command to get help for'}),
+            {'command': 'Name of the command to get detailed help for'}),
     Command('invite', 'invite', 'Get an invite of the server.'),
 
     # Moderation commands
     Command('clear', 'clear <amount> (member)', 'Clear messages in the channel.',
             {'amount': 'Positive integer, at most 100',
              'member': 'User mention or name'},
+            mod_only=True),
+    Command('mute', 'mute <member> (reason)', 'Mute a member in the text-channels.',
+            {'member': 'User mention or name',
+             'reason': 'Any text'},
+            mod_only=True),
+    Command('tempmute', 'tempmute <member> <duration> (reason)', 'Mute a member temporarily in the text-channels.',
+            {'member': 'User mention or name',
+             'duration': "e.g. *'5 min'*, *'3 d'*, *'1 week'*, *'6 months'* or *'3 years'*  (5 years maximum)",
+             'reason': 'Any text'},
+            mod_only=True),
+    Command('unmute', 'unmute <member>', 'Unmute a member on the server.',
+            {'member': 'User mention or name', },
             mod_only=True),
     Command('kick', 'kick <member> (reason)', 'Kick a member from the server.',
             {'member': 'User mention or name',
@@ -113,9 +134,17 @@ commands = [  # User commands
             {'member': 'User mention or name',
              'reason': 'Any text'},
             mod_only=True),
-    Command('warns', 'warns <member>', 'Get the latest warns of the member.',
+    Command('warns', 'warns <member>', 'Get the latest warns of a member.',
             {'member': 'User mention or name'},
             mod_only=True),
+    Command('report', 'report <member> <reason>', 'Report a member of the server.',
+            {'member': 'User mention or name',
+             'reason': 'Any text'},
+            in_help=lambda g: moderation.get_mod_log(g) is not None),
+    Command('reports', 'reports <member>', 'Get the latest reports of a member.',
+            {'member': 'User mention or name'},
+            mod_only=True,
+            in_help=lambda g: moderation.get_mod_log(g) is not None),
 
     # Admin commands
     Command('setup', 'setup', 'Menu to set up the bot.', admin_only=True),

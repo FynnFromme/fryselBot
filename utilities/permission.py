@@ -96,3 +96,15 @@ def ban(ctx: Context) -> bool:
 
     # Return True if the member is a mod or has the permission to ban
     return is_mod(member=member) or member.guild_permissions.ban_members
+
+
+def mute(ctx: Context) -> bool:
+    """
+    Checks whether the member has permission to mute in this context
+    :param ctx: Context of permission request
+    :return: Whether the member has permission to mute
+    """
+    member: Member = ctx.author
+
+    # Return True if the member is a mod or has the permission to ban
+    return is_mod(member=member) or member.guild_permissions.mute_members

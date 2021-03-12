@@ -136,7 +136,8 @@ def _create_tables(c: Cursor) -> None:
                     pr_settings_id INTEGER,
                     mod_log_id INTEGER,
                     support_log_id INTEGER,
-                    ticket_category_id INTEGER
+                    ticket_category_id INTEGER,
+                    mute_role_id INTEGER
                     )''')
 
     # TODO: Add welcome_dms und welcome_dm_message
@@ -167,7 +168,7 @@ def _create_tables(c: Cursor) -> None:
     '''
     TABLE: roles
     PRIMARY KEY: role_id                 # Discord role id
-    ATTRIBUTE: type                      # 'ADMIN', 'MODERATOR', 'MUTE' or 'SUPPORTER'
+    ATTRIBUTE: type                      # 'ADMIN', 'MODERATOR' or 'SUPPORTER'
     FOREIGN KEY: guild_id  (guilds)
     '''
     c.execute('''CREATE TABLE roles (

@@ -87,6 +87,9 @@ async def reactions(member: Member, guild: Guild, channel: TextChannel, message:
             if emoji == '📪':
                 # Deactivate moderation log
                 await setup_moderation_log(channel, guild, message)
+            elif emoji == '👥':
+                # Call roles page
+                await roles_page(channel, guild)
 
 
 async def setup_page(channel: TextChannel, guild: Guild) -> None:
@@ -540,11 +543,18 @@ async def moderation_page(channel: TextChannel, guild: Guild):
                          description='Setup the moderation system!',
                          colour=appearance.get_color(guild.id))
 
-    mod_log: TextChannel = mod.get_mod_log(guild)
+    # Add information about moderation roles
+    embed.add_field(name='Set Moderation Roles', value=f'React with 👥', inline=False)
 
+    mod_log: TextChannel = mod.get_mod_log(guild)
     # Add information about the current moderation log
+    embed.add_field(name='\u200b', value='\u200b', inline=False)
+
+    embed.add_field(name='Moderation Log', value='• Get notified of mod operations\n'
+                                                 '• Unlock reports',
+                    inline=False)
     if mod_log:
-        embed.add_field(name='Moderation Log', value=mod_log.mention)
+        embed.add_field(name='Current Channel', value=mod_log.mention, inline=False)
 
     # Add information about the commands
     embed.add_field(name='Set Moderation Log', value=f'`{prefix}{description.get_command("moderation log").syntax}`',
@@ -554,11 +564,24 @@ async def moderation_page(channel: TextChannel, guild: Guild):
     if mod_log:
         embed.add_field(name='Deactivate Moderation Log', value='React with 📪', inline=False)
 
+    # Add information about the warn system
+    embed.add_field(name='\u200b', value='\u200b', inline=False)
+    embed.add_field(name='Warn Punishment', value=f'• **1 warn:**  30 min mute\n'
+                                                  f'• **3 warns within two weeks:**  2h mute\n'
+                                                  f'• **4 warns within one month:**  24h mute & kick')
+
+    # Add information about mute
+    mute_role: Role = await mod.get_mute_role(guild)
+    embed.add_field(name='\u200b', value='\u200b', inline=False)
+    embed.add_field(name='Problems With Mute?', value=f'Make sure the position of {mute_role.mention} is high enough.')
+
+    # Send embed
     msg = await channel.send(embed=embed)
 
     # Add reactions
     if mod_log:
         await msg.add_reaction('📪')
+    await msg.add_reaction('👥')
 
 
 async def setup_moderation_log(channel: TextChannel, guild: Guild, message: Message,

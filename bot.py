@@ -15,9 +15,8 @@ async def get_prefix(_: Bot, message: Message):
 
 
 # Setup intents and create bot client
-intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
+intents = discord.Intents.all()
 client = commands.Bot(command_prefix=get_prefix, intents=intents, help_command=None, case_insensitive=True)
-
 
 # Load all extensions
 cogs.load_all(client)
@@ -33,6 +32,9 @@ async def on_ready():
     # Set database up to date
     for check in guilds.checks:
         check(client)
+
+    for check in guilds.async_checks:
+        await check(client)
 
     # States, that the bot is ready
     print('{} is logged in as user {}'.format(appearance.bot_name, client.user.name))

@@ -1,7 +1,7 @@
 from fryselBot.database import insert, select, delete
 from fryselBot.system import welcome, moderation
 
-from discord import Guild, Client
+from discord import Guild, Client, Member, Role
 
 
 def join_guild(guild: Guild) -> None:
@@ -11,7 +11,9 @@ def join_guild(guild: Guild) -> None:
     """
     insert.guild(guild_id=guild.id)
     insert.guild_settings(guild_id=guild.id)
-    # TODO: Welcome message (Introduce and help command)
+
+    # Setup mute
+    moderation.setup_mute_in_guild(guild)
 
 
 def remove_guild(guild: Guild) -> None:
@@ -22,19 +24,23 @@ def remove_guild(guild: Guild) -> None:
     delete.all_entries_of_guild(guild_id=guild.id)
 
 
-def check_guilds(client: Client) -> None:
+async def check_guilds(client: Client) -> None:
     """
     Checks for guilds left / joined.
     :param client: Bot client
     """
     # Get list of all active guild_ids and guild_ids in database
-    active_guild_ids = list(map(lambda g: g.id, client.guilds))
+    active_guilds = client.guilds
+    active_guild_ids = list(map(lambda g: g.id, active_guilds))
     db_guild_ids = select.all_guilds()
 
     # Check for new guilds and add them to database
-    for guild_id in active_guild_ids:
-        if guild_id not in db_guild_ids:
-            join_guild(client.get_guild(guild_id))
+    for guild in active_guilds:
+        if guild.id not in db_guild_ids:
+            join_guild(client.get_guild(guild.id))
+
+        # Setup mute
+        await moderation.setup_mute_in_guild(guild)
 
     # Check for guilds left and remove them from database
     for guild_id in db_guild_ids:
@@ -91,5 +97,20 @@ def check_roles(client: Client) -> None:
             delete.role(role_id)
 
 
+async def check_members(client: Client) -> None:
+    """
+    Checks for members joined
+    :param client: Bot client
+    """
+    guilds: list[Guild] = client.guilds
+
+    for guild in guilds:
+        for member in guild.members:
+            if moderation.is_muted(member):
+                mute_role: Role = await moderation.get_mute_role(guild)
+                await member.add_roles(mute_role, reason='Member is muted')
+
+
 # Checks that can be done after rebooting to set database up to date
-checks = {check_guilds, check_channels, check_roles}
+checks = {check_channels, check_roles}
+async_checks = {check_guilds, check_members}

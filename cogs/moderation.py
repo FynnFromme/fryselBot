@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from discord import Member
+from discord import Member, Role
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
@@ -21,8 +21,10 @@ class Moderation(commands.Cog):
     def __init__(self, client: Bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = client
-        self.check_expired_bans.start()
+
+        # Start loops
         self.check_old_warns.start()
+        self.check_expired.start()
 
     @commands.command(name='clear')
     @commands.check(permission.clear)
@@ -62,7 +64,7 @@ class Moderation(commands.Cog):
             await error_messages.error_handler(ctx, error, description.get_command('kick'), 'Member',
                                                'I am missing permissions to do that.', True)
 
-    @commands.command(name='ban')
+    @commands.command(name='ban', aliases=['bigmac'])
     @commands.check(permission.ban)
     async def ban(self, ctx: Context, member: Member, *, reason: str = None):
         """Ban command"""
@@ -130,10 +132,92 @@ class Moderation(commands.Cog):
             await error_messages.error_handler(ctx, error, description.get_command('unban'), 'User',
                                                'Cannot find the user.', True)
 
+    @commands.command(name='mute')
+    @commands.check(permission.mute)
+    async def mute(self, ctx: Context, member: Member, *, reason: str = None):
+        """Mute command"""
+        await mod.mute(ctx.message, member, reason)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: Member):
+        """Called when a member joines a guild"""
+        # Check whether the member is muted
+        if mod.is_muted(member):
+            mute_role: Role = await mod.get_mute_role(member.guild)
+            await member.add_roles(mute_role, reason='Member was muted when joining the server.')
+
+    @mute.error
+    async def mute_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the mute command"""
+        if error.args[0].endswith('moderators'):
+            # Cannot mute moderators
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='Cannot mute moderators.')
+        elif error.args[0].endswith('mute the bot'):
+            # Cannot mute the bot
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='Nice try...')
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('mute'), 'Member',
+                                               'Cannot find the member.', True)
+
+    @commands.command(name='tempmute')
+    @commands.check(permission.mute)
+    async def tempmute(self, ctx: Context, member: Member, duration_amount: int, duration_unit: str, *,
+                       reason: str = None):
+        """tempmute command"""
+        await mod.tempmute(ctx.message, member, duration_amount, duration_unit, reason)
+
+    @tempmute.error
+    async def tempmute_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the tempmute command"""
+        if error.args[0].endswith('moderators'):
+            # Cannot mute moderators
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='Cannot ban moderators.')
+        elif error.args[0].endswith('mute the bot'):
+            # Cannot mute the bot
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='Nice try...')
+        elif error.args[0].endswith('Invalid Duration'):
+            # Invalid duration
+            await error_messages.arguments_error(ctx, description.get_command('tempmute'))
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('tempmute'), 'Member',
+                                               'Cannot find the member.', True)
+
     @tasks.loop(seconds=10)
-    async def check_expired_bans(self):
-        """Checks for expired temporary bans"""
+    async def check_expired(self):
+        """Checks for expired temporary mutes"""
+        await mod.check_tempmute_expired(self.client)
         await mod.check_tempban_expired(self.client)
+
+    @check_expired.before_loop
+    async def before_check_expired(self):
+        """Wait until bot is ready"""
+        await self.client.wait_until_ready()
+
+    @commands.command(name='unmute')
+    @commands.check(permission.ban)
+    async def unmute(self, ctx: Context, member: Member):
+        """Unmute command"""
+        await mod.unmute(ctx.message, member)
+
+    @unmute.error
+    async def unmute_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the unmute command"""
+        if error.args[0].endswith('is not muted'):
+            # Member is not muted
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='The member is not muted.')
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('unmute'), 'Member',
+                                               'Cannot find the member.', True)
 
     @commands.command(name='warn')
     @commands.check(permission.is_mod)
@@ -145,12 +229,12 @@ class Moderation(commands.Cog):
     async def warn_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the warn command"""
         if error.args[0].endswith('moderators'):
-            # Cannot ban moderators
+            # Cannot warn moderators
             await util.delete_message(ctx.message)
             await error_messages.invalid_input_error(ctx, title='Member',
                                                      description='Cannot warn moderators.')
         elif error.args[0].endswith('warn the bot'):
-            # Cannot ban the bot
+            # Cannot warn the bot
             await util.delete_message(ctx.message)
             await error_messages.invalid_input_error(ctx, title='Member',
                                                      description='Nice try...')
@@ -170,13 +254,53 @@ class Moderation(commands.Cog):
         await error_messages.error_handler(ctx, error, description.get_command('warns'), 'Member',
                                            'Cannot find the member.', True)
 
-    @tasks.loop(hours=1)
+    @tasks.loop(hours=24)
     async def check_old_warns(self):
         """Checks for old warns"""
         # Get date of 1 year ago
         date = datetime.utcnow() - timedelta(days=365)
         for warn in select.warns_date(date=date, after=False):
             delete.warn(warn.warn_id)
+
+    @commands.command(name='report')
+    async def report(self, ctx: Context, member: Member, *, reason: str):
+        """Report command"""
+        await mod.report(ctx.message, member, reason)
+
+    @report.error
+    async def report_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the repor command"""
+        if not mod.get_mod_log(ctx.guild):
+            # Ignore if the log is not set up
+            return
+        elif error.args[0].endswith('moderators'):
+            # Cannot report moderators
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='Cannot report moderators.')
+        elif error.args[0].endswith('report the bot'):
+            # Cannot report the bot
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Member',
+                                                     description='Nice try...')
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('report'), 'Member',
+                                               'Cannot find the member.', True)
+
+    @commands.command(name='reports')
+    @commands.check(permission.is_mod)
+    async def reports(self, ctx: Context, member: Member):
+        """Reports command"""
+        await mod.reports_of_member(self.client, ctx.message, member)
+
+    @reports.error
+    async def reports_error(self, ctx: Context, error: Exception):
+        """Handles exceptions while running the reports command"""
+        if not mod.get_mod_log(ctx.guild):
+            # Ignore if the log is not set up
+            return
+        await error_messages.error_handler(ctx, error, description.get_command('reports'), 'Member',
+                                           'Cannot find the member.', True)
 
 
 def setup(client: Bot):

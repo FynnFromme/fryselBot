@@ -45,6 +45,8 @@ support_log_id = _update_by_keyword_factory(table='guilds', attribute='support_l
 
 ticket_category_id = _update_by_keyword_factory(table='guilds', attribute='ticket_category_id', keyword='guild_id')
 
+mute_role_id = _update_by_keyword_factory(table='guilds', attribute='mute_role_id', keyword='guild_id')
+
 prefix = _update_by_keyword_factory(table='guild_settings', attribute='prefix', keyword='guild_id')
 
 color = _update_by_keyword_factory(table='guild_settings', attribute='color', keyword='guild_id')

@@ -78,8 +78,8 @@ async def _member_help(message: Message) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.member_cmd() and cmd.in_help:
-            embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.get_complete_description(), inline=False)
+        if cmd.member_cmd() and cmd.in_help(guild):
+            embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.description, inline=False)
 
     # Add fields for other bot functions
     for func in description.functions:
@@ -88,7 +88,8 @@ async def _member_help(message: Message) -> None:
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
     embed.set_thumbnail(url=guild.get_member(secret.bot_id).avatar_url)
-    embed.set_footer(text='Created by frysel  |  <> Required  |  () Optional', icon_url=member.avatar_url)
+    embed.set_footer(text=f'{prefix}help <command> for detailed information | <> Required  |  () Optional',
+                     icon_url=member.avatar_url)
 
     # Send message
     await channel.send(embed=embed)
@@ -112,14 +113,15 @@ async def _mod_help(message: Message, channel: TextChannel, footer: bool = True)
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.mod_only and cmd.in_help:
-            embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.get_complete_description(), inline=False)
+        if cmd.mod_only and cmd.in_help(guild):
+            embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.description, inline=False)
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
 
     if footer:
-        embed.set_footer(text='Created by frysel  |  <> Required  |  () Optional', icon_url=member.avatar_url)
+        embed.set_footer(text=f'{prefix}help <command> for detailed information | <> Required  |  () Optional',
+                         icon_url=member.avatar_url)
 
     # Send direct message or in channel if dm is forbidden
     try:
@@ -145,8 +147,8 @@ async def _admin_help(message: Message, channel: TextChannel) -> None:
 
     # Add fields for commands
     for cmd in description.commands:
-        if cmd.admin_only and cmd.in_help:
-            embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.get_complete_description(), inline=False)
+        if cmd.admin_only and cmd.in_help(guild):
+            embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.description, inline=False)
 
     # Add fields for other bot functions
     for func in description.functions:
@@ -154,8 +156,8 @@ async def _admin_help(message: Message, channel: TextChannel) -> None:
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
-    embed.set_footer(text='Created by frysel  |  <> Required  |  () Optional', icon_url=member.avatar_url)
-
+    embed.set_footer(text=f'{prefix}help <command> for detailed information | <> Required  |  () Optional',
+                     icon_url=member.avatar_url)
     # Send direct message or in channel if dm is forbidden
     try:
         await member.send(embed=embed)

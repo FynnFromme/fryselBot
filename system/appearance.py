@@ -19,7 +19,7 @@ moderation_color: hex = 0xa82020
 
 
 # Status of the bot                                                   # Newest function of the bot
-status = cycle(['Hey there!', f'v. {version} | {default_prefix}help', 'New Welcome System!'])
+status = cycle(['Hey there!', f'v. {version} | {default_prefix}help', 'New Features!'])
 
 
 # Prefix functions

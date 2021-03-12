@@ -1,5 +1,7 @@
 from datetime import datetime
 import random
+from typing import Optional
+
 from discord import Message, NotFound
 
 
@@ -28,14 +30,14 @@ class InvalidInputError(Exception):
         super().__init__(*args)
 
 
-def iso_to_datetime(s: str) -> datetime:
+def iso_to_datetime(s: str) -> Optional[datetime]:
     """
     Create datetime object form date as iso format
     :param s: Date in '%Y-%m-%d %H:%M:%S'
     :return: Datetime object
     """
     if s is None:
-        raise Exception('Invalid Input (iso_to_datetime)')
+        return None
 
     year_ = int(s[0:4])
     month_ = int(s[5:7])

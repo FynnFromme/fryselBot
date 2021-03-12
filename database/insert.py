@@ -43,7 +43,8 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
           pr_settings_id: int = None,
           mod_log_id: int = None,
           support_log_id: int = None,
-          ticket_category_id: int = None) -> None:
+          ticket_category_id: int = None,
+          mute_role_id: int = None) -> None:
     """
     Insert guild into db.
     :param _c: Database cursor (provided by decorator)
@@ -54,17 +55,19 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
     :param mod_log_id: Discord TextChannelID
     :param support_log_id: Discord TextChannelID
     :param ticket_category_id: Discord CategoryID
-    :return: None
+    :param mute_role_id: ID of Mute role
     """
     # Insert into db
     _c.execute('''INSERT INTO guilds VALUES (:guild_id, :welcome_channel_id, :cpr_channel_id, :pr_settings_id, 
-                :mod_log_id, :support_log_id, :ticket_category_id)''', {'guild_id': guild_id,
-                                                                        'welcome_channel_id': welcome_channel_id,
-                                                                        'cpr_channel_id': cpr_channel_id,
-                                                                        'pr_settings_id': pr_settings_id,
-                                                                        'mod_log_id': mod_log_id,
-                                                                        'support_log_id': support_log_id,
-                                                                        'ticket_category_id': ticket_category_id})
+                :mod_log_id, :support_log_id, :ticket_category_id, :mute_role_id)''',
+               {'guild_id': guild_id,
+                'welcome_channel_id': welcome_channel_id,
+                'cpr_channel_id': cpr_channel_id,
+                'pr_settings_id': pr_settings_id,
+                'mod_log_id': mod_log_id,
+                'support_log_id': support_log_id,
+                'ticket_category_id': ticket_category_id,
+                'mute_role_id': mute_role_id})
 
 
 @connection
@@ -107,14 +110,14 @@ def role(_c: Cursor, role_id: int, type_: str, guild_id: int) -> None:
     Insert role into db.
     :param _c: Database cursor (provided by decorator)
     :param role_id: Discord RoleID
-    :param type_: Type of role ("MODERATOR", "ADMIN", "SUPPORTER" or "MUTE")
+    :param type_: Type of role ("MODERATOR", "ADMIN" or "SUPPORTER")
     :param guild_id: Discord GuildID
     :return: None
     """
     # Check type_ for requirements
-    if not (type_ == 'MODERATOR' or type_ == 'ADMIN' or type_ == 'MUTE' or type_ == 'SUPPORTER'):
+    if not (type_ == 'MODERATOR' or type_ == 'ADMIN' or type_ == 'SUPPORTER'):
         raise DatabaseAttributeError('type_', False, type_,
-                                     "type_ has to be 'MODERATOR', 'ADMIN', 'SUPPORTER' or 'MUTE'.")
+                                     "type_ has to be 'MODERATOR', 'ADMIN' or 'SUPPORTER'.")
 
     # Insert into db
     _c.execute('INSERT INTO roles VALUES (:role_id, :type, :guild_id)', {'role_id': role_id, 'type': type_,

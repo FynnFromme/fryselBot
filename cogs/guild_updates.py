@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord.ext.commands import Bot
-from discord import Guild, Role
+from discord import Guild, Role, TextChannel
 from discord.abc import GuildChannel
 
 from fryselBot.system import guilds, welcome, moderation
@@ -34,19 +34,26 @@ class GuildUpdates(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: GuildChannel):
         """Is called when a channel is deleted on a guild"""
-        guild = channel.guild
+        if isinstance(channel, TextChannel):
+            guild = channel.guild
 
-        # Welcome System: Check whether the channel is a welcome Channel
-        if (channel.id, guild.id) in select.all_welcome_channels():
-            # Disable welcome/leave messages on the guild
-            welcome.toggle_welcome(guild, disable=True)
-            welcome.toggle_leave(guild, disable=True)
-            welcome.set_welcome_channel(guild, channel_id=None)
+            # Welcome System: Check whether the channel is a welcome Channel
+            if (channel.id, guild.id) in select.all_welcome_channels():
+                # Disable welcome/leave messages on the guild
+                welcome.toggle_welcome(guild, disable=True)
+                welcome.toggle_leave(guild, disable=True)
+                welcome.set_welcome_channel(guild, channel_id=None)
 
-        # Moderation System: Check whether the channel is the moderation log
-        if (channel.id, guild.id) in select.all_moderation_logs():
-            # Delete mod log out of database
-            moderation.set_mod_log(guild, channel_id=None)
+            # Moderation System: Check whether the channel is the moderation log
+            if (channel.id, guild.id) in select.all_moderation_logs():
+                # Delete mod log out of database
+                moderation.set_mod_log(guild, channel_id=None)
+
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel: GuildChannel):
+        """Is called when a channel is created on a guild"""
+        if isinstance(channel, TextChannel):
+            await moderation.setup_mute_in_channel(channel)
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: Role):
