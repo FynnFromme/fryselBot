@@ -238,15 +238,34 @@ async def remove_owner_permissions(owner: Member, private_room: PrivateRoom) -> 
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
 
-    # Reset permissions in private room and move channel
-    if pr_channel:
-        await pr_channel.set_permissions(owner, overwrite=None)
-    if move_channel:
-        await move_channel.set_permissions(owner, overwrite=None)
+    # Reset permissions in private room and move channel if they exist
+    try:
+        if pr_channel:
+            await pr_channel.set_permissions(owner, overwrite=None)
+    except NotFound:
+        pass
 
-    # Reset permissions in cpr and settings channel
-    await get_settings_channel(guild).set_permissions(owner, overwrite=None)
-    await get_cpr_channel(guild).set_permissions(owner, overwrite=None)
+    try:
+        if move_channel:
+            await move_channel.set_permissions(owner, overwrite=None)
+    except NotFound:
+        pass
+
+    # Reset permissions in cpr and settings channel if they exist
+    settings_channel: TextChannel = get_settings_channel(guild)
+    cpr_channel: VoiceChannel = get_cpr_channel(guild)
+
+    try:
+        if settings_channel:
+            await get_settings_channel(guild).set_permissions(owner, overwrite=None)
+    except NotFound:
+        pass
+
+    try:
+        if cpr_channel:
+            await get_cpr_channel(guild).set_permissions(owner, overwrite=None)
+    except NotFound:
+        pass
 
 
 async def delete_private_room(guild: Guild, private_room: PrivateRoom) -> None:

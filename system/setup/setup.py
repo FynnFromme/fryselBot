@@ -1,7 +1,7 @@
 from discord import Member, Embed, TextChannel, Guild, Message
 from fryselBot.system import appearance, roles, welcome as welcome_sys, permission
 from fryselBot.utilities import secret
-from fryselBot.system.setup import prefix, color, welcome, roles, moderation
+from fryselBot.system.setup import prefix, color, welcome, roles, moderation, private_rooms
 
 
 async def check_reactions(member: Member, guild: Guild, channel: TextChannel, message: Message, emoji: str,
@@ -59,6 +59,9 @@ async def check_reactions(member: Member, guild: Guild, channel: TextChannel, me
             elif emoji == '👮🏽‍♂️':
                 # Call moderation page
                 await moderation.moderation_page(channel, guild)
+            elif emoji == '🔉':
+                # Call private rooms page
+                await private_rooms.private_rooms_page(channel, guild)
 
         elif title == f'{bot_name} Setup - Prefix':
             if emoji == '❗':
@@ -90,6 +93,9 @@ async def check_reactions(member: Member, guild: Guild, channel: TextChannel, me
             elif emoji == '👥':
                 # Call roles page
                 await roles.roles_page(channel, guild)
+        elif title == f'{bot_name} Setup - Private Rooms':
+            if emoji == '🔉':
+                await private_rooms.toggle_private_rooms(channel, guild, message)
 
 
 async def setup_page(channel: TextChannel, guild: Guild) -> None:
@@ -112,7 +118,7 @@ async def setup_page(channel: TextChannel, guild: Guild) -> None:
     embed.add_field(name='Roles  👥', value=f'`{guild_prefix}setup roles`', inline=True)
     embed.add_field(name='Welcome  👋', value=f'`{guild_prefix}setup welcome`', inline=True)
     embed.add_field(name='Moderation  👮🏽‍♂️', value=f'`{guild_prefix}setup moderation`', inline=True)
-    embed.add_field(name='Coming Soon  ❓', value=f'`{guild_prefix}setup ... `', inline=True)
+    embed.add_field(name='Private Rooms  🔉', value=f'`{guild_prefix}setup private rooms`', inline=True)
 
     # Send embed and add reactions
     message = await channel.send(embed=embed)
@@ -121,3 +127,4 @@ async def setup_page(channel: TextChannel, guild: Guild) -> None:
     await message.add_reaction(emoji='👥')
     await message.add_reaction(emoji='👋')
     await message.add_reaction(emoji='👮🏽‍♂️')
+    await message.add_reaction(emoji='🔉')

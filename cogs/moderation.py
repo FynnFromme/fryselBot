@@ -43,6 +43,8 @@ class Moderation(commands.Cog):
         await error_messages.error_handler(ctx, error, description.get_command('clear'), 'Amount',
                                            'The amount has to be a positive integer.', True)
 
+    ####################################
+
     @commands.command(name='kick')
     @commands.check(permission.kick)
     async def kick(self, ctx: Context, member: Member, *, reason: str = None):
@@ -65,6 +67,8 @@ class Moderation(commands.Cog):
         else:
             await error_messages.error_handler(ctx, error, description.get_command('kick'), 'Member',
                                                'I am missing permissions to do that.', True)
+
+    ####################################
 
     @commands.command(name='ban', aliases=['bigmac'])
     @commands.check(permission.ban)
@@ -134,6 +138,8 @@ class Moderation(commands.Cog):
             await error_messages.error_handler(ctx, error, description.get_command('unban'), 'User',
                                                'Cannot find the user.', True)
 
+    ####################################
+
     @commands.command(name='mute')
     @commands.check(permission.mute)
     async def mute(self, ctx: Context, member: Member, *, reason: str = None):
@@ -192,17 +198,6 @@ class Moderation(commands.Cog):
             await error_messages.error_handler(ctx, error, description.get_command('tempmute'), 'Member',
                                                'Cannot find the member.', True)
 
-    @tasks.loop(seconds=10)
-    async def check_expired(self):
-        """Checks for expired temporary mutes"""
-        await mute.check_expired(self.client)
-        await ban.check_expired(self.client)
-
-    @check_expired.before_loop
-    async def before_check_expired(self):
-        """Wait until bot is ready"""
-        await self.client.wait_until_ready()
-
     @commands.command(name='unmute')
     @commands.check(permission.ban)
     async def unmute(self, ctx: Context, member: Member):
@@ -220,6 +215,21 @@ class Moderation(commands.Cog):
         else:
             await error_messages.error_handler(ctx, error, description.get_command('unmute'), 'Member',
                                                'Cannot find the member.', True)
+
+    ####################################
+
+    @tasks.loop(seconds=10)
+    async def check_expired(self):
+        """Checks for expired temporary mutes"""
+        await mute.check_expired(self.client)
+        await ban.check_expired(self.client)
+
+    @check_expired.before_loop
+    async def before_check_expired(self):
+        """Wait until bot is ready"""
+        await self.client.wait_until_ready()
+
+    ####################################
 
     @commands.command(name='warn')
     @commands.check(permission.is_mod)
@@ -263,6 +273,8 @@ class Moderation(commands.Cog):
         date = datetime.utcnow() - timedelta(days=365)
         for w in select.warns_date(date=date, after=False):
             delete.warn(w.warn_id)
+
+    ####################################
 
     @commands.command(name='report')
     async def report(self, ctx: Context, member: Member, *, reason: str):

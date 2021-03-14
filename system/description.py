@@ -176,6 +176,7 @@ commands = [  # User commands
     Command('moderation log', 'setup moderation log <text-channel>', 'Set the moderation log.',
             {'text-channel': 'Channel mention or name'},
             admin_only=True, in_help=False),
+    Command('private rooms', 'setup private rooms', 'Page to set up private rooms.', admin_only=True, in_help=False),
 ]
 
 

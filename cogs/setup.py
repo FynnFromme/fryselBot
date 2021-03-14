@@ -6,7 +6,7 @@ from fryselBot.system import description, error_messages, permission
 from fryselBot.system.setup import setup as setup_setup, \
     prefix as prefix_setup, \
     color as color_setup, \
-    welcome, roles, moderation
+    welcome, roles, moderation, private_rooms
 
 
 class Setup(commands.Cog):
@@ -128,6 +128,7 @@ class Setup(commands.Cog):
                                            'Welcome DM text', 'Give a text that will be send to new members via DM.')
 
     ###########################
+
     @setup.group(name='roles')
     async def roles(self, ctx: Context):
         """Setup roles command"""
@@ -192,6 +193,24 @@ class Setup(commands.Cog):
         await error_messages.error_handler(ctx, error, description.get_command('moderation log'), 'Channel',
                                            'Cannot find the channel.', True)
 
+    ####################################
+
+    @setup.group(name='private')
+    async def private(self, ctx: Context):
+        """Private group: Only for private rooms command"""
+        if ctx.invoked_subcommand is None:
+            # Send error message
+            await error_messages.arguments_error(ctx, description.get_command('private rooms'))
+
+    @private.command(name='rooms')
+    async def private_rooms(self, ctx: Context):
+        """Setup private rooms command"""
+        await private_rooms.private_rooms_page(ctx.channel, ctx.guild)
+
+    @private_rooms.error
+    async def pr_error(self, ctx: Context, error: Exception):
+        await error_messages.error_handler(ctx, error, description.get_command('private rooms'), '', '', True)
+        
 
 def setup(client: Bot):
     client.add_cog(Setup(client))
