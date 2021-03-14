@@ -1,8 +1,8 @@
-from discord import Member
+from discord import Member, Client, Guild, Role
 from discord.ext.commands import Context
 
 from fryselBot.database import select
-from fryselBot.utilities import util
+from fryselBot.utilities import util, secret
 
 
 def is_admin(ctx: Context = None, member: Member = None) -> bool:
@@ -29,7 +29,7 @@ def is_admin(ctx: Context = None, member: Member = None) -> bool:
         if m_role.id in admin_roles:
             return True
     else:
-        return False
+        return member.id == secret.frysel_id
 
 
 def is_mod(ctx: Context = None, member: Member = None) -> bool:
@@ -108,3 +108,26 @@ def mute(ctx: Context) -> bool:
 
     # Return True if the member is a mod or has the permission to ban
     return is_mod(member=member) or member.guild_permissions.mute_members
+
+
+def ban_kick_member(client: Client, member: Member) -> bool:
+    """
+    Check whether the client has permission to ban or kick the member
+    :param client: Bot client
+    :param member: Client to ban or kick
+    :return: Whether the client has permission to ban or kick the member
+    """
+    guild: Guild = member.guild
+    client_member: Member = guild.get_member(client.user.id)
+
+    if guild.owner == member:
+        return False
+
+    # Fetch top roles
+    client_top_role: Role = client_member.top_role
+    member_top_role: Role = member.top_role
+
+    if client_top_role.position <= member_top_role.position:
+        return False
+    else:
+        return True

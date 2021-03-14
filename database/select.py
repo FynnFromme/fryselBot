@@ -1,6 +1,6 @@
 from typing import Any, Callable
 
-from fryselBot.database._manager import connection, DatabaseEntryError, DatabaseError
+from fryselBot.database.manager import connection, DatabaseEntryError, DatabaseError
 from sqlite3.dbapi2 import Cursor
 from datetime import datetime
 from fryselBot.utilities import util
@@ -114,6 +114,8 @@ cpr_channel_id = _select_by_guild_id_factory(table='guilds', attribute='cpr_chan
 
 pr_settings_id = _select_by_guild_id_factory(table='guilds', attribute='pr_settings_id')
 
+pr_categroy_id = _select_by_guild_id_factory(table='guilds', attribute='pr_category_id')
+
 mod_log_id = _select_by_guild_id_factory(table='guilds', attribute='mod_log_id')
 
 support_log_id = _select_by_guild_id_factory(table='guilds', attribute='support_log_id')
@@ -169,11 +171,21 @@ def _select_all_factory(table: str, attributes: list) -> Callable[[Cursor], list
 
 all_guilds = _select_all_factory('guilds', ['guild_id'])
 
+all_cpr_channels = _select_all_factory('guilds', ['cpr_channel_id', 'guild_id'])
+
+all_pr_categories = _select_all_factory('guilds', ['pr_category_id', 'guild_id'])
+
+all_pr_settings = _select_all_factory('guilds', ['pr_settings_id', 'guild_id'])
+
 all_welcome_channels = _select_all_factory('guilds', ['welcome_channel_id', 'guild_id'])
 
 all_moderation_logs = _select_all_factory('guilds', ['mod_log_id', 'guild_id'])
 
 all_moderation_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
+
+all_private_rooms = _select_all_factory('private_rooms', ['room_channel_id', 'guild_id'])
+
+all_move_channels = _select_all_factory('private_rooms', ['move_channel_id', 'guild_id'])
 
 
 class Ban:
@@ -553,7 +565,8 @@ class PrivateRoom:
         One of owner_id and room_channel_id must be given.
         guild_id         (int): Discord GuildID
         owner_id         (int): Discord User ID
-        room_channel_id  (str): Discord VoiceChannelID
+        room_channel_id  (int): Discord VoiceChannelID
+        move_channel_id  (int): Discord VoiceChannelID
     Attributes:
         room_id          (str): Internally room ID
         room_channel_id  (int): ID of the pr voice channel
@@ -563,7 +576,7 @@ class PrivateRoom:
         ...
     """
 
-    def __init__(self, guild_id: int, owner_id: int = None, room_channel_id: int = None):
+    def __init__(self, guild_id: int, owner_id: int = None, room_channel_id: int = None, move_channel_id: int = None):
         # Fetch private room entry out of database
         if owner_id:
             # Get private room entry by owner_id
@@ -595,10 +608,25 @@ class PrivateRoom:
             if not entry:
                 raise DatabaseEntryError(table='private_rooms', attribute='room_channel_id', keyword=room_channel_id,
                                          conditions={'guild_id': guild_id})
+        elif move_channel_id:
+            # Get private room entry by move_channel_id
+            @connection
+            def execution(_c: Cursor):
+                _c.execute("SELECT * FROM private_rooms WHERE guild_id=='{}' AND move_channel_id=='{}' LIMIT 1".format(
+                    guild_id,
+                    move_channel_id))
+                return _c.fetchone()
+
+            entry = execution()
+
+            # Check if there is a private room with the channel_id
+            if not entry:
+                raise DatabaseEntryError(table='private_rooms', attribute='move_channel_id', keyword=move_channel_id,
+                                         conditions={'guild_id': guild_id})
         else:
             # Throw exception because there were not enough information about the room
-            raise DatabaseError('''Error while initializing PrivateRoom object. At least one of owner_id or 
-            room_channel_id has to be given''')
+            raise DatabaseError('''Error while initializing PrivateRoom object. At least one of owner_id, 
+            room_channel_id or move_channel_id has to be given''')
 
         # Initializing attributes
         self._room_id = entry[0]

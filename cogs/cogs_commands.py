@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord.ext.commands import Context, Bot, CheckFailure
 
-from fryselBot.system import cogs, error_messages, description
+from fryselBot.system import cogs, description, error_messages
 from fryselBot.utilities import secret
 
 

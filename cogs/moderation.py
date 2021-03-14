@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
+from typing import Union
 
 from discord import Member, Role
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
 from fryselBot.database import delete, select
-from fryselBot.utilities import permission, util
-from fryselBot.system import moderation as mod, error_messages, description
+from fryselBot.utilities import util
+from fryselBot.system import description, error_messages, permission
+from fryselBot.system.moderation import moderation as mod, clear, kick, ban, mute, warn, report
 
 
 class Moderation(commands.Cog):
@@ -28,12 +30,12 @@ class Moderation(commands.Cog):
 
     @commands.command(name='clear')
     @commands.check(permission.clear)
-    async def clear(self, ctx: Context, amount: int, member: Member = None):
+    async def clear(self, ctx: Context, amount: int = 100, member: Member = None):
         """Clear command"""
         if member:
-            await mod.clear_member(member, ctx.message, amount)
+            await clear.clear_member(member, ctx.message, amount)
         else:
-            await mod.clear(ctx.message, amount)
+            await clear.clear_messages(ctx.message, amount)
 
     @clear.error
     async def clear_error(self, ctx: Context, error: Exception):
@@ -45,7 +47,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.kick)
     async def kick(self, ctx: Context, member: Member, *, reason: str = None):
         """Kick command"""
-        await mod.kick(ctx.message, member, reason)
+        await kick.kick_cmd(ctx.message, member, self.client, reason)
 
     @kick.error
     async def kick_error(self, ctx: Context, error: Exception):
@@ -68,7 +70,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.ban)
     async def ban(self, ctx: Context, member: Member, *, reason: str = None):
         """Ban command"""
-        await mod.ban(ctx.message, member, reason)
+        await ban.ban_cmd(ctx.message, member, self.client, reason)
 
     @ban.error
     async def ban_error(self, ctx: Context, error: Exception):
@@ -89,10 +91,10 @@ class Moderation(commands.Cog):
 
     @commands.command(name='tempban')
     @commands.check(permission.ban)
-    async def tempban(self, ctx: Context, member: Member, duration_amount: int, duration_unit: str, *,
+    async def tempban(self, ctx: Context, member: Member, duration_amount: Union[float, int], duration_unit: str, *,
                       reason: str = None):
         """Tempban command"""
-        await mod.tempban(ctx.message, member, duration_amount, duration_unit, reason)
+        await ban.tempban_cmd(ctx.message, member, duration_amount, duration_unit, self.client, reason)
 
     @tempban.error
     async def tempban_error(self, ctx: Context, error: Exception):
@@ -118,7 +120,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.ban)
     async def unban(self, ctx: Context, *, user):
         """Unban command"""
-        await mod.unban(ctx.message, user)
+        await ban.unban_cmd(ctx.message, user)
 
     @unban.error
     async def unban_error(self, ctx: Context, error: Exception):
@@ -136,14 +138,14 @@ class Moderation(commands.Cog):
     @commands.check(permission.mute)
     async def mute(self, ctx: Context, member: Member, *, reason: str = None):
         """Mute command"""
-        await mod.mute(ctx.message, member, reason)
+        await mute.mute_cmd(ctx.message, member, reason)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
         """Called when a member joines a guild"""
         # Check whether the member is muted
-        if mod.is_muted(member):
-            mute_role: Role = await mod.get_mute_role(member.guild)
+        if mute.is_muted(member):
+            mute_role: Role = await mute.get_mute_role(member.guild)
             await member.add_roles(mute_role, reason='Member was muted when joining the server.')
 
     @mute.error
@@ -165,10 +167,10 @@ class Moderation(commands.Cog):
 
     @commands.command(name='tempmute')
     @commands.check(permission.mute)
-    async def tempmute(self, ctx: Context, member: Member, duration_amount: int, duration_unit: str, *,
+    async def tempmute(self, ctx: Context, member: Member, duration_amount: Union[float, int], duration_unit: str, *,
                        reason: str = None):
         """tempmute command"""
-        await mod.tempmute(ctx.message, member, duration_amount, duration_unit, reason)
+        await mute.tempmute_cmd(ctx.message, member, duration_amount, duration_unit, reason)
 
     @tempmute.error
     async def tempmute_error(self, ctx: Context, error: Exception):
@@ -193,8 +195,8 @@ class Moderation(commands.Cog):
     @tasks.loop(seconds=10)
     async def check_expired(self):
         """Checks for expired temporary mutes"""
-        await mod.check_tempmute_expired(self.client)
-        await mod.check_tempban_expired(self.client)
+        await mute.check_expired(self.client)
+        await ban.check_expired(self.client)
 
     @check_expired.before_loop
     async def before_check_expired(self):
@@ -205,7 +207,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.ban)
     async def unmute(self, ctx: Context, member: Member):
         """Unmute command"""
-        await mod.unmute(ctx.message, member)
+        await mute.unmute_cmd(ctx.message, member)
 
     @unmute.error
     async def unmute_error(self, ctx: Context, error: Exception):
@@ -223,7 +225,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.is_mod)
     async def warn(self, ctx: Context, member: Member, *, reason: str = None):
         """Warn command"""
-        await mod.warn(ctx.message, member, reason)
+        await warn.warn_cmd(ctx.message, member, reason)
 
     @warn.error
     async def warn_error(self, ctx: Context, error: Exception):
@@ -246,7 +248,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.is_mod)
     async def warns(self, ctx: Context, member: Member):
         """Warns command"""
-        await mod.warns_of_member(self.client, ctx.message, member)
+        await warn.warns_of_member_cmd(self.client, ctx.message, member)
 
     @warns.error
     async def warns_error(self, ctx: Context, error: Exception):
@@ -259,13 +261,13 @@ class Moderation(commands.Cog):
         """Checks for old warns"""
         # Get date of 1 year ago
         date = datetime.utcnow() - timedelta(days=365)
-        for warn in select.warns_date(date=date, after=False):
-            delete.warn(warn.warn_id)
+        for w in select.warns_date(date=date, after=False):
+            delete.warn(w.warn_id)
 
     @commands.command(name='report')
     async def report(self, ctx: Context, member: Member, *, reason: str):
         """Report command"""
-        await mod.report(ctx.message, member, reason)
+        await report.report_cmd(ctx.message, member, reason)
 
     @report.error
     async def report_error(self, ctx: Context, error: Exception):
@@ -291,7 +293,7 @@ class Moderation(commands.Cog):
     @commands.check(permission.is_mod)
     async def reports(self, ctx: Context, member: Member):
         """Reports command"""
-        await mod.reports_of_member(self.client, ctx.message, member)
+        await report.reports_of_member_cmd(self.client, ctx.message, member)
 
     @reports.error
     async def reports_error(self, ctx: Context, error: Exception):

@@ -20,12 +20,20 @@ class Welcome(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
         """Is called when a member joins a guild"""
+        if member. bot:
+            # Ignore bots
+            return
+
         await welcome.welcome_message(member)
         await welcome.welcome_dm(member)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: Member):
         """Is called when a member leaves a guild"""
+        if member. bot:
+            # Ignore bots
+            return
+
         await welcome.leave_message(member)
 
 

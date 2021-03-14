@@ -1,10 +1,12 @@
 from discord.ext import commands
 from discord.ext.commands import Bot
-from discord import Guild, Role, TextChannel
+from discord import Guild, Role, TextChannel, VoiceChannel, CategoryChannel, Member
 from discord.abc import GuildChannel
 
 from fryselBot.system import guilds, welcome, moderation
-from fryselBot.database import select, delete
+from fryselBot.database import delete, select
+from fryselBot.system.moderation import mute, moderation
+from fryselBot.system.private_rooms import private_rooms
 
 
 class GuildUpdates(commands.Cog):
@@ -36,7 +38,6 @@ class GuildUpdates(commands.Cog):
         """Is called when a channel is deleted on a guild"""
         if isinstance(channel, TextChannel):
             guild = channel.guild
-
             # Welcome System: Check whether the channel is a welcome Channel
             if (channel.id, guild.id) in select.all_welcome_channels():
                 # Disable welcome/leave messages on the guild
@@ -49,11 +50,50 @@ class GuildUpdates(commands.Cog):
                 # Delete mod log out of database
                 moderation.set_mod_log(guild, channel_id=None)
 
+            # Private Rooms: Check whether the channel is the settings channel
+            if (channel.id, guild.id) in select.all_pr_settings():
+                # Disable private rooms on guild
+                await private_rooms.disable(guild)
+
+        elif isinstance(channel, VoiceChannel):
+            guild = channel.guild
+            # Private Rooms: Check whether the channel is the cpr channel
+            if (channel.id, guild.id) in select.all_cpr_channels():
+                # Disable private rooms on guild
+                await private_rooms.disable(guild)
+
+            # Private Rooms: Check whether the channel is a private room
+            elif (channel.id, guild.id) in select.all_private_rooms():
+                # Delete private room
+                private_room = select.PrivateRoom(guild_id=guild.id, room_channel_id=channel.id)
+                await private_rooms.delete_private_room(guild, private_room)
+
+                # Remove owner permissions
+                owner: Member = guild.get_member(private_room.owner_id)
+                await private_rooms.remove_owner_permissions(owner, private_room)
+
+            # Private Rooms: Check whether the channel is a move channel
+            elif (channel.id, guild.id) in select.all_move_channels():
+                # Delete private room
+                private_room = select.PrivateRoom(guild_id=guild.id, move_channel_id=channel.id)
+                await private_rooms.delete_private_room(guild, private_room)
+
+                # Remove owner permissions
+                owner: Member = guild.get_member(private_room.owner_id)
+                await private_rooms.remove_owner_permissions(owner, private_room)
+
+        elif isinstance(channel, CategoryChannel):
+            guild = channel.guild
+            # Private Rooms: Check whether the channel is the pr category
+            if (channel.id, guild.id) in select.all_pr_categories():
+                # Disable private rooms on guild
+                await private_rooms.disable(guild)
+
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel):
         """Is called when a channel is created on a guild"""
         if isinstance(channel, TextChannel):
-            await moderation.setup_mute_in_channel(channel)
+            await mute.setup_mute_in_channel(channel)
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: Role):

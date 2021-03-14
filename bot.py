@@ -5,8 +5,8 @@ from discord.ext.commands import Bot
 from discord import Message
 
 # fryselBot imports
-from fryselBot.system import help, appearance, guilds, cogs
-from fryselBot.utilities import secret
+from system import cogs, guilds, appearance, help
+from utilities import secret
 
 
 async def get_prefix(_: Bot, message: Message):

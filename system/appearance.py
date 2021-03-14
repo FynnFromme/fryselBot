@@ -1,4 +1,4 @@
-from fryselBot.database import select, update
+from fryselBot.database import update, select
 from fryselBot.utilities import util
 
 from itertools import cycle
@@ -19,7 +19,7 @@ moderation_color: hex = 0xa82020
 
 
 # Status of the bot                                                   # Newest function of the bot
-status = cycle(['Hey there!', f'v. {version} | {default_prefix}help', 'New Features!'])
+status = cycle(['Hey there!', f'v. {version} | {default_prefix}help', 'Private Rooms!'])
 
 
 # Prefix functions

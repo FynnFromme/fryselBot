@@ -1,4 +1,4 @@
-from fryselBot.database._manager import connection, DatabaseAttributeError, DatabaseError
+from fryselBot.database.manager import connection, DatabaseAttributeError, DatabaseError
 from sqlite3.dbapi2 import Cursor
 from fryselBot.utilities import util
 
@@ -41,6 +41,7 @@ def generate_new_id(_c: Cursor, table: str, identifier: str) -> str:
 @connection
 def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel_id: int = None,
           pr_settings_id: int = None,
+          pr_category_id: int = None,
           mod_log_id: int = None,
           support_log_id: int = None,
           ticket_category_id: int = None,
@@ -52,6 +53,7 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
     :param welcome_channel_id: Discord TextChannelID
     :param cpr_channel_id: Discord VoiceChannelID (cpr: create private room)
     :param pr_settings_id: Discord TextChannelID (pr: private room)
+    :param pr_category_id: Discord CategoryChannelID (pr: private room)
     :param mod_log_id: Discord TextChannelID
     :param support_log_id: Discord TextChannelID
     :param ticket_category_id: Discord CategoryID
@@ -59,11 +61,12 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
     """
     # Insert into db
     _c.execute('''INSERT INTO guilds VALUES (:guild_id, :welcome_channel_id, :cpr_channel_id, :pr_settings_id, 
-                :mod_log_id, :support_log_id, :ticket_category_id, :mute_role_id)''',
+                :pr_category_id, :mod_log_id, :support_log_id, :ticket_category_id, :mute_role_id)''',
                {'guild_id': guild_id,
                 'welcome_channel_id': welcome_channel_id,
                 'cpr_channel_id': cpr_channel_id,
                 'pr_settings_id': pr_settings_id,
+                'pr_category_id': pr_category_id,
                 'mod_log_id': mod_log_id,
                 'support_log_id': support_log_id,
                 'ticket_category_id': ticket_category_id,

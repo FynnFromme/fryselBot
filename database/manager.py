@@ -73,7 +73,6 @@ class DatabaseEntryError(DatabaseError):
 def _delete_database() -> None:
     """
     Deletes the db (only for test purpose)
-    :return: None
     """
     # Path of db file
     path = './database/bot.db'
@@ -125,6 +124,7 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: welcome_channel_id # Discord TextChannelID
     ATTRIBUTE: cpr_channel_id     # Discord VoiceChannelID
     ATTRIBUTE: pr_settings_id     # Discord TextChannelID
+    ATTRIBUTE: pr_category_id     # Discord CategoryChannelID
     ATTRIBUTE: mod_log_id         # Discord TextChannelID
     ATTRIBUTE: support_log_id     # Discord TextChannelID
     ATTRIBUTE: ticket_category_id # Discord CategoryID
@@ -134,6 +134,7 @@ def _create_tables(c: Cursor) -> None:
                     welcome_channel_id INTEGER,
                     cpr_channel_id INTEGER,
                     pr_settings_id INTEGER,
+                    pr_category_id INTEGER,
                     mod_log_id INTEGER,
                     support_log_id INTEGER,
                     ticket_category_id INTEGER,

@@ -2,8 +2,11 @@ from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from discord import Message, Guild, TextChannel, Member, Role
 
-from fryselBot.system import error_messages, description, setup as setup_sys
-from fryselBot.utilities import permission
+from fryselBot.system import description, error_messages, permission
+from fryselBot.system.setup import setup as setup_setup, \
+    prefix as prefix_setup, \
+    color as color_setup, \
+    welcome, roles, moderation
 
 
 class Setup(commands.Cog):
@@ -29,7 +32,7 @@ class Setup(commands.Cog):
         member: Member = guild.get_member(payload.user_id)
         emoji = payload.emoji.name
 
-        await setup_sys.reactions(member, guild, channel, message, emoji)
+        await setup_setup.check_reactions(member, guild, channel, message, emoji)
 
     ######################
 
@@ -39,7 +42,7 @@ class Setup(commands.Cog):
         """Group of setup commands."""
         # Send setup page if the setup command is called without subcommand
         if ctx.invoked_subcommand is None:
-            await setup_sys.setup_page(ctx.channel, ctx.guild)
+            await setup_setup.setup_page(ctx.channel, ctx.guild)
 
     @setup.error
     async def setup_error(self, ctx: Context, error: Exception):
@@ -54,10 +57,10 @@ class Setup(commands.Cog):
         """Set prefix command"""
         if prefix:
             # Set prefix if prefix is given
-            await setup_sys.setup_prefix(ctx.channel, ctx.guild, ctx.message, prefix)
+            await prefix_setup.setup_prefix(ctx.channel, ctx.guild, ctx.message, prefix)
         else:
             # Send prefix page if no prefix is given
-            await setup_sys.prefix_page(ctx.channel, ctx.guild)
+            await prefix_setup.prefix_page(ctx.channel, ctx.guild)
 
     @prefix.error
     async def prefix_error(self, ctx: Context, error: Exception):
@@ -73,10 +76,10 @@ class Setup(commands.Cog):
         """Set color command"""
         if color:
             # Set color if color is given
-            await setup_sys.setup_color(ctx.channel, ctx.guild, ctx.message, color)
+            await color_setup.setup_color(ctx.channel, ctx.guild, ctx.message, color)
         else:
             # Send color page if no color is given
-            await setup_sys.color_page(ctx.channel, ctx.guild)
+            await color_setup.color_page(ctx.channel, ctx.guild)
 
     @color.error
     async def color_error(self, ctx: Context, error: Exception):
@@ -92,7 +95,7 @@ class Setup(commands.Cog):
         """Setup welcome system command"""
         if ctx.invoked_subcommand is None:
             # Send welcome page if no args are given
-            await setup_sys.welcome_page(ctx.channel, ctx.guild)
+            await welcome.welcome_page(ctx.channel, ctx.guild)
 
     @welcome.error
     async def welcome_error(self, ctx: Context, error: Exception):
@@ -103,7 +106,7 @@ class Setup(commands.Cog):
     @welcome.command(name='channel')
     async def welcome_channel(self, ctx: Context, welcome_channel: TextChannel):
         """Command for setting the welcome channel"""
-        await setup_sys.setup_welcome_channel(ctx.channel, ctx.guild, ctx.message, welcome_channel)
+        await welcome.setup_welcome_channel(ctx.channel, ctx.guild, ctx.message, welcome_channel)
 
     @welcome_channel.error
     async def welcome_channel_error(self, ctx: Context, error: Exception):
@@ -115,7 +118,7 @@ class Setup(commands.Cog):
     @welcome.command(name='dm')
     async def welcome_dm_text(self, ctx: Context, *, text: str):
         """Command for setting the text for welcome dms"""
-        await setup_sys.setup_welcome_dm_text(ctx.channel, ctx.guild, ctx.message, text)
+        await welcome.setup_welcome_dm_text(ctx.channel, ctx.guild, ctx.message, text)
 
     @welcome_dm_text.error
     async def welcome_dm_text_error(self, ctx: Context, error: Exception):
@@ -130,7 +133,7 @@ class Setup(commands.Cog):
         """Setup roles command"""
         if ctx.invoked_subcommand is None:
             # Send welcome page if no args are given
-            await setup_sys.roles_page(ctx.channel, ctx.guild)
+            await roles.roles_page(ctx.channel, ctx.guild)
 
     @roles.error
     async def roles_error(self, ctx: Context, error: Exception):
@@ -141,7 +144,7 @@ class Setup(commands.Cog):
     @roles.command(name='add')
     async def roles_add(self, ctx: Context, type_: str, role: Role):
         """Command for adding roles"""
-        await setup_sys.add_role(ctx.guild, role, type_, ctx.channel, ctx.message)
+        await roles.add_role(ctx.guild, role, type_, ctx.channel, ctx.message)
 
     @roles_add.error
     async def roles_add_error(self, ctx: Context, error: Exception):
@@ -153,7 +156,7 @@ class Setup(commands.Cog):
     @roles.command(name='remove')
     async def roles_remove(self, ctx: Context, type_: str, role: Role):
         """Command for removing roles"""
-        await setup_sys.remove_role(ctx.guild, role, type_, ctx.channel, ctx.message)
+        await roles.remove_role(ctx.guild, role, type_, ctx.channel, ctx.message)
 
     @roles_remove.error
     async def roles_remove_error(self, ctx: Context, error: Exception):
@@ -169,7 +172,7 @@ class Setup(commands.Cog):
         """Setup moderation command"""
         if ctx.invoked_subcommand is None:
             # Send welcome page if no args are given
-            await setup_sys.moderation_page(ctx.channel, ctx.guild)
+            await moderation.moderation_page(ctx.channel, ctx.guild)
 
     @moderation.error
     async def moderation_error(self, ctx: Context, error: Exception):
@@ -180,7 +183,7 @@ class Setup(commands.Cog):
     @moderation.command(name='log')
     async def set_mod_log(self, ctx: Context, mod_log: TextChannel):
         """Command to set the moderation log"""
-        await setup_sys.setup_moderation_log(ctx.channel, ctx.guild, ctx.message, mod_log)
+        await moderation.setup_moderation_log(ctx.channel, ctx.guild, ctx.message, mod_log)
 
     @set_mod_log.error
     async def mod_log_error(self, ctx: Context, error: Exception):

@@ -1,5 +1,5 @@
-from fryselBot.utilities import permission, secret, util
-from fryselBot.system import description, appearance
+from fryselBot.utilities import secret, util
+from fryselBot.system import description, appearance, permission
 from discord import Message, Guild, Member, TextChannel, Embed, Forbidden
 
 

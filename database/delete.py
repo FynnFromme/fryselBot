@@ -1,6 +1,6 @@
 from typing import Callable
 
-from fryselBot.database._manager import connection
+from fryselBot.database.manager import connection
 from sqlite3.dbapi2 import Cursor
 
 
@@ -65,16 +65,26 @@ def ticket_user(_c: Cursor, ticket_id: str, user_id: str) -> None:
     _c.execute("DELETE FROM ticket_users WHERE ticket_id=='{}' AND user_id=='{}'".format(ticket_id, user_id))
 
 
-@connection
-def warns_of_member(_c: Cursor, user_id: str, guild_id: str) -> None:
-    """
-    Deletes all warns of user on guild
-    :param _c: Database cursor (provided by decorator)
-    :param user_id: UserID of the warns
-    :param guild_id: GuildID of the warns
-    """
-    # Delete entries
-    _c.execute("DELETE FROM warns WHERE user_id=='{}' AND guild_id=='{}'".format(user_id, guild_id))
+def mod_operation_of_member_factory(table: str) -> Callable[[Cursor, str, str], None]:
+    @connection
+    def inner(_c: Cursor, user_id: str, guild_id: str) -> None:
+        """
+        Deletes all entries of a specific mod operation of user on guild
+        :param _c: Database cursor (provided by decorator)
+        :param user_id: UserID of the mod_operations
+        :param guild_id: GuildID of the mod_operations
+        """
+        # Delete entries
+        statement = "DELETE FROM {} WHERE user_id=={} AND guild_id=={}".format(table, user_id, guild_id)
+        _c.execute(statement)
+    return inner
+
+
+warns_of_member = mod_operation_of_member_factory('warns')
+
+mutes_of_member = mod_operation_of_member_factory('mutes')
+
+bans_of_member = mod_operation_of_member_factory('bans')
 
 
 @connection

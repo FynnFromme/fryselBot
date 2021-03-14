@@ -1,6 +1,6 @@
 from typing import Callable, Any
 
-from fryselBot.database._manager import connection
+from fryselBot.database.manager import connection
 from sqlite3.dbapi2 import Cursor
 
 
@@ -26,7 +26,7 @@ def _update_by_keyword_factory(table: str, attribute: str, keyword: str) -> Call
             value = int(value)
         # Update the attribute in table
         if value:  # Set to value if value != None
-            _c.execute("UPDATE {} SET {}='{}' WHERE {}=={}".format(table, attribute, value, keyword, argument))
+            _c.execute("UPDATE {} SET {}='{}' WHERE {}=='{}'".format(table, attribute, value, keyword, argument))
         else:  # Set to NULL if value == None
             _c.execute('UPDATE {} SET {}=NULL WHERE {}=={}'.format(table, attribute, keyword, argument))
 
@@ -38,6 +38,8 @@ welcome_channel_id = _update_by_keyword_factory(table='guilds', attribute='welco
 cpr_channel_id = _update_by_keyword_factory(table='guilds', attribute='cpr_channel_id', keyword='guild_id')
 
 pr_settings_id = _update_by_keyword_factory(table='guilds', attribute='pr_settings_id', keyword='guild_id')
+
+pr_categroy_id = _update_by_keyword_factory(table='guilds', attribute='pr_category_id', keyword='guild_id')
 
 mod_log_id = _update_by_keyword_factory(table='guilds', attribute='mod_log_id', keyword='guild_id')
 

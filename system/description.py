@@ -1,9 +1,9 @@
 from difflib import SequenceMatcher
-from typing import Union, Callable, Any
+from typing import Union, Callable
 
 from discord import Guild
 
-from fryselBot.system import moderation
+from fryselBot.system.moderation import moderation
 
 
 class Command:

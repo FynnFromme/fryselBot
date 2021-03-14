@@ -1,6 +1,6 @@
-from fryselBot.database import select, update
-from fryselBot.system import appearance, description
-from fryselBot.utilities import util, secret
+from fryselBot.database import update, select
+from fryselBot.system import description, appearance
+from fryselBot.utilities import secret, util
 from discord import Member, Guild, TextChannel, Embed, Forbidden
 import random
 
@@ -140,15 +140,14 @@ async def welcome_dm(member: Member, channel: TextChannel = None, force: bool = 
     embed: Embed = Embed(title=f'Welcome to {guild.name}!', description=text, color=appearance.get_color(guild.id))
 
     embed.set_thumbnail(url=guild.icon_url)
-    embed.set_footer(text=f'Use {appearance.get_prefix(guild.id)}{description.get_command("help").syntax} on '
-                          f'{guild.name}',
+    embed.set_footer(text=f'Use {appearance.get_prefix(guild.id)}help on {guild.name}',
                      icon_url=guild.get_member(secret.bot_id).avatar_url)
 
     # Send direct message or in channel if dm is forbidden
     try:
         await member.send(embed=embed)
     except Forbidden:
-        if channel:
+        if channel and force:
             await channel.send(embed=embed)
 
 

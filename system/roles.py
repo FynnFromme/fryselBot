@@ -1,5 +1,5 @@
 from discord import Guild, Role
-from fryselBot.database import select, insert, delete
+from fryselBot.database import insert, delete, select
 
 
 def add_admin_role(guild: Guild, role: Role) -> None:

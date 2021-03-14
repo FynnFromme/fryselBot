@@ -2,7 +2,7 @@ import os
 
 from discord.ext.commands import Context, Bot, ExtensionAlreadyLoaded, ExtensionNotLoaded
 from discord import Embed
-
+import fryselBot
 from fryselBot.utilities import util
 from fryselBot.system import appearance
 
