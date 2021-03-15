@@ -7,6 +7,7 @@ from fryselBot.system.setup import setup as setup_setup, \
     prefix as prefix_setup, \
     color as color_setup, \
     welcome, roles, moderation, private_rooms
+from fryselBot.system.private_rooms import private_rooms as pr_sys
 
 
 class Setup(commands.Cog):
@@ -31,6 +32,10 @@ class Setup(commands.Cog):
         message: Message = await channel.fetch_message(payload.message_id)
         member: Member = guild.get_member(payload.user_id)
         emoji = payload.emoji.name
+
+        # Ignore messages in the settings channel
+        if pr_sys.is_settings_channel(channel):
+            return
 
         await setup_setup.check_reactions(member, guild, channel, message, emoji)
 

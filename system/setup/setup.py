@@ -19,12 +19,16 @@ async def check_reactions(member: Member, guild: Guild, channel: TextChannel, me
         # Ignore reactions on messages, that are from other ones
         return
 
-    if member.bot:
-        # Ignore reactions from bots
+    if member.id == secret.bot_id:
+        # Ignore reactions from our bot
         return
 
     # Remove Reaction
     await message.remove_reaction(emoji, member)
+
+    if member.bot:
+        # Ignore reactions from bots
+        return
 
     if not permission.is_admin(member=member):
         # Ignore reactions from members without admin permission

@@ -6,7 +6,7 @@ from discord.abc import GuildChannel
 from fryselBot.system import guilds, welcome, moderation
 from fryselBot.database import delete, select
 from fryselBot.system.moderation import mute, moderation
-from fryselBot.system.private_rooms import private_rooms
+from fryselBot.system.private_rooms import private_rooms, settings as pr_settings
 
 
 class GuildUpdates(commands.Cog):
@@ -76,11 +76,7 @@ class GuildUpdates(commands.Cog):
             elif (channel.id, guild.id) in select.all_move_channels():
                 # Delete private room
                 private_room = select.PrivateRoom(guild_id=guild.id, move_channel_id=channel.id)
-                await private_rooms.delete_private_room(guild, private_room)
-
-                # Remove owner permissions
-                owner: Member = guild.get_member(private_room.owner_id)
-                await private_rooms.remove_owner_permissions(owner, private_room)
+                await pr_settings.unlock(guild, private_room)
 
         elif isinstance(channel, CategoryChannel):
             guild = channel.guild

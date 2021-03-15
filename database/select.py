@@ -151,8 +151,13 @@ def _select_all_factory(table: str, attributes: list) -> Callable[[Cursor], list
         :param _c: Database cursor (provided by decorator)
         :return: List of all tuples of values for attributes and guild_ids in database
         """
+        # Setup condition -> Only fetch entries that arent null
+        condition = f'{attributes[0]} IS NOT NULL'
+        for a in attributes[1:]:
+            condition += f' AND {a} IS NOT NULL'
+
         # Create statement
-        statement = f"SELECT {', '.join(attributes)}, guild_id FROM {table}"
+        statement = f"SELECT {', '.join(attributes)} FROM {table} WHERE {condition}"
 
         # Fetch all entries
         _c.execute(statement)
@@ -186,6 +191,8 @@ all_moderation_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
 all_private_rooms = _select_all_factory('private_rooms', ['room_channel_id', 'guild_id'])
 
 all_move_channels = _select_all_factory('private_rooms', ['move_channel_id', 'guild_id'])
+
+all_waiting_for_response = _select_all_factory('waiting_for_responses', ['user_id', 'channel_id'])
 
 
 class Ban:
@@ -563,20 +570,25 @@ class PrivateRoom:
     Represents private room.
     Args:
         One of owner_id and room_channel_id must be given.
-        guild_id         (int): Discord GuildID
-        owner_id         (int): Discord User ID
-        room_channel_id  (int): Discord VoiceChannelID
-        move_channel_id  (int): Discord VoiceChannelID
+        guild_id          (int): Discord GuildID
+        owner_id          (int): Discord User ID
+        room_channel_id   (int): Discord VoiceChannelID
+        move_channel_id   (int): Discord VoiceChannelID
+        include_settings (bool): Whether to include settings
     Attributes:
         room_id          (str): Internally room ID
         room_channel_id  (int): ID of the pr voice channel
         move_channel_id  (int): ID of the move voice channel
         owner_id         (int): ID of the owner from the server
         guild_id         (int): ID of the guild of the private room
-        ...
+        name             (str): Name of private room
+        locked          (bool): Whether the room is locked
+        user_limit       (int):  User limit of room
+        hidden          (bool): Whether the room is hidden
     """
 
-    def __init__(self, guild_id: int, owner_id: int = None, room_channel_id: int = None, move_channel_id: int = None):
+    def __init__(self, guild_id: int, owner_id: int = None, room_channel_id: int = None, move_channel_id: int = None,
+                 inclued_settings: bool = True):
         # Fetch private room entry out of database
         if owner_id:
             # Get private room entry by owner_id
@@ -635,16 +647,20 @@ class PrivateRoom:
         self._owner_id = entry[3]
         self._guild_id = entry[4]
 
-        # Fetch private room settings entry
-        @connection
-        def execution(_c: Cursor):
-            _c.execute("SELECT * FROM pr_settings WHERE room_id=='{}'LIMIT 1".format(self.room_id))
-            return _c.fetchone()
+        if inclued_settings:
+            # Fetch private room settings entry
+            @connection
+            def execution(_c: Cursor):
+                _c.execute("SELECT * FROM pr_settings WHERE room_id=='{}'LIMIT 1".format(self.room_id))
+                return _c.fetchone()
 
-        # settings = execution()
+            settings = execution()
 
-        # Initializing settings attributes
-        # TODO: Add pr settings
+            # Initializing settings attributes
+            self._name = settings[1]
+            self._locked = bool(settings[2])
+            self._user_limit = settings[3]
+            self._hidden = bool(settings[4])
 
     # Add properties
     room_id = property(lambda self: self._room_id)
@@ -652,6 +668,10 @@ class PrivateRoom:
     move_channel_id = property(lambda self: self._move_channel_id)
     owner_id = property(lambda self: self._owner_id)
     guild_id = property(lambda self: self._guild_id)
+    name = property(lambda self: self._name)
+    locked = property(lambda self: self._locked)
+    user_limit = property(lambda self: self._user_limit)
+    hidden = property(lambda self: self._hidden)
 
 
 class Ticket:
@@ -757,3 +777,60 @@ class Ticket:
     guild_id = property(lambda self: self._guild_id)
     user_ids = property(lambda self: self._user_ids)
     mod_ids = property(lambda self: self._mod_ids)
+
+
+class WaitingResponse:
+    """
+    Represents either the latest report of user_id on guild_id or a specific warn by report_id.
+    Args:
+        channel_id       (int): Discord TextChannelID
+        user_id          (int): Discord UserID
+        id               (str): Internally ID
+    Attributes:
+        id               (str): Internally ID
+        user_id          (int): ID of the user to wait for response
+        channel_id       (int): ID of the textchannel to wait for response
+        response         (str): The response given
+        guild_id         (int): ID of the guild where waiting for the response
+    """
+    def __init__(self, channel_id: int = None, user_id: int = None, id: str = None):
+        # Fetch entry out of database
+        if id:
+            @connection
+            def execution(_c: Cursor):
+                _c.execute("SELECT * FROM waiting_for_responses WHERE id=? LIMIT 1", (id,))
+                return _c.fetchone()
+
+            entry = execution()
+
+            # Check if there is a entry with the id
+            if not entry:
+                raise DatabaseEntryError(table='waiting_for_responses', attribute='id', keyword=id)
+        elif channel_id and user_id:
+            @connection
+            def execution(_c: Cursor):
+                _c.execute("SELECT * FROM waiting_for_responses WHERE channel_id=? AND user_id=? LIMIT 1", (channel_id,
+                                                                                                            user_id))
+                return _c.fetchone()
+
+            entry = execution()
+
+            # Check if there is a entry with the id
+            if not entry:
+                raise DatabaseEntryError(table='waiting_for_responses', attribute='channel_id', keyword=channel_id,
+                                         conditions={'user_id': user_id})
+        else:
+            raise DatabaseError('Provide either channel_id and user_id or the id')
+
+        self._id = entry[0]
+        self._user_id = entry[1]
+        self._channel_id = entry[2]
+        self._response = entry[3]
+        self._guild_id = entry[4]
+
+    # Add properties
+    id = property(lambda self: self._id)
+    user_id = property(lambda self: self._user_id)
+    channel_id = property(lambda self: self._channel_id)
+    response = property(lambda self: self._response)
+    guild_id = property(lambda self: self._guild_id)

@@ -279,23 +279,28 @@ def _create_tables(c: Cursor) -> None:
     c.execute('''CREATE TABLE private_rooms (
                     room_id TEXT PRIMARY KEY,
                     room_channel_id INTEGER NOT NULL,
-                    move_channel_id INTEGER NOT NULL,
+                    move_channel_id INTEGER,
                     owner_id INTEGER NOT NULL,
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)
                         REFERENCES guilds (guild_id)
                     )''')
 
-    # TODO: Weitere Attribute zu pr_settings hinzufügen
     '''
     TABLE: pr_settings                   # Settings for private rooms
     PRIMARY KEY: pr_settings_id          # AUTOINCREMENT
-    ATTRIBUTE: ...
+    ATTRIBUTE: name
+    ATTRIBUTE: locked                    # 0 or 1
+    ATTRIBUTE: limit                     # 0 for no limit
+    ATTRIBUTE: hidden                    # 0 or 1
     FOREIGN KEY: room_id  (private_rooms)
     '''
     c.execute('''CREATE TABLE pr_settings (
                     pr_settings_id TEXT PRIMARY KEY,
-                    
+                    name TEXT NOT NULL,
+                    locked INTEGER NOT NULL,
+                    user_limit INTEGER NOT NULL,
+                    hidden INTEGER NOT NULL,
                     room_id INTEGER NOT NULL,
                     FOREIGN KEY (room_id)
                         REFERENCES private_rooms (room_id)
@@ -323,7 +328,6 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: ticket_users
-    PRIMARY KEY: relation_id            # AUTOINCREMENT
     ATTRIBUTE: user_id                  # Discord UserID
     ATTRIBUTE: is_mod                   # 0 or 1
     ATTRIBUTE: ticket_id                # (Table tickets: ticket_id)
@@ -335,3 +339,21 @@ def _create_tables(c: Cursor) -> None:
                     FOREIGN KEY (ticket_id)
                         REFERENCES tickets (ticket_id)
                     )''')
+
+    '''
+    TABLE: waiting_for_responses
+    PRIMARY KEY: id
+    ATTRIBUTE: user_id                  # Discord UserID
+    ATTRIBUTE: channel_id               # Discord TextChannelID
+    ATTRIBUTE: response
+    ATTRIBUTE: guild_id                 # (Table guilds: guild_id)
+    '''
+    c.execute('''CREATE TABLE waiting_for_responses (
+                        id TEXT PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        channel_id INTEGER NOT NULL,
+                        response TEXT,
+                        guild_id TEXT NOT NULL,
+                        FOREIGN KEY (guild_id)
+                            REFERENCES guilds (guild_id)
+                        )''')

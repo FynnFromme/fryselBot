@@ -1,3 +1,5 @@
+import asyncio
+
 from discord import Guild, Role, Permissions, TextChannel, Member, Message, Embed, Client
 from datetime import datetime, timedelta
 
@@ -60,6 +62,9 @@ async def setup_mute_in_guild(guild: Guild) -> None:
 
     # Add role permissions to all text_channels
     for channel in guild.text_channels:
+        # Ignore if the channel is a settings channel for private rooms
+        if (channel.id, guild.id) in select.all_pr_settings():
+            continue
         await channel.set_permissions(mute_role, send_messages=False)
 
 
@@ -69,6 +74,11 @@ async def setup_mute_in_channel(channel: TextChannel) -> None:
     :param channel: TextChannel to set permissions
     """
     guild: Guild = channel.guild
+
+    # Ignore if the channel is a settings channel for private rooms
+    await asyncio.sleep(1)  # Wait until the settings channel is in database
+    if (channel.id, guild.id) in select.all_pr_settings():
+        return
 
     mute_role = await get_mute_role(guild)
 

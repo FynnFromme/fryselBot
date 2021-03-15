@@ -1,9 +1,12 @@
-from discord import Member, VoiceChannel, VoiceState
+from discord import Member, VoiceChannel, VoiceState, Guild, TextChannel, Message
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-from fryselBot.system import welcome
-from fryselBot.system.private_rooms import private_rooms
+from fryselBot.database.manager import DatabaseEntryError
+from fryselBot.database.select import PrivateRoom
+from fryselBot.system import welcome, waiting_for_responses
+from fryselBot.system.private_rooms import private_rooms, settings
+from fryselBot.utilities import secret
 
 
 class PrivateRooms(commands.Cog):
@@ -51,6 +54,34 @@ class PrivateRooms(commands.Cog):
             # Check whether the channel is a private room
             if private_rooms.is_private_room(channel):
                 await private_rooms.leave_private_room(member, channel)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        """Called when there is a reaction on a message added. Handles the ones on setup commands."""
+        # Retrieve information out of payload
+        guild: Guild = self.client.get_guild(payload.guild_id)
+        channel: TextChannel = guild.get_channel(payload.channel_id)
+        message: Message = await channel.fetch_message(payload.message_id)
+        member: Member = guild.get_member(payload.user_id)
+        emoji = payload.emoji.name
+
+        # Check reaction if the reaction is in a settings channel and the member owns a private room
+        if private_rooms.is_settings_channel(channel):
+            try:
+                private_room: PrivateRoom = PrivateRoom(guild.id, owner_id=member.id)
+            except DatabaseEntryError:
+                if member.id != secret.bot_id:
+                    await message.remove_reaction(emoji, member)
+                return
+            else:
+                await settings.check_reactions(member, guild, private_room, message, emoji, True)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: Message):
+        if isinstance(message.channel, TextChannel):
+            if private_rooms.is_settings_channel(message.channel) and message.author.id != secret.bot_id:
+                waiting_for_responses.handle_response(message)
+                await message.delete()
 
 
 def setup(client: Bot):

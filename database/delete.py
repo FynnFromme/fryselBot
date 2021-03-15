@@ -52,6 +52,8 @@ pr_settings = _delete_by_keyword_factory(table='pr_settings', keyword='room_id')
 
 ticket = _delete_by_keyword_factory(table='tickets', keyword='ticket_id')
 
+waiting_for_response = _delete_by_keyword_factory(table='waiting_for_responses', keyword='id')
+
 
 @connection
 def ticket_user(_c: Cursor, ticket_id: str, user_id: str) -> None:
@@ -114,3 +116,13 @@ def all_entries_of_guild(_c: Cursor, guild_id: str) -> None:
 
     for table in tables:
         _c.execute("DELETE FROM {} WHERE guild_id=='{}'".format(table, guild_id))
+
+
+@connection
+def all_waiting_for_responses(_c: Cursor) -> None:
+    """
+    Delete alle entries of waiting for responses
+    :param _c: Database cursor (privided by decorator)
+    """
+    # Delete all entries
+    _c.execute('DELETE FROM waiting_for_responses')

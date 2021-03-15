@@ -14,7 +14,7 @@ def _update_by_keyword_factory(table: str, attribute: str, keyword: str) -> Call
     """
 
     @connection
-    def update_by_keyword_id(_c: Cursor, argument: str, value=None) -> None:
+    def update_by_keyword_id(_c: Cursor, argument: int, value=None) -> None:
         """
         Updates the attribute in the table to value by guild_id.
         :param _c: Database cursor (provided by decorator)
@@ -24,11 +24,12 @@ def _update_by_keyword_factory(table: str, attribute: str, keyword: str) -> Call
         """
         if type(value) == bool:
             value = int(value)
+
         # Update the attribute in table
-        if value:  # Set to value if value != None
-            _c.execute("UPDATE {} SET {}='{}' WHERE {}=='{}'".format(table, attribute, value, keyword, argument))
+        if value is not None:  # Set to value if value != None
+            _c.execute(f"UPDATE {table} SET {attribute}=? WHERE {keyword}==?", (value, argument))
         else:  # Set to NULL if value == None
-            _c.execute('UPDATE {} SET {}=NULL WHERE {}=={}'.format(table, attribute, keyword, argument))
+            _c.execute(f"UPDATE {table} SET {attribute}=NULL WHERE {keyword}==?", (argument,))
 
     return update_by_keyword_id
 
@@ -61,6 +62,18 @@ welcome_dms = _update_by_keyword_factory(table='guild_settings', attribute='welc
 
 welcome_dm = _update_by_keyword_factory(table='guild_settings', attribute='welcome_dm', keyword='guild_id')
 
-owner_id = _update_by_keyword_factory(table='private_rooms', attribute='owner_id', keyword='room_id')
+pr_owner_id = _update_by_keyword_factory(table='private_rooms', attribute='owner_id', keyword='room_id')
+
+pr_move_channel_id = _update_by_keyword_factory(table='private_rooms', attribute='move_channel_id', keyword='room_id')
+
+pr_name = _update_by_keyword_factory(table='pr_settings', attribute='name', keyword='room_id')
+
+pr_locked = _update_by_keyword_factory(table='pr_settings', attribute='locked', keyword='room_id')
+
+pr_user_limit = _update_by_keyword_factory(table='pr_settings', attribute='user_limit', keyword='room_id')
+
+pr_hidden = _update_by_keyword_factory(table='pr_settings', attribute='hidden', keyword='room_id')
 
 voice_channel_id = _update_by_keyword_factory(table='tickets', attribute='voice_channel_id', keyword='ticket_id')
+
+response = _update_by_keyword_factory(table='waiting_for_responses', attribute='response', keyword='id')

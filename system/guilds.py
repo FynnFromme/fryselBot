@@ -3,6 +3,7 @@ from fryselBot.system import welcome, moderation
 
 from discord import Guild, Client, Role, VoiceChannel, Member
 
+from fryselBot.system import private_rooms as pr_sys
 from fryselBot.system.moderation import mute, moderation
 from fryselBot.system.private_rooms import private_rooms
 
@@ -108,7 +109,7 @@ async def check_channels(client: Client) -> None:
             else:
                 if owner in members:
                     # Do nothing if the owner is in the channel
-                    return
+                    pass
                 else:
                     # Reset permissions for owner and find new owner
                     await private_rooms.leave_private_room(owner, channel)
@@ -118,15 +119,14 @@ async def check_channels(client: Client) -> None:
 
     # Iterate through channels
     for channel_id, guild_id in channels:
+
         guild: Guild = client.get_guild(guild_id)
 
         # Check if the channel exists
         if channel_id not in list(map(lambda c: c.id, guild.channels)):
-            # Private rooms: Delete private room
+            # Private rooms: Unlock private room
             private_room = select.PrivateRoom(guild_id=guild.id, move_channel_id=channel_id)
-            owner: Member = guild.get_member(private_room.owner_id)
-            await private_rooms.remove_owner_permissions(owner, private_room)
-            await private_rooms.delete_private_room(guild, private_room)
+            await pr_sys.settings.unlock(guild, private_room)
 
     # Cpr channels: List of pairs of channel_ids and guild_ids
     channels = select.all_cpr_channels()

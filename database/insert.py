@@ -253,7 +253,7 @@ def report(_c: Cursor, reporter_id: int, user_id: int, date: datetime.datetime, 
 
 
 @connection
-def private_room(_c: Cursor, room_channel_id: int, move_channel_id: int, owner_id: int, guild_id: int) -> None:
+def private_room(_c: Cursor, room_channel_id: int, owner_id: int, guild_id: int, move_channel_id: int = None) -> str:
     """
     Insert private_room into db
     :param _c: Database cursor (provided by decorator)
@@ -263,32 +263,42 @@ def private_room(_c: Cursor, room_channel_id: int, move_channel_id: int, owner_i
     :param guild_id: Discord UserID
     :return: None
     """
-
+    room_id = generate_new_id(table='private_rooms', identifier='room_id')
     # Insert into db
     _c.execute('INSERT INTO private_rooms VALUES (:room_id, :room_channel_id, :move_channel_id, :owner_id, :guild_id)',
-               {'room_id': generate_new_id(table='private_rooms', identifier='room_id'),
+               {'room_id': room_id,
                 'room_channel_id': room_channel_id,
                 'move_channel_id': move_channel_id,
                 'owner_id': owner_id,
                 'guild_id': guild_id
                 })
+    return room_id
 
 
 @connection
-def pr_settings(_c: Cursor, room_id: str) -> None:
+def pr_settings(_c: Cursor, room_id: str, name: str, locked: bool = False, user_limit: int = 0,
+                hidden: bool = False) -> None:
     """
     Insert private room settings into db
     :param _c: Database cursor (provided by decorator)
     :param room_id: room_id (Table: private_rooms)
-    :return: None
+    :param name: Name of private room
+    :param locked: Whether the private room is locked
+    :param user_limit: Limit of private room (0 for no limit)
+    :param hidden: Whether the private room is hidden
     """
-    # TODO: Weitere Attribute hinzufügen (Zuerst in _manager._create_tables() hinzufügen)
+    # Parse bool to int
+    locked = int(locked)
+    hidden = int(hidden)
 
     # Insert into db
-    _c.execute('INSERT INTO pr_settings VALUES ({} , {})'.format(
-        generate_new_id(table='pr_settings', identifier='pr_settings_id'),
-        room_id))
-    raise NotImplementedError()
+    _c.execute('INSERT INTO pr_settings VALUES (:id, :name, :locked, :user_limit, :hidden, :room_id)', {
+        'id': generate_new_id(table='pr_settings', identifier='pr_settings_id'),
+        'name': name,
+        'locked': locked,
+        'user_limit': user_limit,
+        'hidden': hidden,
+        'room_id': room_id})
 
 
 @connection
@@ -336,3 +346,26 @@ def ticket_user(_c: Cursor, user_id: int, ticket_id: str, is_mod: bool = False) 
                 'is_mod': is_mod,
                 'ticket_id': ticket_id
                 })
+
+
+@connection
+def waiting_for_reponse(_c: Cursor, user_id: int, channel_id: int, guild_id: int) -> str:
+    """
+    Insert waiting for response
+    :param _c: Database cursor (provided by decorator)
+    :param user_id: Discord UserID
+    :param channel_id: Discord TextChaannelID
+    :param guild_id: Guild of waiting
+    :return: Id of created entry
+    """
+    waiting_id = generate_new_id(table='waiting_for_responses', identifier='id')
+
+    # Insert waiting into db
+    _c.execute('INSERT INTO waiting_for_responses VALUES (:id, :user_id, :channel_id, NULL, :guild_id)',
+               {'id': waiting_id,
+                'user_id': user_id,
+                'channel_id': channel_id,
+                'guild_id': guild_id
+                })
+
+    return waiting_id

@@ -5,6 +5,7 @@ from discord.ext.commands import Bot
 from discord import Message
 
 # fryselBot imports
+from fryselBot.database import delete
 from system import cogs, guilds, appearance, help
 from utilities import secret
 
@@ -35,6 +36,8 @@ async def on_ready():
 
     for check in guilds.async_checks:
         await check(client)
+
+    delete.all_waiting_for_responses()
 
     # States, that the bot is ready
     print('{} is logged in as user {}'.format(appearance.bot_name, client.user.name))
