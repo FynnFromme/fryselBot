@@ -1,6 +1,7 @@
+from fryselBot.system.private_rooms import private_rooms
 from fryselBot.utilities import secret, util
 from fryselBot.system import description, appearance, permission
-from discord import Message, Guild, Member, TextChannel, Embed, Forbidden
+from discord import Message, Guild, Member, TextChannel, Embed, Forbidden, VoiceChannel
 
 
 async def cmd_help(message: Message, cmd_name: str) -> None:
@@ -82,8 +83,13 @@ async def _member_help(message: Message) -> None:
             embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.description, inline=False)
 
     # Add fields for other bot functions
-    for func in description.functions:
-        embed.add_field(name='`' + func.name + '`', value=func.description, inline=False)
+    cpr_channel: VoiceChannel = private_rooms.get_cpr_channel(guild)
+    if cpr_channel:
+        settings_channel: TextChannel = private_rooms.get_settings_channel(guild)
+        embed.add_field(name='\u200b', value='\u200b', inline=False)
+        embed.add_field(name='Private Rooms', value=f'• Join `{cpr_channel.name}` to create a private Room\n'
+                                                    f'• Adjust the settings in {settings_channel.mention}',
+                        inline=False)
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)
@@ -133,7 +139,6 @@ async def _mod_help(message: Message, channel: TextChannel, footer: bool = True)
 async def _admin_help(message: Message, channel: TextChannel) -> None:
     """
     Sends help message for admins via dm.
-    :return: None
     """
     # Initialize attributes of message
     guild: Guild = message.guild
@@ -149,10 +154,6 @@ async def _admin_help(message: Message, channel: TextChannel) -> None:
     for cmd in description.commands:
         if cmd.admin_only and cmd.in_help(guild):
             embed.add_field(name='`' + prefix + cmd.syntax + '`', value=cmd.description, inline=False)
-
-    # Add fields for other bot functions
-    for func in description.functions:
-        embed.add_field(name='`' + func.name + '`', value=func.description, inline=False)
 
     # Setup embed style
     embed.colour = appearance.get_color(guild.id)

@@ -96,7 +96,7 @@ class GuildUpdates(commands.Cog):
         """Is called when a role is deleted on a guild"""
         guild = role.guild
         # Check whether the role is in database
-        if (role.id, guild.id) in select.all_moderation_roles():
+        if (role.id, guild.id) in select.all_roles():
             # Delete role out of database
             delete.role(role.id)
 

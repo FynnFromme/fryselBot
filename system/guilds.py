@@ -149,7 +149,7 @@ def check_roles(client: Client) -> None:
     :param client: Bot client
     """
     # List of pairs of role_ids and guild_ids
-    roles = select.all_moderation_roles()
+    roles = select.all_roles()
 
     # Iterate through channels
     for role_id, guild_id in roles:

@@ -165,11 +165,11 @@ commands = [  # User commands
             admin_only=True, in_help=False),
     Command('roles', 'setup roles', 'Page to set up the roles.', admin_only=True, in_help=False),
     Command('roles add', 'setup roles add <type> <role>', 'Add the role.',
-            {'type': "*'admin'*, *'moderator'* or *'supporter'*",
+            {'type': "*'admin'*, *'moderator'* or *'autorole'*",
              'role': 'Role mention or name'},
             admin_only=True, in_help=False),
     Command('roles remove', 'setup roles remove <type> <role>', 'Remove the role.',
-            {'type': "*'admin'*, *'moderator'* or *'supporter'*",
+            {'type': "*'admin'*, *'moderator'* or *'autorole'*",
              'role': 'Role mention or name'},
             admin_only=True, in_help=False),
     Command('moderation', 'setup moderation', 'Page to set up the moderation.', admin_only=True, in_help=False),
@@ -216,32 +216,3 @@ def get_similar_command(name: str) -> tuple[bool, Command]:
     else:
         # Unsure: suggestion
         return True, highest_ration[0]
-
-
-class Function:
-    """
-    Represents a function of the bot.
-    Arguments:
-        name           (str): Name of the function
-        description    (str): Description of the function
-        setup_cmd  (Command): Command to set it up
-    Attributes:
-        name           (str): Name of the function
-        description    (str): Description of the function
-        setup_cmd      (str): Command to set it up
-    """
-
-    def __init__(self, name: str, description: str, setup_cmd: Command):
-        # Initializing attributes
-        self._name = name
-        self._description = description
-        self._setup_cmd = setup_cmd
-
-    # Adding properties
-    name = property(lambda self: self._name)
-    description = property(lambda self: self._description)
-    setup_cmd = property(lambda self: self._setup_cmd)
-
-
-# Description of other functions
-functions = {}

@@ -2,7 +2,7 @@ from discord import Member
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-from fryselBot.system import welcome
+from fryselBot.system import welcome, roles
 
 
 class Welcome(commands.Cog):
@@ -26,6 +26,7 @@ class Welcome(commands.Cog):
 
         await welcome.welcome_message(member)
         await welcome.welcome_dm(member)
+        await roles.add_auto_roles(member)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: Member):

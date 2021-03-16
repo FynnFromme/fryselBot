@@ -50,6 +50,8 @@ private_room = _delete_by_keyword_factory(table='private_rooms', keyword='room_i
 
 pr_settings = _delete_by_keyword_factory(table='pr_settings', keyword='room_id')
 
+default_pr_settings = _delete_by_keyword_factory(table='default_pr_settings', keyword='guild_id')
+
 ticket = _delete_by_keyword_factory(table='tickets', keyword='ticket_id')
 
 waiting_for_response = _delete_by_keyword_factory(table='waiting_for_responses', keyword='id')
@@ -112,7 +114,8 @@ def all_entries_of_guild(_c: Cursor, guild_id: str) -> None:
                     )'''.format(guild_id))
 
     # Delete all entries of tables with guild_id attribute
-    tables = ['guilds', 'guild_settings', 'roles', 'bans', 'mutes', 'warns', 'reports', 'private_rooms', 'tickets']
+    tables = ['guilds', 'guild_settings', 'roles', 'bans', 'mutes', 'warns', 'reports', 'private_rooms', 'tickets',
+              'waiting_for_responses', 'default_pr_settings']
 
     for table in tables:
         _c.execute("DELETE FROM {} WHERE guild_id=='{}'".format(table, guild_id))

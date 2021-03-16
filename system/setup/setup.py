@@ -99,7 +99,9 @@ async def check_reactions(member: Member, guild: Guild, channel: TextChannel, me
                 await roles.roles_page(channel, guild)
         elif title == f'{bot_name} Setup - Private Rooms':
             if emoji == '🔉':
-                await private_rooms.toggle_private_rooms(channel, guild, message)
+                await private_rooms.toggle_private_rooms(guild, message)
+            if emoji == '⚙️':
+                await private_rooms.set_default_settings(member, channel)
 
 
 async def setup_page(channel: TextChannel, guild: Guild) -> None:

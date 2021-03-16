@@ -141,10 +141,9 @@ def _create_tables(c: Cursor) -> None:
                     mute_role_id INTEGER
                     )''')
 
-    # TODO: Add welcome_dms und welcome_dm_message
     '''
     TABLE: guild_settings
-    PRIMARY KEY: setting_id           # AUTOINCREMENT
+    PRIMARY KEY: setting_id
     ATTRIBUTE: prefix
     ATTRIBUTE: color                  # hex as integer
     ATTRIBUTE: welcome_messages       # 0 or 1
@@ -169,7 +168,7 @@ def _create_tables(c: Cursor) -> None:
     '''
     TABLE: roles
     PRIMARY KEY: role_id                 # Discord role id
-    ATTRIBUTE: type                      # 'ADMIN', 'MODERATOR' or 'SUPPORTER'
+    ATTRIBUTE: type                      # 'ADMIN', 'MODERATOR', 'AUTOROLE or 'SUPPORTER'
     FOREIGN KEY: guild_id  (guilds)
     '''
     c.execute('''CREATE TABLE roles (
@@ -182,7 +181,7 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: bans
-    PRIMARY KEY: ban_id                  # AUTOINCREMENT
+    PRIMARY KEY: ban_id
     ATTRIBUTE: temp                      # 0 or 1
     ATTRIBUTE: user_id                   # Discord user id
     ATTRIBUTE: mod_id                    # Discord user id
@@ -206,7 +205,7 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: mutes
-    PRIMARY KEY: mute_id                  # AUTOINCREMENT
+    PRIMARY KEY: mute_id
     ATTRIBUTE: temp                      # 0 or 1
     ATTRIBUTE: user_id                   # Discord user id
     ATTRIBUTE: mod_id                    # Discord user id
@@ -230,7 +229,7 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: warns
-    PRIMARY KEY: warn_id                 # AUTOINCREMENT
+    PRIMARY KEY: warn_i
     ATTRIBUTE: user_id                   # Discord user id
     ATTRIBUTE: mod_id                    # Discord user id
     ATTRIBUTE: reason
@@ -250,7 +249,7 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: reports
-    PRIMARY KEY: report_id               # AUTOINCREMENT
+    PRIMARY KEY: report_id
     ATTRIBUTE: reporter_id               # Discord user id
     ATTRIBUTE: user_id                # Discord user id
     ATTRIBUTE: reason
@@ -270,7 +269,7 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: private_rooms                 # Create Private Room voice channels
-    PRIMARY KEY: room_id                 # AUTOINCREMENT
+    PRIMARY KEY: room_id
     ATTRIBUTE: room_channel_id           # Discord voice channel id
     ATTRIBUTE: move_channel_id           # Discord voice channel id
     ATTRIBUTE: owner_id                  # Discord user id
@@ -288,8 +287,9 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: pr_settings                   # Settings for private rooms
-    PRIMARY KEY: pr_settings_id          # AUTOINCREMENT
+    PRIMARY KEY: pr_settings_id          
     ATTRIBUTE: name
+    ATTRIBUTE: game_activity             # 0 or 1
     ATTRIBUTE: locked                    # 0 or 1
     ATTRIBUTE: limit                     # 0 for no limit
     ATTRIBUTE: hidden                    # 0 or 1
@@ -297,7 +297,8 @@ def _create_tables(c: Cursor) -> None:
     '''
     c.execute('''CREATE TABLE pr_settings (
                     pr_settings_id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
+                    name TEXT,
+                    game_activity NOT NULL,
                     locked INTEGER NOT NULL,
                     user_limit INTEGER NOT NULL,
                     hidden INTEGER NOT NULL,
@@ -305,6 +306,28 @@ def _create_tables(c: Cursor) -> None:
                     FOREIGN KEY (room_id)
                         REFERENCES private_rooms (room_id)
                     )''')
+
+    '''
+    TABLE: default_pr_settings           #  Default settings for private rooms
+    ATTRIBUTE: id
+    ATTRIBUTE: name
+    ATTRIBUTE: game_activity             # 0 or 1
+    ATTRIBUTE: locked                    # 0 or 1
+    ATTRIBUTE: limit                     # 0 for no limit
+    ATTRIBUTE: hidden                    # 0 or 1
+    FOREIGN KEY: guild_id  (guilds)
+    '''
+    c.execute('''CREATE TABLE default_pr_settings (
+                        id TEXT PRIMARY KEY,
+                        name TEXT,
+                        game_activity NOT NULL,
+                        locked INTEGER NOT NULL,
+                        user_limit INTEGER NOT NULL,
+                        hidden INTEGER NOT NULL,
+                        guild_id INTEGER NOT NULL,
+                        FOREIGN KEY (guild_id)
+                            REFERENCES guilds (guild_id)
+                        )''')
 
     '''
     TABLE: tickets                       # Support ticket

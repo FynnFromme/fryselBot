@@ -1,4 +1,4 @@
-from discord import Guild, Role
+from discord import Guild, Role, Member
 from fryselBot.database import insert, delete, select
 
 
@@ -11,6 +11,9 @@ def add_admin_role(guild: Guild, role: Role) -> None:
     # Throw exception if the role isn't a role of the guild
     if role not in guild.roles:
         raise Exception('role has to be a role on the guild')
+
+    if role == guild.default_role:
+        raise Exception('Cannot add default role')
 
     # Ignore if the role is already marked as an admin role
     if role.id in select.admin_roles(guild.id):
@@ -56,6 +59,9 @@ def add_moderator_role(guild: Guild, role: Role) -> None:
     if role not in guild.roles:
         raise Exception('role has to be a role on the guild')
 
+    if role == guild.default_role:
+        raise Exception('Cannot add default role')
+
     # Ignore if the role is already marked as a moderator role
     if role.id in select.moderator_roles(guild.id):
         return
@@ -90,9 +96,56 @@ def get_moderator_roles(guild: Guild) -> list:
     return roles
 
 
-def add_support_role(guild: Guild, role: Role) -> None:
+# def add_support_role(guild: Guild, role: Role) -> None:
+#     """
+#     Add support role to database.
+#     :param guild: Guild to add the role
+#     :param role: Role that will be added
+#     """
+#     # Throw exception if the role isn't a role of the guild
+#     if role not in guild.roles:
+#         raise Exception('role has to be a role on the guild')
+#
+#     if role == guild.default_role:
+#         raise Exception('Cannot add default role')
+#
+#     # Ignore if the role is already marked as a support role
+#     if role.id in select.support_roles(guild.id):
+#         return
+#
+#     # Insert role to database
+#     insert.role(role.id, 'SUPPORTER', guild.id)
+#
+#
+# def remove_support_role(role: Role) -> None:
+#     """
+#     Remove support role from database.
+#     :param role: Role that will be removed
+#     """
+#     # Delete role from database
+#     delete.role(role.id, type='SUPPORTER')
+#
+#
+# def get_support_roles(guild: Guild) -> list:
+#     """
+#     Creates a list of all support roles on the guild
+#     :param guild: Guild to search support roles
+#     :return: List of all support roles on the guild
+#     """
+#     # Get all IDs of support roles
+#     role_ids = select.support_roles(guild.id)
+#
+#     # Create list of all roles
+#     roles = []
+#     for role_id in role_ids:
+#         roles.append(guild.get_role(role_id))
+#
+#     return roles
+
+
+def add_auto_role(guild: Guild, role: Role) -> None:
     """
-    Add support role to database.
+    Add auto role to database.
     :param guild: Guild to add the role
     :param role: Role that will be added
     """
@@ -100,31 +153,34 @@ def add_support_role(guild: Guild, role: Role) -> None:
     if role not in guild.roles:
         raise Exception('role has to be a role on the guild')
 
+    if role == guild.default_role:
+        raise Exception('Cannot add default role')
+
     # Ignore if the role is already marked as a support role
     if role.id in select.support_roles(guild.id):
         return
 
     # Insert role to database
-    insert.role(role.id, 'SUPPORTER', guild.id)
+    insert.role(role.id, 'AUTOROLE', guild.id)
 
 
-def remove_support_role(role: Role) -> None:
+def remove_auto_role(role: Role) -> None:
     """
-    Remove support role from database.
+    Remove auto role from database.
     :param role: Role that will be removed
     """
     # Delete role from database
-    delete.role(role.id, type='SUPPORTER')
+    delete.role(role.id, type='AUTOROLE')
 
 
-def get_support_roles(guild: Guild) -> list:
+def get_auto_roles(guild: Guild) -> list:
     """
-    Creates a list of all support roles on the guild
-    :param guild: Guild to search support roles
-    :return: List of all support roles on the guild
+    Creates a list of all auto roles on the guild
+    :param guild: Guild to search auto roles
+    :return: List of all auto roles on the guild
     """
     # Get all IDs of support roles
-    role_ids = select.support_roles(guild.id)
+    role_ids = select.auto_roles(guild.id)
 
     # Create list of all roles
     roles = []
@@ -132,3 +188,13 @@ def get_support_roles(guild: Guild) -> list:
         roles.append(guild.get_role(role_id))
 
     return roles
+
+
+async def add_auto_roles(member: Member) -> None:
+    """
+    Adds the autoroles to the member
+    :param member: Member to add autoroles
+    """
+    autoroles: list[Role] = get_auto_roles(member.guild)
+
+    await member.add_roles(*autoroles, reason='Autorole')

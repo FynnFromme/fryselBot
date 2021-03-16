@@ -113,14 +113,14 @@ def role(_c: Cursor, role_id: int, type_: str, guild_id: int) -> None:
     Insert role into db.
     :param _c: Database cursor (provided by decorator)
     :param role_id: Discord RoleID
-    :param type_: Type of role ("MODERATOR", "ADMIN" or "SUPPORTER")
+    :param type_: Type of role ("MODERATOR", "ADMIN", "AUTOROLE" or "SUPPORTER")
     :param guild_id: Discord GuildID
     :return: None
     """
     # Check type_ for requirements
-    if not (type_ == 'MODERATOR' or type_ == 'ADMIN' or type_ == 'SUPPORTER'):
+    if not (type_ == 'MODERATOR' or type_ == 'ADMIN' or type_ == 'SUPPORTER' or type_ == 'AUTOROLE'):
         raise DatabaseAttributeError('type_', False, type_,
-                                     "type_ has to be 'MODERATOR', 'ADMIN' or 'SUPPORTER'.")
+                                     "type_ has to be 'MODERATOR', 'ADMIN', 'AUTOROLE' or 'SUPPORTER'.")
 
     # Insert into db
     _c.execute('INSERT INTO roles VALUES (:role_id, :type, :guild_id)', {'role_id': role_id, 'type': type_,
@@ -276,13 +276,14 @@ def private_room(_c: Cursor, room_channel_id: int, owner_id: int, guild_id: int,
 
 
 @connection
-def pr_settings(_c: Cursor, room_id: str, name: str, locked: bool = False, user_limit: int = 0,
-                hidden: bool = False) -> None:
+def pr_settings(_c: Cursor, room_id: str, name: str = None, game_activity: bool = False, locked: bool = False,
+                user_limit: int = 0, hidden: bool = False) -> None:
     """
     Insert private room settings into db
     :param _c: Database cursor (provided by decorator)
     :param room_id: room_id (Table: private_rooms)
     :param name: Name of private room
+    :param game_activity: Whether to show game activity in the name
     :param locked: Whether the private room is locked
     :param user_limit: Limit of private room (0 for no limit)
     :param hidden: Whether the private room is hidden
@@ -290,15 +291,48 @@ def pr_settings(_c: Cursor, room_id: str, name: str, locked: bool = False, user_
     # Parse bool to int
     locked = int(locked)
     hidden = int(hidden)
+    game_activity = int(game_activity)
 
     # Insert into db
-    _c.execute('INSERT INTO pr_settings VALUES (:id, :name, :locked, :user_limit, :hidden, :room_id)', {
+    _c.execute('INSERT INTO pr_settings VALUES (:id, :name, :game_activity, :locked, :user_limit, :hidden, :room_id)', {
         'id': generate_new_id(table='pr_settings', identifier='pr_settings_id'),
         'name': name,
+        'game_activity': game_activity,
         'locked': locked,
         'user_limit': user_limit,
         'hidden': hidden,
         'room_id': room_id})
+
+
+@connection
+def default_pr_settings(_c: Cursor, guild_id: int, name: str = None, game_activity: bool = False, locked: bool = False,
+                        user_limit: int = 0, hidden: bool = False) -> None:
+    """
+    Insert private room settings into db
+    :param _c: Database cursor (provided by decorator)
+    :param guild_id: Guild of default settings (Table: guilds)
+    :param name: Name of private room
+    :param game_activity: Whether to show game activity in the name
+    :param locked: Whether the private room is locked
+    :param user_limit: Limit of private room (0 for no limit)
+    :param hidden: Whether the private room is hidden
+    """
+    # Parse bool to int
+    locked = int(locked)
+    hidden = int(hidden)
+    game_activity = int(game_activity)
+
+    # Insert into db
+    _c.execute('INSERT INTO default_pr_settings VALUES (:id, :name, :game_activity, :locked, :user_limit, :hidden, '
+               ':guild_id)',
+               {'id': generate_new_id(table='pr_settings', identifier='pr_settings_id'),
+                'name': name,
+                'game_activity': game_activity,
+                'locked': locked,
+                'user_limit': user_limit,
+                'hidden': hidden,
+                'guild_id': guild_id}
+               )
 
 
 @connection

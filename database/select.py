@@ -116,6 +116,16 @@ pr_settings_id = _select_by_guild_id_factory(table='guilds', attribute='pr_setti
 
 pr_categroy_id = _select_by_guild_id_factory(table='guilds', attribute='pr_category_id')
 
+default_pr_name = _select_by_guild_id_factory(table='default_pr_settings', attribute='name')
+
+default_pr_game_activity = _select_by_guild_id_factory(table='default_pr_settings', attribute='game_activity')
+
+default_pr_locked = _select_by_guild_id_factory(table='default_pr_settings', attribute='locked')
+
+default_pr_user_limit = _select_by_guild_id_factory(table='default_pr_settings', attribute='user_limit')
+
+default_pr_hidden = _select_by_guild_id_factory(table='default_pr_settings', attribute='hidden')
+
 mod_log_id = _select_by_guild_id_factory(table='guilds', attribute='mod_log_id')
 
 support_log_id = _select_by_guild_id_factory(table='guilds', attribute='support_log_id')
@@ -141,6 +151,8 @@ moderator_roles = _select_by_guild_id_factory(table='roles', attribute='role_id'
 support_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='SUPPORTER')
 
 admin_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='ADMIN')
+
+auto_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='AUTOROLE')
 
 
 def _select_all_factory(table: str, attributes: list) -> Callable[[Cursor], list]:
@@ -186,7 +198,7 @@ all_welcome_channels = _select_all_factory('guilds', ['welcome_channel_id', 'gui
 
 all_moderation_logs = _select_all_factory('guilds', ['mod_log_id', 'guild_id'])
 
-all_moderation_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
+all_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
 
 all_private_rooms = _select_all_factory('private_rooms', ['room_channel_id', 'guild_id'])
 
@@ -582,6 +594,7 @@ class PrivateRoom:
         owner_id         (int): ID of the owner from the server
         guild_id         (int): ID of the guild of the private room
         name             (str): Name of private room
+        game_activity   (bool): Whether to show game activity in the name
         locked          (bool): Whether the room is locked
         user_limit       (int):  User limit of room
         hidden          (bool): Whether the room is hidden
@@ -658,9 +671,16 @@ class PrivateRoom:
 
             # Initializing settings attributes
             self._name = settings[1]
-            self._locked = bool(settings[2])
-            self._user_limit = settings[3]
-            self._hidden = bool(settings[4])
+            self._game_activity = bool(settings[2])
+            self._locked = bool(settings[3])
+            self._user_limit = settings[4]
+            self._hidden = bool(settings[5])
+        else:
+            self._name = None
+            self._game_activity = None
+            self._locked = None
+            self._user_limit = None
+            self._hidden = None
 
     # Add properties
     room_id = property(lambda self: self._room_id)
@@ -669,6 +689,7 @@ class PrivateRoom:
     owner_id = property(lambda self: self._owner_id)
     guild_id = property(lambda self: self._guild_id)
     name = property(lambda self: self._name)
+    game_activity = property(lambda self: self._game_activity)
     locked = property(lambda self: self._locked)
     user_limit = property(lambda self: self._user_limit)
     hidden = property(lambda self: self._hidden)

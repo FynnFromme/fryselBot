@@ -218,7 +218,7 @@ class Moderation(commands.Cog):
 
     ####################################
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(seconds=30)
     async def check_expired(self):
         """Checks for expired temporary mutes"""
         await mute.check_expired(self.client)

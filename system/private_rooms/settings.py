@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from discord import VoiceChannel, Guild, Role, PermissionOverwrite, CategoryChannel, Member, NotFound, TextChannel, \
-    Embed, Message, Forbidden
+    Embed, Message, Forbidden, Client, Game
 
 from fryselBot.database import update, select
 from fryselBot.database.select import PrivateRoom
@@ -9,8 +9,43 @@ from fryselBot.system import appearance, waiting_for_responses
 from fryselBot.system.private_rooms import private_rooms
 from fryselBot.utilities import secret
 
+default_name = f"<owner>'s Room"
 
-async def set_name(guild: Guild, private_room: PrivateRoom) -> None:
+
+def get_name(guild: Guild, owner: Member) -> str:
+    """
+
+    :param guild:
+    :param owner:
+    :return:
+    """
+    default_guild_name = select.default_pr_name(guild.id)
+
+    if default_guild_name:
+        name = default_guild_name.replace('<owner>', owner.display_name)
+    else:
+        name = default_name.replace('<owner>', owner.display_name)
+    return name
+
+
+async def set_name(name: str, guild: Guild, private_room: PrivateRoom) -> None:
+    """
+
+    :param name:
+    :param guild:
+    :param private_room:
+    """
+    pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
+    owner: Member = guild.get_member(private_room.owner_id)
+
+    name.replace('<owner>', owner.mention)
+
+    if pr_channel:
+        if pr_channel.name != name:
+            await pr_channel.edit(name=name)
+
+
+async def name_response(guild: Guild, private_room: PrivateRoom) -> None:
     """
 
     :param guild:
@@ -27,11 +62,72 @@ async def set_name(guild: Guild, private_room: PrivateRoom) -> None:
     if len(response) > 40:
         return
 
-    pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
-
-    await pr_channel.edit(name=response)
+    await set_name(response, guild, private_room)
 
     update.pr_name(private_room.room_id, response)
+
+
+async def handle_game_activity(client: Client) -> None:
+    """
+
+    :param client:
+    """
+    rooms: list[PrivateRoom] = [PrivateRoom(guild_id=g_id, room_channel_id=pr_id)
+                                for pr_id, g_id
+                                in select.all_private_rooms()]
+
+    for room in filter(lambda r: r.game_activity, rooms):
+        guild: Guild = client.get_guild(room.guild_id)
+        await check_game_activity(guild, room)
+
+
+async def check_game_activity(guild: Guild, private_room: PrivateRoom) -> None:
+    """
+
+    :param guild:
+    :param private_room:
+    """
+    pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
+    owner: Member = guild.get_member(private_room.owner_id)
+
+    # Create dict of games and how many members play them
+    games: dict[Game, float] = {}
+    for member in pr_channel.members:
+        for game in filter(lambda a: isinstance(a, Game), member.activities):
+            # Owner activities are more important
+            if owner.id == member.id:
+                if game in games:
+                    games[game] += 1.5
+                else:
+                    games[game] = 1.5
+            else:
+                if game in games:
+                    games[game] += 1.5
+                else:
+                    games[game] = 1.5
+
+    if games:
+        game: Game = max(games, key=games.get)
+        await set_name(f'Playing {game.name}', guild, private_room)
+    else:
+        await set_name(get_name(guild, owner), guild, private_room)
+
+
+async def toggle_game_activity(guild: Guild, private_room: PrivateRoom):
+    """
+
+    :param guild:
+    :param private_room:
+    :return:
+    """
+    if private_room.game_activity:
+        # Disable game activity
+        update.pr_game_activity(argument=private_room.room_id, value=False)
+        owner: Member = guild.get_member(private_room.owner_id)
+        await set_name(get_name(guild, owner), guild, private_room)
+    else:
+        # Enable game activity
+        update.pr_game_activity(argument=private_room.room_id, value=True)
 
 
 async def lock(guild: Guild, private_room: PrivateRoom) -> None:
@@ -53,7 +149,8 @@ async def lock(guild: Guild, private_room: PrivateRoom) -> None:
     await pr_channel.set_permissions(default_role, overwrite=overwrite)
 
     # Create move channel and set perms
-    perms = {pr_owner: PermissionOverwrite(connect=False, move_members=True)}
+    perms = {pr_owner: PermissionOverwrite(connect=False, move_members=True),
+             default_role: PermissionOverwrite(speak=False)}
 
     if private_room.hidden:
         perms[default_role] = PermissionOverwrite(view_channel=False)
@@ -112,7 +209,24 @@ async def toggle_lock(guild: Guild, private_room: PrivateRoom) -> None:
         await lock(guild, private_room)
 
 
-async def set_limit(guild: Guild, private_room: PrivateRoom) -> None:
+async def set_user_limit(limit: int, guild: Guild, private_room: PrivateRoom) -> None:
+    """
+
+    :param limit:
+    :param guild:
+    :param private_room:
+    """
+    pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
+
+    if pr_channel:
+        if pr_channel.user_limit != limit:
+            await pr_channel.edit(user_limit=limit)
+
+    # Update database
+    update.pr_user_limit(private_room.room_id, limit)
+
+
+async def limit_response(guild: Guild, private_room: PrivateRoom) -> None:
     """
 
     :param guild:
@@ -131,31 +245,12 @@ async def set_limit(guild: Guild, private_room: PrivateRoom) -> None:
 
     limit = int(response)
 
-    pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
-
     if limit > 99:
         limit = 99
     elif limit < 0:
         limit = 0
 
-    await pr_channel.edit(user_limit=limit)
-
-    # Update database
-    update.pr_user_limit(private_room.room_id, limit)
-
-
-async def reset_limit(guild: Guild, private_room: PrivateRoom) -> None:
-    """
-
-    :param guild:
-    :param private_room:
-    """
-    pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
-
-    await pr_channel.edit(user_limit=0)
-
-    # Update database
-    update.pr_user_limit(private_room.room_id, 0)
+    await set_user_limit(limit, guild, private_room)
 
 
 async def hide(guild: Guild, private_room: PrivateRoom) -> None:
@@ -233,6 +328,12 @@ async def information_message(guild: Guild, private_room: PrivateRoom) -> None:
     embed: Embed = Embed(title='Your Private Room Settings', timestamp=datetime.utcnow(),
                          colour=appearance.get_color(guild.id))
 
+    # Add information about game activity
+    if private_room.game_activity:
+        embed.add_field(name='Game Activity', value='Game activity will be shown 🎮', inline=False)
+    else:
+        embed.add_field(name='Game Activity', value='Game activity will not be shown', inline=False)
+
     # Add information about privacy status
     if private_room.locked:
         embed.add_field(name='Privacy', value='Currently locked 🔒', inline=False)
@@ -291,9 +392,12 @@ async def setup_settings(guild: Guild) -> None:
                               colour=appearance.get_color(guild.id))
     lock_embed.add_field(name='Set Name', value='React with 🪧 to change the name of your private room\n'
                                                 'You have 10 seconds time to write the new name in this text channel')
+    lock_embed.add_field(name='Toggle Game Activity', value='React with 🎮 to toggle whether the main game activity of '
+                                                            'your room is shown in the name', inline=False)
 
     lock_msg: Message = await settings_channel.send(embed=lock_embed)
     await lock_msg.add_reaction(emoji='🪧')
+    await lock_msg.add_reaction(emoji='🎮')
 
     # Send lock embed and add emoji
     lock_embed: Embed = Embed(title='Privacy', description='Decide whether members can join your private room or '
@@ -336,6 +440,7 @@ async def check_reactions(member: Member, guild: Guild, private_room: PrivateRoo
     :param emoji: Emoji that was reacted
     :param added: Whether the reaction was added or removed
     """
+
     if message.author.id != secret.bot_id:
         # Ignore reactions on messages, that are from other ones
         return
@@ -366,7 +471,10 @@ async def check_reactions(member: Member, guild: Guild, private_room: PrivateRoo
         elif title == 'Name':
             if emoji == '🪧':
                 # Set name
-                await set_name(guild, private_room)
+                await name_response(guild, private_room)
+            if emoji == '🎮':
+                # Toggle game activity
+                await toggle_game_activity(guild, private_room)
 
         elif title == 'Privacy':
             if emoji == '🔒':
@@ -376,12 +484,25 @@ async def check_reactions(member: Member, guild: Guild, private_room: PrivateRoo
         elif title == 'Limit':
             if emoji == '🔄':
                 # Reset limit
-                await reset_limit(guild, private_room)
+                await set_user_limit(0, guild, private_room)
             elif emoji == '🔢':
                 # Set limit
-                await set_limit(guild, private_room)
+                await limit_response(guild, private_room)
 
         elif title == 'Visibility':
             if emoji == '👀':
                 # Deactivate moderation log
                 await toggle_hide(guild, private_room)
+
+
+def set_default(guild: Guild, private_room: PrivateRoom) -> None:
+    """
+
+    :param guild:
+    :param private_room:
+    :return:
+    """
+    update.default_pr_game_activity(argument=guild.id, value=private_room.game_activity)
+    update.default_pr_locked(argument=guild.id, value=private_room.locked)
+    update.default_pr_user_limit(argument=guild.id, value=private_room.user_limit)
+    update.default_pr_hidden(argument=guild.id, value=private_room.hidden)

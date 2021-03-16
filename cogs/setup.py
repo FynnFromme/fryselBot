@@ -8,6 +8,7 @@ from fryselBot.system.setup import setup as setup_setup, \
     color as color_setup, \
     welcome, roles, moderation, private_rooms
 from fryselBot.system.private_rooms import private_rooms as pr_sys
+from fryselBot.utilities import util
 
 
 class Setup(commands.Cog):
@@ -156,8 +157,14 @@ class Setup(commands.Cog):
     async def roles_add_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the roles add command"""
         # Handle error messages
-        await error_messages.error_handler(ctx, error, description.get_command('roles add'), 'Type',
-                                           'The type must be either *admin*, *moderator* or *supporter*.', True)
+        if error.args[0].endswith('add default role'):
+            # Cannot add default role
+            await util.delete_message(ctx.message)
+            await error_messages.invalid_input_error(ctx, title='Role',
+                                                     description='Cannot add @everyone')
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('roles add'), 'Type',
+                                               'The type must be either *admin*, *moderator* or *autorole*.', True)
 
     @roles.command(name='remove')
     async def roles_remove(self, ctx: Context, type_: str, role: Role):

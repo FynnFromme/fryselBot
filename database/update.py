@@ -68,11 +68,25 @@ pr_move_channel_id = _update_by_keyword_factory(table='private_rooms', attribute
 
 pr_name = _update_by_keyword_factory(table='pr_settings', attribute='name', keyword='room_id')
 
+pr_game_activity = _update_by_keyword_factory(table='pr_settings', attribute='game_activity', keyword='room_id')
+
 pr_locked = _update_by_keyword_factory(table='pr_settings', attribute='locked', keyword='room_id')
 
 pr_user_limit = _update_by_keyword_factory(table='pr_settings', attribute='user_limit', keyword='room_id')
 
 pr_hidden = _update_by_keyword_factory(table='pr_settings', attribute='hidden', keyword='room_id')
+
+default_pr_name = _update_by_keyword_factory(table='default_pr_settings', attribute='name', keyword='guild_id')
+
+default_pr_game_activity = _update_by_keyword_factory(table='default_pr_settings', attribute='game_activity',
+                                                      keyword='guild_id')
+
+default_pr_locked = _update_by_keyword_factory(table='default_pr_settings', attribute='locked', keyword='guild_id')
+
+default_pr_user_limit = _update_by_keyword_factory(table='default_pr_settings', attribute='user_limit',
+                                                   keyword='guild_id')
+
+default_pr_hidden = _update_by_keyword_factory(table='default_pr_settings', attribute='hidden', keyword='guild_id')
 
 voice_channel_id = _update_by_keyword_factory(table='tickets', attribute='voice_channel_id', keyword='ticket_id')
 

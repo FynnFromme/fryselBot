@@ -6,6 +6,7 @@ from discord import Message
 
 # fryselBot imports
 from fryselBot.database import delete
+from fryselBot.system.private_rooms import private_rooms
 from system import cogs, guilds, appearance, help
 from utilities import secret
 
@@ -55,12 +56,15 @@ async def on_message(message: Message):
     if message.author.bot:
         # Ignore messages from bots
         return
-    elif message.content == appearance.default_prefix + 'help':
-        # Default help command
-        await help.help_command(message)
     elif message.guild is None:
         # Private messages
         pass
+    elif private_rooms.is_settings_channel(message.channel):
+        # Ignore messages in settings channel
+        return
+    elif message.content == appearance.default_prefix + 'help':
+        # Default help command
+        await help.help_command(message)
     else:
         # Guild messages
         await client.process_commands(message)

@@ -1,5 +1,5 @@
 from discord import Member, VoiceChannel, VoiceState, Guild, TextChannel, Message
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import Bot
 
 from fryselBot.database.manager import DatabaseEntryError
@@ -20,6 +20,7 @@ class PrivateRooms(commands.Cog):
     def __init__(self, client: Bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = client
+        self.check_activity.start()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
@@ -28,7 +29,6 @@ class PrivateRooms(commands.Cog):
         # When member joins a voicechannel
         if before.channel is None and after.channel is not None and before.channel != after.channel:
             channel: VoiceChannel = after.channel
-
             # Check whether the channel is the cpr channel
             if private_rooms.is_cpr_channel(channel):
                 await private_rooms.create_private_room(member)
@@ -36,10 +36,8 @@ class PrivateRooms(commands.Cog):
         # When member leaves a voice_channel
         elif before.channel is not None and after.channel is None and before.channel != after.channel:
             channel: VoiceChannel = before.channel
-
             # Check whether the channel is a private room
             if private_rooms.is_private_room(channel):
-
                 await private_rooms.leave_private_room(member, channel)
 
         # When a member moves from one channel to another
@@ -53,6 +51,7 @@ class PrivateRooms(commands.Cog):
             channel: VoiceChannel = before.channel
             # Check whether the channel is a private room
             if private_rooms.is_private_room(channel):
+                print(7)
                 await private_rooms.leave_private_room(member, channel)
 
     @commands.Cog.listener()
@@ -78,10 +77,25 @@ class PrivateRooms(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
+        """..."""
         if isinstance(message.channel, TextChannel):
             if private_rooms.is_settings_channel(message.channel) and message.author.id != secret.bot_id:
                 waiting_for_responses.handle_response(message)
                 await message.delete()
+
+    #####################
+
+    @tasks.loop(minutes=1)
+    async def check_activity(self):
+        """Checks for new activities"""
+        await settings.handle_game_activity(self.client)
+
+    @check_activity.before_loop
+    async def before_check_activity(self):
+        """Wait until bot is ready"""
+        await self.client.wait_until_ready()
+
+    #####################
 
 
 def setup(client: Bot):
