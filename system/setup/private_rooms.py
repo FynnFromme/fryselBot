@@ -1,9 +1,9 @@
 from discord import TextChannel, Guild, Embed, Message, Member
 
-from fryselBot.database import select
+from fryselBot.database import select, update
 from fryselBot.database.select import PrivateRoom
 from fryselBot.system import appearance
-from fryselBot.system.private_rooms import private_rooms, settings as pr_settings
+from fryselBot.system.private_rooms import private_rooms, settings as pr_settings, settings
 
 
 async def private_rooms_page(channel: TextChannel, guild: Guild) -> None:
@@ -22,24 +22,52 @@ async def private_rooms_page(channel: TextChannel, guild: Guild) -> None:
     embed.colour = appearance.get_color(guild.id)
 
     # Emojis whether private rooms are setup
-    is_set_up = select.cpr_channel_id(guild.id) is not None
-    emoji = '✅' if is_set_up else '❌'
+    set_up_emoji = '✅' if select.cpr_channel_id(guild.id) is not None else '❌'
+    text_channel_emoji = '✅' if select.pr_text_channel_activated(guild.id) else '❌'
+    name_emoji = '✅' if select.pr_change_name(guild.id) else '❌'
+    privacy_emoji = '✅' if select.pr_change_privacy(guild.id) else '❌'
+    limit_emoji = '✅' if select.pr_change_limit(guild.id) else '❌'
+    visibility_emoji = '✅' if select.pr_change_visibility(guild.id) else '❌'
 
     # Setup the fields
-    embed.add_field(name='Private Rooms Set Up?', value=emoji, inline=True)
+    embed.add_field(name='Private Rooms Set Up?', value=set_up_emoji, inline=True)
 
     embed.add_field(name='Toggle Private Rooms', value='React with 🔉', inline=True)
+
+    embed.add_field(name='\u200b', value='\u200b', inline=True)
 
     embed.add_field(name='\u200b', value='\u200b', inline=False)
 
     embed.add_field(name='Default Settings', value='React with ⚙️ to set your current private room settings to the '
-                                                   'default ones of the server.', inline=False)
+                                                   'default ones of the server', inline=False)
+
+    embed.add_field(name='\u200b', value='\u200b', inline=False)
+
+    embed.add_field(name='Toggle Settings', value='React with the corresponding reaction to toggle whether the setting '
+                                                  'can be used on your server', inline=False)
+
+    embed.add_field(name='Text Channels #️⃣', value=text_channel_emoji, inline=True)
+
+    embed.add_field(name='Name 🪧', value=name_emoji, inline=True)
+
+    embed.add_field(name='Privacy 🔒', value=privacy_emoji, inline=True)
+
+    embed.add_field(name='Limit 🔢', value=limit_emoji, inline=True)
+
+    embed.add_field(name='Visibility 👀', value=visibility_emoji, inline=True)
+
+    embed.add_field(name='\u200b', value='\u200b', inline=True)
 
     # Send embed and add reactions
     message = await channel.send(embed=embed)
 
     await message.add_reaction(emoji='🔉')
     await message.add_reaction(emoji='⚙️')
+    await message.add_reaction(emoji='#️⃣')
+    await message.add_reaction(emoji='🪧')
+    await message.add_reaction(emoji='🔒')
+    await message.add_reaction(emoji='🔢')
+    await message.add_reaction(emoji='👀')
 
 
 async def toggle_private_rooms(guild: Guild, setup_message: Message) -> None:
@@ -62,10 +90,127 @@ async def toggle_private_rooms(guild: Guild, setup_message: Message) -> None:
     embed_name = embed.fields[0].name
     if new_status:
         embed.set_field_at(0, name=embed_name, value='✅', inline=True)
-        await setup_message.edit(embed=embed)
     else:
         embed.set_field_at(0, name=embed_name, value='❌', inline=True)
-        await setup_message.edit(embed=embed)
+
+    await setup_message.edit(embed=embed)
+
+
+async def toggle_text_channel(guild: Guild, setup_message: Message) -> None:
+    """
+    Toggles whether private rooms have text channels
+    :param guild: Guild of the call
+    :param setup_message: The message where the reaction was edited
+    """
+    new_status = not select.pr_text_channel_activated(guild.id)
+
+    # Setup or disable the private rooms on guild
+    update.pr_text_channel_activated(argument=guild.id, value=new_status)
+
+    # Change status within the embed
+    embed = setup_message.embeds[0]
+    embed_name = embed.fields[7].name
+    if new_status:
+        embed.set_field_at(7, name=embed_name, value='✅', inline=True)
+    else:
+        embed.set_field_at(7, name=embed_name, value='❌', inline=True)
+
+    await setup_message.edit(embed=embed)
+
+
+async def toggle_name(guild: Guild, setup_message: Message) -> None:
+    """
+    Toggles whether private rooms can change the name
+    :param guild: Guild of the call
+    :param setup_message: The message where the reaction was edited
+    """
+    new_status = not select.pr_change_name(guild.id)
+
+    # Setup or disable the private rooms on guild
+    update.pr_change_name(argument=guild.id, value=new_status)
+
+    # Change status within the embed
+    embed = setup_message.embeds[0]
+    embed_name = embed.fields[8].name
+    if new_status:
+        embed.set_field_at(8, name=embed_name, value='✅', inline=True)
+    else:
+        embed.set_field_at(8, name=embed_name, value='❌', inline=True)
+
+    await setup_message.edit(embed=embed)
+
+    await settings.setup_settings(guild)
+
+
+async def toggle_privacy(guild: Guild, setup_message: Message) -> None:
+    """
+    Toggles whether private rooms can change privacy
+    :param guild: Guild of the call
+    :param setup_message: The message where the reaction was edited
+    """
+    new_status = not select.pr_change_privacy(guild.id)
+    # Setup or disable the private rooms on guild
+    update.pr_change_privacy(argument=guild.id, value=new_status)
+
+    # Change status within the embed
+    embed = setup_message.embeds[0]
+    embed_name = embed.fields[9].name
+    if new_status:
+        embed.set_field_at(9, name=embed_name, value='✅', inline=True)
+    else:
+        embed.set_field_at(9, name=embed_name, value='❌', inline=True)
+
+    await setup_message.edit(embed=embed)
+
+    await settings.setup_settings(guild)
+
+
+async def toggle_limit(guild: Guild, setup_message: Message) -> None:
+    """
+    Toggles whether private rooms can change the user limit
+    :param guild: Guild of the call
+    :param setup_message: The message where the reaction was edited
+    """
+    new_status = not select.pr_change_limit(guild.id)
+
+    # Setup or disable the private rooms on guild
+    update.pr_change_limit(argument=guild.id, value=new_status)
+
+    # Change status within the embed
+    embed = setup_message.embeds[0]
+    embed_name = embed.fields[10].name
+    if new_status:
+        embed.set_field_at(10, name=embed_name, value='✅', inline=True)
+    else:
+        embed.set_field_at(10, name=embed_name, value='❌', inline=True)
+
+    await setup_message.edit(embed=embed)
+
+    await settings.setup_settings(guild)
+
+
+async def toggle_visibility(guild: Guild, setup_message: Message) -> None:
+    """
+    Toggles whether private rooms can change visibility
+    :param guild: Guild of the call
+    :param setup_message: The message where the reaction was edited
+    """
+    new_status = not select.pr_change_visibility(guild.id)
+
+    # Setup or disable the private rooms on guild
+    update.pr_change_visibility(argument=guild.id, value=new_status)
+
+    # Change status within the embed
+    embed = setup_message.embeds[0]
+    embed_name = embed.fields[11].name
+    if new_status:
+        embed.set_field_at(11, name=embed_name, value='✅', inline=True)
+    else:
+        embed.set_field_at(11, name=embed_name, value='❌', inline=True)
+
+    await setup_message.edit(embed=embed)
+
+    await settings.setup_settings(guild)
 
 
 async def set_default_settings(member: Member, channel: TextChannel) -> None:

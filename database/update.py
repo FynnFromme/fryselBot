@@ -40,7 +40,7 @@ cpr_channel_id = _update_by_keyword_factory(table='guilds', attribute='cpr_chann
 
 pr_settings_id = _update_by_keyword_factory(table='guilds', attribute='pr_settings_id', keyword='guild_id')
 
-pr_categroy_id = _update_by_keyword_factory(table='guilds', attribute='pr_category_id', keyword='guild_id')
+pr_category_id = _update_by_keyword_factory(table='guilds', attribute='pr_category_id', keyword='guild_id')
 
 mod_log_id = _update_by_keyword_factory(table='guilds', attribute='mod_log_id', keyword='guild_id')
 
@@ -62,9 +62,22 @@ welcome_dms = _update_by_keyword_factory(table='guild_settings', attribute='welc
 
 welcome_dm = _update_by_keyword_factory(table='guild_settings', attribute='welcome_dm', keyword='guild_id')
 
+pr_text_channel_activated = _update_by_keyword_factory(table='guild_settings', attribute='pr_text_channel',
+                                                       keyword='guild_id')
+
+pr_change_name = _update_by_keyword_factory(table='guild_settings', attribute='pr_name', keyword='guild_id')
+
+pr_change_privacy = _update_by_keyword_factory(table='guild_settings', attribute='pr_privacy', keyword='guild_id')
+
+pr_change_limit = _update_by_keyword_factory(table='guild_settings', attribute='pr_limit', keyword='guild_id')
+
+pr_change_visibility = _update_by_keyword_factory(table='guild_settings', attribute='pr_visibility', keyword='guild_id')
+
 pr_owner_id = _update_by_keyword_factory(table='private_rooms', attribute='owner_id', keyword='room_id')
 
 pr_move_channel_id = _update_by_keyword_factory(table='private_rooms', attribute='move_channel_id', keyword='room_id')
+
+pr_text_channel_id = _update_by_keyword_factory(table='private_rooms', attribute='text_channel_id', keyword='room_id')
 
 pr_name = _update_by_keyword_factory(table='pr_settings', attribute='name', keyword='room_id')
 

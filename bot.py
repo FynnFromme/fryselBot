@@ -41,7 +41,7 @@ async def on_ready():
     delete.all_waiting_for_responses()
 
     # States, that the bot is ready
-    print('{} is logged in as user {}'.format(appearance.bot_name, client.user.name))
+    print('\033[93m{} is logged in as user {}'.format(appearance.bot_name, client.user.name))
 
 
 @tasks.loop(seconds=30)

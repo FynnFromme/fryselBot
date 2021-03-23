@@ -1,3 +1,5 @@
+import asyncio
+
 from discord import Member, Embed, TextChannel, Guild, Message
 from fryselBot.system import appearance, roles, welcome as welcome_sys, permission
 from fryselBot.utilities import secret
@@ -98,10 +100,21 @@ async def check_reactions(member: Member, guild: Guild, channel: TextChannel, me
                 # Call roles page
                 await roles.roles_page(channel, guild)
         elif title == f'{bot_name} Setup - Private Rooms':
+            await asyncio.sleep(1)
             if emoji == '🔉':
                 await private_rooms.toggle_private_rooms(guild, message)
-            if emoji == '⚙️':
+            elif emoji == '⚙️':
                 await private_rooms.set_default_settings(member, channel)
+            elif emoji == '#️⃣':
+                await private_rooms.toggle_text_channel(guild, message)
+            elif emoji == '🪧':
+                await private_rooms.toggle_name(guild, message)
+            elif emoji == '🔒':
+                await private_rooms.toggle_privacy(guild, message)
+            elif emoji == '🔢':
+                await private_rooms.toggle_limit(guild, message)
+            elif emoji == '👀':
+                await private_rooms.toggle_visibility(guild, message)
 
 
 async def setup_page(channel: TextChannel, guild: Guild) -> None:

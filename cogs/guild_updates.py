@@ -55,6 +55,12 @@ class GuildUpdates(commands.Cog):
                 # Disable private rooms on guild
                 await private_rooms.disable(guild)
 
+            # Private Rooms: Check whether the channel is a text channel of a private room
+            if (channel.id, guild.id) in select.all_pr_text_channels():
+                # Delete private room
+                private_room = select.PrivateRoom(guild_id=guild.id, text_channel_id=channel.id)
+                await private_rooms.delete_private_room(guild, private_room)
+
         elif isinstance(channel, VoiceChannel):
             guild = channel.guild
             # Private Rooms: Check whether the channel is the cpr channel

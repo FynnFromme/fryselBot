@@ -61,10 +61,8 @@ async def check_channels(client: Client) -> None:
     :param client: Bot client
     """
     # Welcome System:List of pairs of channel_ids and guild_ids
-    channels = select.all_welcome_channels()
-
     # Iterate through channels
-    for channel_id, guild_id in channels:
+    for channel_id, guild_id in select.all_welcome_channels():
         guild: Guild = client.get_guild(guild_id)
         # Check if the channel exists
         if channel_id not in list(map(lambda c: c.id, guild.channels)):
@@ -74,10 +72,8 @@ async def check_channels(client: Client) -> None:
             welcome.set_welcome_channel(guild, channel_id=None)
 
     # Moderation Log: List of pairs of channel_ids and guild_ids
-    channels = select.all_moderation_logs()
-
     # Iterate through channels
-    for channel_id, guild_id in channels:
+    for channel_id, guild_id in select.all_moderation_logs():
         guild: Guild = client.get_guild(guild_id)
         # Check if the channel exists
         if channel_id not in list(map(lambda c: c.id, guild.channels)):
@@ -85,10 +81,8 @@ async def check_channels(client: Client) -> None:
             moderation.set_mod_log(guild, channel_id=None)
 
     # Private_rooms: List of pairs of channel_ids and guild_ids
-    channels = select.all_private_rooms()
-
     # Iterate through channels
-    for channel_id, guild_id in channels:
+    for channel_id, guild_id in select.all_private_rooms():
         guild: Guild = client.get_guild(guild_id)
         private_room = select.PrivateRoom(guild_id=guild.id, room_channel_id=channel_id)
         owner = guild.get_member(private_room.owner_id)
@@ -115,18 +109,24 @@ async def check_channels(client: Client) -> None:
                     await private_rooms.leave_private_room(owner, channel)
 
     # Move channels: List of pairs of channel_ids and guild_ids
-    channels = select.all_move_channels()
-
     # Iterate through channels
-    for channel_id, guild_id in channels:
-
+    for channel_id, guild_id in select.all_move_channels():
         guild: Guild = client.get_guild(guild_id)
-
         # Check if the channel exists
         if channel_id not in list(map(lambda c: c.id, guild.channels)):
             # Private rooms: Unlock private room
             private_room = select.PrivateRoom(guild_id=guild.id, move_channel_id=channel_id)
             await pr_sys.settings.unlock(guild, private_room)
+
+    # PR Text channels: List of pairs of channel_ids and guild_ids
+    # Iterate through channels
+    for channel_id, guild_id in select.all_pr_text_channels():
+        guild: Guild = client.get_guild(guild_id)
+        # Check if the channel exists
+        if channel_id not in list(map(lambda c: c.id, guild.channels)):
+            # Private rooms: Unlock private room
+            private_room = select.PrivateRoom(guild_id=guild.id, text_channel_id=channel_id)
+            await private_rooms.delete_private_room(guild, private_room)
 
     # Cpr channels: List of pairs of channel_ids and guild_ids
     channels = select.all_cpr_channels()
@@ -136,7 +136,6 @@ async def check_channels(client: Client) -> None:
     # Iterate through channels
     for channel_id, guild_id in channels:
         guild: Guild = client.get_guild(guild_id)
-
         # Check if the channel exists
         if channel_id not in list(map(lambda c: c.id, guild.channels)):
             # Private rooms: Delete private room

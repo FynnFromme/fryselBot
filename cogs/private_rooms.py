@@ -1,4 +1,4 @@
-from discord import Member, VoiceChannel, VoiceState, Guild, TextChannel, Message
+from discord import Member, VoiceChannel, VoiceState, Guild, TextChannel, Message, NotFound
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot
 
@@ -32,6 +32,9 @@ class PrivateRooms(commands.Cog):
             # Check whether the channel is the cpr channel
             if private_rooms.is_cpr_channel(channel):
                 await private_rooms.create_private_room(member)
+            # Check whether the channel is the cpr channel
+            if private_rooms.is_private_room(channel):
+                await private_rooms.join_private_room(member, channel)
 
         # When member leaves a voice_channel
         elif before.channel is not None and after.channel is None and before.channel != after.channel:
@@ -44,25 +47,31 @@ class PrivateRooms(commands.Cog):
         elif before.channel is not None and after.channel is not None and before.channel != after.channel:
             channel: VoiceChannel = after.channel
 
-            # Check whether the channel is the cpr channel
+            # Check whether joined a cpr channel
             if private_rooms.is_cpr_channel(channel):
                 await private_rooms.create_private_room(member)
+
+            # Check whether joined a private room
+            if private_rooms.is_private_room(channel):
+                await private_rooms.join_private_room(member, channel)
 
             channel: VoiceChannel = before.channel
             # Check whether the channel is a private room
             if private_rooms.is_private_room(channel):
-                print(7)
                 await private_rooms.leave_private_room(member, channel)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         """Called when there is a reaction on a message added. Handles the ones on setup commands."""
         # Retrieve information out of payload
-        guild: Guild = self.client.get_guild(payload.guild_id)
-        channel: TextChannel = guild.get_channel(payload.channel_id)
-        message: Message = await channel.fetch_message(payload.message_id)
-        member: Member = guild.get_member(payload.user_id)
-        emoji = payload.emoji.name
+        try:
+            guild: Guild = self.client.get_guild(payload.guild_id)
+            channel: TextChannel = guild.get_channel(payload.channel_id)
+            message: Message = await channel.fetch_message(payload.message_id)
+            member: Member = guild.get_member(payload.user_id)
+            emoji = payload.emoji.name
+        except NotFound:
+            pass
 
         # Check reaction if the reaction is in a settings channel and the member owns a private room
         if private_rooms.is_settings_channel(channel):

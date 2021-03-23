@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
-from discord import Message, Guild, TextChannel, Member, Role
+from discord import Message, Guild, TextChannel, Member, Role, NotFound
 
 from fryselBot.system import description, error_messages, permission
 from fryselBot.system.setup import setup as setup_setup, \
@@ -28,11 +28,14 @@ class Setup(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         """Called when there is a reaction on a message added. Handles the ones on setup commands."""
         # Retrieve information out of payload
-        guild: Guild = self.client.get_guild(payload.guild_id)
-        channel: TextChannel = guild.get_channel(payload.channel_id)
-        message: Message = await channel.fetch_message(payload.message_id)
-        member: Member = guild.get_member(payload.user_id)
-        emoji = payload.emoji.name
+        try:
+            guild: Guild = self.client.get_guild(payload.guild_id)
+            channel: TextChannel = guild.get_channel(payload.channel_id)
+            message: Message = await channel.fetch_message(payload.message_id)
+            member: Member = guild.get_member(payload.user_id)
+            emoji = payload.emoji.name
+        except NotFound:
+            return
 
         # Ignore messages in the settings channel
         if pr_sys.is_settings_channel(channel):

@@ -1,9 +1,11 @@
+import asyncio
 from datetime import datetime
 
 from discord import VoiceChannel, Guild, Role, PermissionOverwrite, CategoryChannel, Member, NotFound, TextChannel, \
     Embed, Message, Forbidden, Client, Game
 
 from fryselBot.database import update, select
+from fryselBot.database.manager import DatabaseEntryError
 from fryselBot.database.select import PrivateRoom
 from fryselBot.system import appearance, waiting_for_responses
 from fryselBot.system.private_rooms import private_rooms
@@ -36,13 +38,23 @@ async def set_name(name: str, guild: Guild, private_room: PrivateRoom) -> None:
     :param private_room:
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
+    text_channel: TextChannel = guild.get_channel(private_room.text_channel_id)
     owner: Member = guild.get_member(private_room.owner_id)
 
     name.replace('<owner>', owner.mention)
 
     if pr_channel:
         if pr_channel.name != name:
-            await pr_channel.edit(name=name)
+            try:
+                await pr_channel.edit(name=name)
+            except NotFound:
+                pass
+
+            if text_channel:
+                try:
+                    await text_channel.edit(name=name)
+                except NotFound:
+                    pass
 
 
 async def name_response(guild: Guild, private_room: PrivateRoom) -> None:
@@ -59,7 +71,7 @@ async def name_response(guild: Guild, private_room: PrivateRoom) -> None:
     if not response:
         return
 
-    if len(response) > 40:
+    if len(response) > 20:
         return
 
     await set_name(response, guild, private_room)
@@ -143,6 +155,12 @@ async def lock(guild: Guild, private_room: PrivateRoom) -> None:
     pr_category: CategoryChannel = guild.get_channel(select.pr_categroy_id(guild.id))
     pr_owner: Member = guild.get_member(private_room.owner_id)
 
+    await asyncio.sleep(0.2)
+    try:
+        PrivateRoom(guild_id=guild.id, room_channel_id=pr_channel.id)
+    except DatabaseEntryError:
+        return
+
     # Set permission in pr_channel
     overwrite: PermissionOverwrite = pr_channel.overwrites_for(default_role)
     overwrite.update(connect=False)
@@ -176,9 +194,9 @@ async def unlock(guild: Guild, private_room: PrivateRoom) -> None:
 
     if private_room.locked:  # Unlock room
         # Set permission in pr_channel
-        overwrite: PermissionOverwrite = pr_channel.overwrites_for(default_role)
-        overwrite.update(connect=True)
         if pr_channel:
+            overwrite: PermissionOverwrite = pr_channel.overwrites_for(default_role)
+            overwrite.update(connect=True)
             try:
                 await pr_channel.set_permissions(default_role, overwrite=overwrite)
             except NotFound:
@@ -367,6 +385,9 @@ async def setup_settings(guild: Guild) -> None:
 
     :param guild:
     """
+    old_channel: TextChannel = private_rooms.get_settings_channel(guild)
+
+    await asyncio.sleep(0.2)
     category: CategoryChannel = private_rooms.get_category(guild)
 
     # Create settings channel, set permissions and add to database
@@ -378,55 +399,71 @@ async def setup_settings(guild: Guild) -> None:
                                                                     reason='Setup private rooms')
     update.pr_settings_id(argument=guild.id, value=settings_channel.id)
 
-    # Send settings embed and add emoji
-    settings_emebd: Embed = Embed(title='Private Room Settings', description='Here you can adjust your private room',
-                                  colour=appearance.get_color(guild.id))
-    settings_emebd.add_field(name='Current Settings', value='React with ℹ️ to get the current settings of your room '
-                                                            'via dm')
+    await asyncio.sleep(0.2)
 
-    settings_msg: Message = await settings_channel.send(embed=settings_emebd)
-    await settings_msg.add_reaction(emoji='ℹ️')
+    if old_channel:
+        try:
+            await old_channel.delete()
+        except NotFound:
+            pass
 
-    # Send lock embed and add emoji
-    lock_embed: Embed = Embed(title='Name', description='Set the name of your private room',
-                              colour=appearance.get_color(guild.id))
-    lock_embed.add_field(name='Set Name', value='React with 🪧 to change the name of your private room\n'
-                                                'You have 10 seconds time to write the new name in this text channel')
-    lock_embed.add_field(name='Toggle Game Activity', value='React with 🎮 to toggle whether the main game activity of '
-                                                            'your room is shown in the name', inline=False)
+    try:
+        # Send settings embed and add emoji
+        settings_emebd: Embed = Embed(title='Private Room Settings', description='Here you can adjust your private room',
+                                      colour=appearance.get_color(guild.id))
+        settings_emebd.add_field(name='Current Settings', value='React with ℹ️ to get the current settings of your room '
+                                                                'via dm')
 
-    lock_msg: Message = await settings_channel.send(embed=lock_embed)
-    await lock_msg.add_reaction(emoji='🪧')
-    await lock_msg.add_reaction(emoji='🎮')
+        settings_msg: Message = await settings_channel.send(embed=settings_emebd)
+        await settings_msg.add_reaction(emoji='ℹ️')
 
-    # Send lock embed and add emoji
-    lock_embed: Embed = Embed(title='Privacy', description='Decide whether members can join your private room or '
-                                                           'have to be moved',
-                              colour=appearance.get_color(guild.id))
-    lock_embed.add_field(name='Toggle Privacy', value='React with 🔒 to lock or unlock your private room')
+        if select.pr_change_name(guild.id):
+            # Send lock embed and add emoji
+            lock_embed: Embed = Embed(title='Name', description='Set the name of your private room',
+                                      colour=appearance.get_color(guild.id))
+            lock_embed.add_field(name='Set Name', value='React with 🪧 to change the name of your private room\n'
+                                                        'You have 10 seconds time to write the new name in this text channel'
+                                                        ' (20 characters maximum)')
+            lock_embed.add_field(name='Toggle Game Activity', value='React with 🎮 to toggle whether the main game activity of '
+                                                                    'your room is shown in the name', inline=False)
 
-    lock_msg: Message = await settings_channel.send(embed=lock_embed)
-    await lock_msg.add_reaction(emoji='🔒')
+            lock_msg: Message = await settings_channel.send(embed=lock_embed)
+            await lock_msg.add_reaction(emoji='🪧')
+            await lock_msg.add_reaction(emoji='🎮')
 
-    # Send limit embed and add emojis
-    limit_embed: Embed = Embed(title='Limit', description='Set how many users can join your channel',
-                               colour=appearance.get_color(guild.id))
-    limit_embed.add_field(name='No Limit', value='React with 🔄 to set no user limit', inline=False)
-    limit_embed.add_field(name='Limit', value='React with 🔢 to set the user limit to a specific number\n'
-                                              'You have 10 seconds time to write the new limit in this text channel',
-                          inline=False)
+        if select.pr_change_privacy(guild.id):
+            # Send lock embed and add emoji
+            lock_embed: Embed = Embed(title='Privacy', description='Decide whether members can join your private room or '
+                                                                   'have to be moved',
+                                      colour=appearance.get_color(guild.id))
+            lock_embed.add_field(name='Toggle Privacy', value='React with 🔒 to lock or unlock your private room')
 
-    limit_msg: Message = await settings_channel.send(embed=limit_embed)
-    await limit_msg.add_reaction(emoji='🔄')
-    await limit_msg.add_reaction(emoji='🔢')
+            lock_msg: Message = await settings_channel.send(embed=lock_embed)
+            await lock_msg.add_reaction(emoji='🔒')
 
-    # Send hide embed and add emoji
-    hide_embed: Embed = Embed(title='Visibility', description='Adjust whether your channel can be seen or not',
-                              colour=appearance.get_color(guild.id))
-    hide_embed.add_field(name='Toggle Visibility', value='React with 👀 to lock or unlock your private room')
+        if select.pr_change_limit(guild.id):
+            # Send limit embed and add emojis
+            limit_embed: Embed = Embed(title='Limit', description='Set how many users can join your channel',
+                                       colour=appearance.get_color(guild.id))
+            limit_embed.add_field(name='No Limit', value='React with 🔄 to set no user limit', inline=False)
+            limit_embed.add_field(name='Limit', value='React with 🔢 to set the user limit to a specific number\n'
+                                                      'You have 10 seconds time to write the new limit in this text channel',
+                                  inline=False)
 
-    hide_msg: Message = await settings_channel.send(embed=hide_embed)
-    await hide_msg.add_reaction(emoji='👀')
+            limit_msg: Message = await settings_channel.send(embed=limit_embed)
+            await limit_msg.add_reaction(emoji='🔄')
+            await limit_msg.add_reaction(emoji='🔢')
+
+        if select.pr_change_visibility(guild.id):
+            # Send hide embed and add emoji
+            hide_embed: Embed = Embed(title='Visibility', description='Adjust whether your channel can be seen or not',
+                                      colour=appearance.get_color(guild.id))
+            hide_embed.add_field(name='Toggle Visibility', value='React with 👀 to lock or unlock your private room')
+
+            hide_msg: Message = await settings_channel.send(embed=hide_embed)
+            await hide_msg.add_reaction(emoji='👀')
+    except NotFound:
+        return
 
 
 async def check_reactions(member: Member, guild: Guild, private_room: PrivateRoom, message: Message, emoji: str,

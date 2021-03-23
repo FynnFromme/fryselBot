@@ -1,6 +1,6 @@
 import asyncio
 
-from discord import Guild, Role, Permissions, TextChannel, Member, Message, Embed, Client
+from discord import Guild, Role, Permissions, TextChannel, Member, Message, Embed, Client, NotFound
 from datetime import datetime, timedelta
 
 from fryselBot.database import delete, select, insert, update
@@ -83,7 +83,11 @@ async def setup_mute_in_channel(channel: TextChannel) -> None:
     mute_role = await get_mute_role(guild)
 
     # Add role permissions to the channel
-    await channel.set_permissions(mute_role, send_messages=False)
+    try:
+        if channel:
+            await channel.set_permissions(mute_role, send_messages=False)
+    except NotFound:
+        pass
 
 
 async def mute(member: Member, moderator: Member, reason: str = None) -> None:

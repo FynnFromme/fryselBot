@@ -1,3 +1,4 @@
+import asyncio
 import random
 from sqlite3 import Cursor
 from typing import Optional
@@ -101,13 +102,11 @@ async def setup_private_rooms(guild: Guild) -> None:
     category: CategoryChannel = await guild.create_category('PRIVATE ROOMS', reason='Setup private rooms')
 
     # Create cpr channel
-    overwrites = {guild.default_role: PermissionOverwrite(speak=False)}
     cpr_channel: VoiceChannel = await guild.create_voice_channel('➕ Private Room', category=category,
-                                                                 reason='Setup private rooms',
-                                                                 overwrites=overwrites)
+                                                                 reason='Setup private rooms')
 
     # Add them to database
-    update.pr_categroy_id(argument=guild.id, value=category.id)
+    update.pr_category_id(argument=guild.id, value=category.id)
     update.cpr_channel_id(argument=guild.id, value=cpr_channel.id)
     insert.default_pr_settings(guild_id=guild.id)
 
@@ -145,7 +144,7 @@ async def disable(guild: Guild) -> None:
         pass
 
     # Remove from database
-    update.pr_categroy_id(argument=guild.id, value=None)
+    update.pr_category_id(argument=guild.id, value=None)
     update.cpr_channel_id(argument=guild.id, value=None)
     update.pr_settings_id(argument=guild.id, value=None)
     delete.default_pr_settings(guild.id)
@@ -169,8 +168,15 @@ async def create_private_room(owner: Member) -> None:
     for role in mod_roles:
         pr_overwrites[role] = PermissionOverwrite(view_channel=True, connect=True)
 
-    if select.default_pr_hidden(guild.id):
+    if select.default_pr_locked(guild.id) and select.default_pr_hidden(guild.id):
+        pr_overwrites[guild.default_role] = PermissionOverwrite(connect=False, view_channel=False)
+        pr_overwrites[owner] = PermissionOverwrite(connect=True, view_channel=True)
+    elif select.default_pr_locked(guild.id):
+        pr_overwrites[guild.default_role] = PermissionOverwrite(connect=False)
+        pr_overwrites[owner] = PermissionOverwrite(connect=True)
+    elif select.default_pr_hidden(guild.id):
         pr_overwrites[guild.default_role] = PermissionOverwrite(view_channel=False)
+        pr_overwrites[owner] = PermissionOverwrite(view_channel=True)
 
     # Create private room
     pr_channel = await guild.create_voice_channel(settings.get_name(guild, owner), category=category,
@@ -181,13 +187,26 @@ async def create_private_room(owner: Member) -> None:
     # Move owner into private room
     await owner.move_to(pr_channel, reason='Created private room')
 
-    # Insert into database
-    room_id = insert.private_room(room_channel_id=pr_channel.id, move_channel_id=None, owner_id=owner.id,
-                                  guild_id=guild.id)
+    if select.pr_text_channel_activated(guild.id):
+        # Create text channel
+        text_overwrites = {guild.default_role: PermissionOverwrite(view_channel=False),
+                           owner: PermissionOverwrite(view_channel=True)}
+        for role in mod_roles:
+            text_overwrites[role] = PermissionOverwrite(view_channel=True)
+
+        text_channel = await guild.create_text_channel(settings.get_name(guild, owner), category=category,
+                                                       overwrites=text_overwrites,
+                                                       reason='Created private room')
+
+        # Insert into database
+        room_id = insert.private_room(room_channel_id=pr_channel.id, text_channel_id=text_channel.id, owner_id=owner.id,
+                                      guild_id=guild.id)
+    else:
+        room_id = insert.private_room(room_channel_id=pr_channel.id, owner_id=owner.id, guild_id=guild.id)
 
     # Insert room settings into database
     insert.pr_settings(room_id=room_id, hidden=select.default_pr_hidden(guild.id),
-                       user_limit=select.default_pr_user_limit(guild.id))
+                       user_limit=select.default_pr_user_limit(guild.id), locked=select.default_pr_locked(guild.id))
 
     # Fetch database entry with settings
     private_room: PrivateRoom = select.PrivateRoom(guild_id=guild.id, room_channel_id=pr_channel.id)
@@ -199,8 +218,27 @@ async def create_private_room(owner: Member) -> None:
         await settings.toggle_game_activity(guild, private_room)
         await settings.check_game_activity(guild, private_room)
 
+    await asyncio.sleep(0.1)
     # Set the permissions for the owner
     await set_owner_permissions(owner, private_room)
+
+
+async def join_private_room(member: Member, channel: VoiceChannel) -> None:
+    """
+
+    :param member:
+    :param channel:
+    """
+    guild: Guild = member.guild
+
+    private_room: PrivateRoom = select.PrivateRoom(guild_id=guild.id, room_channel_id=channel.id)
+    if private_room.text_channel_id:
+        text_channel: TextChannel = guild.get_channel(private_room.text_channel_id)
+        try:
+            if text_channel:
+                await text_channel.set_permissions(member, view_channel=True)
+        except NotFound:
+            pass
 
 
 async def leave_private_room(member: Member, channel: VoiceChannel) -> None:
@@ -217,20 +255,28 @@ async def leave_private_room(member: Member, channel: VoiceChannel) -> None:
 
     # Check whether the owner left
     if member.id == owner_id:
+        members: list[Member] = list(filter(lambda m: not m.bot, channel.members))
         # Check whether there are members in the channel left
-        if list(filter(lambda m: not m.bot, channel.members)):
+        if members:
             # Search for new owner and set permissions
             new_owner = random.choice(channel.members)
             await set_owner(new_owner, private_room)
+        else:
+            # Delete channel if empty
+            await delete_private_room(guild, private_room)
 
         # Remove owner permissions of old owner
         owner = guild.get_member(owner_id)
         if owner:
             await remove_owner_permissions(owner, private_room)
 
-        # Delete the channel if the channel is empty
-        if not channel.members:
-            await delete_private_room(guild, private_room)
+    if private_room.text_channel_id:
+        text_channel: TextChannel = guild.get_channel(private_room.text_channel_id)
+        try:
+            if text_channel:
+                await text_channel.set_permissions(member, overwrite=None)
+        except NotFound:
+            pass
 
 
 async def set_owner_permissions(owner: Member, private_room: PrivateRoom) -> None:
@@ -245,11 +291,18 @@ async def set_owner_permissions(owner: Member, private_room: PrivateRoom) -> Non
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     if private_room.locked:
         move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
-        await move_channel.set_permissions(owner, move_members=True, connect=False)
+        try:
+            if move_channel:
+                await move_channel.set_permissions(owner, move_members=True, connect=False)
+        except NotFound:
+            pass
 
     # Set permissions in private room and move channel
-    if pr_channel:
-        await pr_channel.set_permissions(owner, move_members=True, connect=True)
+    try:
+        if pr_channel:
+            await pr_channel.set_permissions(owner, move_members=True, connect=True)
+    except NotFound:
+        pass
 
     # Set permissions for owner in settings and cpr channel
     await get_settings_channel(guild).set_permissions(owner, view_channel=True)
@@ -303,16 +356,14 @@ async def delete_private_room(guild: Guild, private_room: PrivateRoom) -> None:
     :param guild: Guild of private room
     :param private_room: PrivateRoom to delete
     """
+    # Delete out of database
+    delete.private_room(private_room.room_id)
+    delete.pr_settings(private_room.room_id)
+
+    await asyncio.sleep(0.3)
+
     # Fetch channels
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
-
-    if private_room.locked:
-        move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
-        try:
-            if move_channel:
-                await move_channel.delete()
-        except NotFound:
-            pass
 
     # Delete channels if they exist
     try:
@@ -321,9 +372,21 @@ async def delete_private_room(guild: Guild, private_room: PrivateRoom) -> None:
     except NotFound:
         pass
 
-    # Delete out of database
-    delete.private_room(private_room.room_id)
-    delete.pr_settings(private_room.room_id)
+    if private_room.text_channel_id:
+        text_channel: TextChannel = guild.get_channel(private_room.text_channel_id)
+        try:
+            if text_channel:
+                await text_channel.delete()
+        except NotFound:
+            pass
+
+    if private_room.locked:
+        move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
+        try:
+            if move_channel:
+                await move_channel.delete()
+        except NotFound:
+            pass
 
 
 async def set_owner(owner: Member, private_room: PrivateRoom) -> None:
@@ -359,6 +422,7 @@ async def delete_old_channels(message: Message, guild: Guild):
         _c.execute('DELETE FROM private_rooms')
         _c.execute('DELETE FROM pr_settings')
         _c.execute('DELETE FROM default_pr_settings')
+
     f()
 
 

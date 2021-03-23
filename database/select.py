@@ -116,6 +116,16 @@ pr_settings_id = _select_by_guild_id_factory(table='guilds', attribute='pr_setti
 
 pr_categroy_id = _select_by_guild_id_factory(table='guilds', attribute='pr_category_id')
 
+pr_text_channel_activated = _select_by_guild_id_factory(table='guild_settings', attribute='pr_text_channel')
+
+pr_change_name = _select_by_guild_id_factory(table='guild_settings', attribute='pr_name')
+
+pr_change_privacy = _select_by_guild_id_factory(table='guild_settings', attribute='pr_privacy')
+
+pr_change_limit = _select_by_guild_id_factory(table='guild_settings', attribute='pr_limit')
+
+pr_change_visibility = _select_by_guild_id_factory(table='guild_settings', attribute='pr_visibility')
+
 default_pr_name = _select_by_guild_id_factory(table='default_pr_settings', attribute='name')
 
 default_pr_game_activity = _select_by_guild_id_factory(table='default_pr_settings', attribute='game_activity')
@@ -203,6 +213,8 @@ all_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
 all_private_rooms = _select_all_factory('private_rooms', ['room_channel_id', 'guild_id'])
 
 all_move_channels = _select_all_factory('private_rooms', ['move_channel_id', 'guild_id'])
+
+all_pr_text_channels = _select_all_factory('private_rooms', ['text_channel_id', 'guild_id'])
 
 all_waiting_for_response = _select_all_factory('waiting_for_responses', ['user_id', 'channel_id'])
 
@@ -586,11 +598,13 @@ class PrivateRoom:
         owner_id          (int): Discord User ID
         room_channel_id   (int): Discord VoiceChannelID
         move_channel_id   (int): Discord VoiceChannelID
+        text_channel_id   (int): Discord TextChannelID
         include_settings (bool): Whether to include settings
     Attributes:
         room_id          (str): Internally room ID
         room_channel_id  (int): ID of the pr voice channel
         move_channel_id  (int): ID of the move voice channel
+        text_channel_id  (int): ID of the room's text channel
         owner_id         (int): ID of the owner from the server
         guild_id         (int): ID of the guild of the private room
         name             (str): Name of private room
@@ -601,7 +615,7 @@ class PrivateRoom:
     """
 
     def __init__(self, guild_id: int, owner_id: int = None, room_channel_id: int = None, move_channel_id: int = None,
-                 inclued_settings: bool = True):
+                 text_channel_id: int = None, inclued_settings: bool = True):
         # Fetch private room entry out of database
         if owner_id:
             # Get private room entry by owner_id
@@ -648,17 +662,33 @@ class PrivateRoom:
             if not entry:
                 raise DatabaseEntryError(table='private_rooms', attribute='move_channel_id', keyword=move_channel_id,
                                          conditions={'guild_id': guild_id})
+        elif text_channel_id:
+            # Get private room entry by move_channel_id
+            @connection
+            def execution(_c: Cursor):
+                _c.execute("SELECT * FROM private_rooms WHERE guild_id=='{}' AND text_channel_id=='{}' LIMIT 1".format(
+                    guild_id,
+                    text_channel_id))
+                return _c.fetchone()
+
+            entry = execution()
+
+            # Check if there is a private room with the channel_id
+            if not entry:
+                raise DatabaseEntryError(table='private_rooms', attribute='text_channel_id', keyword=text_channel_id,
+                                         conditions={'guild_id': guild_id})
         else:
             # Throw exception because there were not enough information about the room
             raise DatabaseError('''Error while initializing PrivateRoom object. At least one of owner_id, 
-            room_channel_id or move_channel_id has to be given''')
+            room_channel_id, text_channel_id or move_channel_id has to be given''')
 
         # Initializing attributes
         self._room_id = entry[0]
         self._room_channel_id = entry[1]
         self._move_channel_id = entry[2]
-        self._owner_id = entry[3]
-        self._guild_id = entry[4]
+        self._text_channel_id = entry[3]
+        self._owner_id = entry[4]
+        self._guild_id = entry[5]
 
         if inclued_settings:
             # Fetch private room settings entry
@@ -686,6 +716,7 @@ class PrivateRoom:
     room_id = property(lambda self: self._room_id)
     room_channel_id = property(lambda self: self._room_channel_id)
     move_channel_id = property(lambda self: self._move_channel_id)
+    text_channel_id = property(lambda self: self._text_channel_id)
     owner_id = property(lambda self: self._owner_id)
     guild_id = property(lambda self: self._guild_id)
     name = property(lambda self: self._name)

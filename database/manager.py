@@ -150,6 +150,11 @@ def _create_tables(c: Cursor) -> None:
     ATTRIBUTE: leave_messages         # 0 or 1
     ATTRIBUTE: welcome_dms            # 0 or 1
     ATTRIBUTE: welcome_dm
+    ATTRIBUTE: pr_text_channel        # 0 or 1
+    ATTRIBUTE: pr_name                # 0 or 1
+    ATTRIBUTE: pr_privacy             # 0 or 1
+    ATTRIBUTE: pr_limit               # 0 or 1
+    ATTRIBUTE: pr_visibility          # 0 or 1
     FOREIGN KEY: guild_id  (guilds)
     '''
     c.execute('''CREATE TABLE guild_settings (
@@ -160,6 +165,11 @@ def _create_tables(c: Cursor) -> None:
                     leave_messages INTEGER,
                     welcome_dms INTEGER,
                     welcome_dm TEXT,
+                    pr_text_channel INTEGER,
+                    pr_name INTEGER,
+                    pr_privacy INTEGER,
+                    pr_limit INTEGER,
+                    pr_visibility INTEGER,
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY(guild_id) 
                         REFERENCES guilds (guild_id)
@@ -229,7 +239,7 @@ def _create_tables(c: Cursor) -> None:
 
     '''
     TABLE: warns
-    PRIMARY KEY: warn_i
+    PRIMARY KEY: warn_id
     ATTRIBUTE: user_id                   # Discord user id
     ATTRIBUTE: mod_id                    # Discord user id
     ATTRIBUTE: reason
@@ -279,6 +289,7 @@ def _create_tables(c: Cursor) -> None:
                     room_id TEXT PRIMARY KEY,
                     room_channel_id INTEGER NOT NULL,
                     move_channel_id INTEGER,
+                    text_channel_id INTEGER,
                     owner_id INTEGER NOT NULL,
                     guild_id INTEGER NOT NULL,
                     FOREIGN KEY (guild_id)

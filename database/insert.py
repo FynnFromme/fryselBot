@@ -76,7 +76,10 @@ def guild(_c: Cursor, guild_id: int, welcome_channel_id: int = None, cpr_channel
 @connection
 def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, color: hex = None,
                    welcome_messages: bool = False, leave_messages: bool = False,
-                   welcome_dms: bool = False, welcome_dm: str = None) -> None:
+                   welcome_dms: bool = False, welcome_dm: str = None,
+                   pr_text_channel: bool = False, pr_name: bool = True,
+                   pr_privacy: bool = True, pr_limit: bool = True,
+                   pr_visibility: bool = False) -> None:
     """
     Insert guild_settings to db.
     :param _c: Database cursor (provided by decorator)
@@ -87,15 +90,26 @@ def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, color: hex = N
     :param leave_messages: Whether leave messages are activated
     :param welcome_dms: Whether welcome direct messages are activated
     :param welcome_dm: The text that will be send to new members
-    :return: None
+    :param pr_text_channel: Whether textchannels for private rooms are activated on the guild
+    :param pr_name: Whether the names of private rooms can be changed
+    :param pr_privacy: Whether the private rooms can be locked
+    :param pr_limit: Whether a user limit can be set for private rooms
+    :param pr_visibility: Whether a private room can be made invisible
     """
     # Parse bool into int
     welcome_messages = int(welcome_messages)
     leave_messages = int(leave_messages)
+    welcome_dms = int(welcome_dms)
+    pr_text_channel = int(pr_text_channel)
+    pr_name = int(pr_name)
+    pr_privacy = int(pr_privacy)
+    pr_limit = int(pr_limit)
+    pr_visibility = int(pr_visibility)
 
     # Insert into db
     _c.execute('''INSERT INTO guild_settings VALUES (:setting_id, :prefix, :color, 
-                :welcome_messages, :leave_messages, :welcome_dms, :welcome_dm, :guild_id)''',
+                :welcome_messages, :leave_messages, :welcome_dms, :welcome_dm, 
+                :pr_text_channel, :pr_name, :pr_privacy, :pr_limit, :pr_visibility, :guild_id)''',
                {'setting_id': generate_new_id(table='guild_settings', identifier='setting_id'),
                 'prefix': prefix,
                 'color': color,
@@ -103,6 +117,11 @@ def guild_settings(_c: Cursor, guild_id: int, prefix: str = None, color: hex = N
                 'leave_messages': leave_messages,
                 'welcome_dms': welcome_dms,
                 'welcome_dm': welcome_dm,
+                'pr_text_channel': pr_text_channel,
+                'pr_name': pr_name,
+                'pr_privacy': pr_privacy,
+                'pr_limit': pr_limit,
+                'pr_visibility': pr_visibility,
                 'guild_id': guild_id
                 })
 
@@ -253,22 +272,25 @@ def report(_c: Cursor, reporter_id: int, user_id: int, date: datetime.datetime, 
 
 
 @connection
-def private_room(_c: Cursor, room_channel_id: int, owner_id: int, guild_id: int, move_channel_id: int = None) -> str:
+def private_room(_c: Cursor, room_channel_id: int, owner_id: int, guild_id: int, move_channel_id: int = None,
+                 text_channel_id: int = None) -> str:
     """
     Insert private_room into db
     :param _c: Database cursor (provided by decorator)
     :param room_channel_id: Discord VoiceChannelID
     :param move_channel_id: Discord VoiceChannelID
+    :param text_channel_id: Discord TextChannelID
     :param owner_id: Discord UserID
     :param guild_id: Discord UserID
-    :return: None
     """
     room_id = generate_new_id(table='private_rooms', identifier='room_id')
     # Insert into db
-    _c.execute('INSERT INTO private_rooms VALUES (:room_id, :room_channel_id, :move_channel_id, :owner_id, :guild_id)',
+    _c.execute('INSERT INTO private_rooms VALUES (:room_id, :room_channel_id, :move_channel_id, :text_channel_id, '
+               ':owner_id, :guild_id)',
                {'room_id': room_id,
                 'room_channel_id': room_channel_id,
                 'move_channel_id': move_channel_id,
+                'text_channel_id': text_channel_id,
                 'owner_id': owner_id,
                 'guild_id': guild_id
                 })
