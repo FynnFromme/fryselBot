@@ -3,7 +3,7 @@ from typing import Union, Callable
 
 from discord import Guild
 
-from fryselBot.system.moderation import moderation
+from system.moderation import moderation
 
 
 class Command:

@@ -1,11 +1,11 @@
 from discord import Message, Member, TextChannel, Guild, Embed, Forbidden, Client, User
 from datetime import datetime, timedelta
 
-from fryselBot.database.select import Warn
-from fryselBot.utilities import util, secret
-from fryselBot.system import permission, appearance
-from fryselBot.system.moderation import moderation, mute, kick
-from fryselBot.database import select, insert
+from database.select import Warn
+from utilities import util, secret
+from system import permission, appearance
+from system.moderation import moderation, mute, kick
+from database import select, insert
 
 
 async def warn(member: Member, moderator: Member, reason: str = None) -> None:

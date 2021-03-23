@@ -2,7 +2,7 @@ from discord import Member
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-from fryselBot.system import welcome, roles
+from system import welcome, roles
 
 
 class Welcome(commands.Cog):

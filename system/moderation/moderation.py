@@ -3,8 +3,8 @@ from typing import Union
 
 from discord import TextChannel, Member, Embed, Guild, User, Forbidden
 
-from fryselBot.database import update, select
-from fryselBot.system import appearance
+from database import update, select
+from system import appearance
 
 
 def set_mod_log(guild: Guild, channel_id: int = None) -> None:

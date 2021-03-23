@@ -5,8 +5,8 @@ from discord.ext.commands import Bot
 from discord import Message
 
 # fryselBot imports
-from fryselBot.database import delete
-from fryselBot.system.private_rooms import private_rooms
+from database import delete
+from system.private_rooms import private_rooms
 from system import cogs, guilds, appearance, help
 from utilities import secret
 

@@ -1,6 +1,6 @@
 from discord import TextChannel, Guild, Embed, Message
-from fryselBot.system import appearance, description
-from fryselBot.utilities import util
+from system import appearance, description
+from utilities import util
 
 
 async def prefix_page(channel: TextChannel, guild: Guild) -> None:

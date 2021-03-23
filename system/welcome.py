@@ -1,6 +1,6 @@
-from fryselBot.database import update, select
-from fryselBot.system import description, appearance
-from fryselBot.utilities import secret, util
+from database import update, select
+from system import description, appearance
+from utilities import secret, util
 from discord import Member, Guild, TextChannel, Embed, Forbidden
 import random
 

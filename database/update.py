@@ -1,6 +1,6 @@
 from typing import Callable, Any
 
-from fryselBot.database.manager import connection
+from database.manager import connection
 from sqlite3.dbapi2 import Cursor
 
 

@@ -5,10 +5,10 @@ from discord import Member, Role
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
-from fryselBot.database import delete, select
-from fryselBot.utilities import util
-from fryselBot.system import description, error_messages, permission
-from fryselBot.system.moderation import moderation as mod, clear, kick, ban, mute, warn, report
+from database import delete, select
+from utilities import util
+from system import description, error_messages, permission
+from system.moderation import moderation as mod, clear, kick, ban, mute, warn, report
 
 
 class Moderation(commands.Cog):

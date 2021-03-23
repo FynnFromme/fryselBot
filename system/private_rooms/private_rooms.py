@@ -7,11 +7,11 @@ from discord import Guild, CategoryChannel, VoiceChannel, TextChannel, Role, Mem
     NotFound, Game, Activity
 from discord.abc import GuildChannel
 
-from fryselBot.database import insert, update, select, delete
-from fryselBot.database.manager import connection, DatabaseEntryError
-from fryselBot.database.select import PrivateRoom
-from fryselBot.system import roles
-from fryselBot.system.private_rooms import settings
+from database import insert, update, select, delete
+from database.manager import connection, DatabaseEntryError
+from database.select import PrivateRoom
+from system import roles
+from system.private_rooms import settings
 
 
 def get_category(guild: Guild) -> CategoryChannel:

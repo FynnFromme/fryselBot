@@ -1,11 +1,11 @@
 from datetime import timedelta, datetime
 from discord import Message, Member, TextChannel, Guild, User, Client, utils as dc_utils
 
-from fryselBot.database import delete, select, insert
-from fryselBot.database.select import Ban
-from fryselBot.utilities import util, secret
-from fryselBot.system import permission, appearance
-from fryselBot.system.moderation import moderation
+from database import delete, select, insert
+from database.select import Ban
+from utilities import util, secret
+from system import permission, appearance
+from system.moderation import moderation
 
 
 async def ban(member: Member, moderator: Member, client: Client, reason: str = None) -> None:

@@ -2,9 +2,8 @@ import os
 
 from discord.ext.commands import Context, Bot, ExtensionAlreadyLoaded, ExtensionNotLoaded
 from discord import Embed
-import fryselBot
-from fryselBot.utilities import util
-from fryselBot.system import appearance
+from utilities import util
+from system import appearance
 
 
 async def load_command(ctx: Context, extension: str, client: Bot) -> None:

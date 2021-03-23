@@ -2,13 +2,13 @@ from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from discord import Message, Guild, TextChannel, Member, Role, NotFound
 
-from fryselBot.system import description, error_messages, permission
-from fryselBot.system.setup import setup as setup_setup, \
+from system import description, error_messages, permission
+from system.setup import setup as setup_setup, \
     prefix as prefix_setup, \
     color as color_setup, \
     welcome, roles, moderation, private_rooms
-from fryselBot.system.private_rooms import private_rooms as pr_sys
-from fryselBot.utilities import util
+from system.private_rooms import private_rooms as pr_sys
+from utilities import util
 
 
 class Setup(commands.Cog):

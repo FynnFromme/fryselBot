@@ -2,9 +2,9 @@ from discord import Embed
 from discord.ext.commands import Context, MissingRequiredArgument, CommandInvokeError, CheckFailure, BadArgument, \
     MemberNotFound, ChannelNotFound, RoleNotFound
 
-from fryselBot.system.description import Command
-from fryselBot.system import appearance
-from fryselBot.utilities import util
+from system.description import Command
+from system import appearance
+from utilities import util
 
 
 async def arguments_error(ctx: Context, cmd: Command) -> None:

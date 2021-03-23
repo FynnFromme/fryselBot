@@ -1,5 +1,5 @@
-from fryselBot.database import update, select
-from fryselBot.utilities import util
+from database import update, select
+from utilities import util
 
 from itertools import cycle
 

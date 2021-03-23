@@ -1,9 +1,9 @@
 from typing import Any, Callable
 
-from fryselBot.database.manager import connection, DatabaseEntryError, DatabaseError
+from database.manager import connection, DatabaseEntryError, DatabaseError
 from sqlite3.dbapi2 import Cursor
 from datetime import datetime
-from fryselBot.utilities import util
+from utilities import util
 
 
 def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = False,

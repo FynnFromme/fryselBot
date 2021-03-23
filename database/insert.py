@@ -1,6 +1,6 @@
-from fryselBot.database.manager import connection, DatabaseAttributeError, DatabaseError
+from database.manager import connection, DatabaseAttributeError, DatabaseError
 from sqlite3.dbapi2 import Cursor
-from fryselBot.utilities import util
+from utilities import util
 
 import datetime
 

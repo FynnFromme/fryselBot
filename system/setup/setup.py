@@ -1,9 +1,9 @@
 import asyncio
 
 from discord import Member, Embed, TextChannel, Guild, Message
-from fryselBot.system import appearance, roles, welcome as welcome_sys, permission
-from fryselBot.utilities import secret
-from fryselBot.system.setup import prefix, color, welcome, roles, moderation, private_rooms
+from system import appearance, roles, welcome as welcome_sys, permission
+from utilities import secret
+from system.setup import prefix, color, welcome, roles, moderation, private_rooms
 
 
 async def check_reactions(member: Member, guild: Guild, channel: TextChannel, message: Message, emoji: str,

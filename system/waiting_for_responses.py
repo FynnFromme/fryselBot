@@ -4,9 +4,9 @@ from typing import Optional
 
 from discord import Member, TextChannel, Message, PermissionOverwrite
 
-from fryselBot.database import select, update, insert, delete
-from fryselBot.database.manager import DatabaseEntryError, connection
-from fryselBot.database.select import WaitingResponse
+from database import select, update, insert, delete
+from database.manager import DatabaseEntryError, connection
+from database.select import WaitingResponse
 
 
 def is_waiting_for_response(member: Member, channel: TextChannel) -> bool:

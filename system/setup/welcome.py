@@ -1,8 +1,8 @@
 from discord import TextChannel, Guild, Embed, Message
 
-from fryselBot.database import select
-from fryselBot.system import appearance, description, welcome as welcome_sys
-from fryselBot.utilities import util
+from database import select
+from system import appearance, description, welcome as welcome_sys
+from utilities import util
 
 
 async def welcome_page(channel: TextChannel, guild: Guild) -> None:

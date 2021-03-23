@@ -3,10 +3,10 @@ from discord.ext.commands import Bot
 from discord import Guild, Role, TextChannel, VoiceChannel, CategoryChannel, Member
 from discord.abc import GuildChannel
 
-from fryselBot.system import guilds, welcome, moderation
-from fryselBot.database import delete, select
-from fryselBot.system.moderation import mute, moderation
-from fryselBot.system.private_rooms import private_rooms, settings as pr_settings
+from system import guilds, welcome, moderation
+from database import delete, select
+from system.moderation import mute, moderation
+from system.private_rooms import private_rooms, settings as pr_settings
 
 
 class GuildUpdates(commands.Cog):

@@ -1,7 +1,7 @@
 from discord import TextChannel, Guild, Embed, Role, Message
 
-from fryselBot.system import appearance, roles, description
-from fryselBot.utilities import util
+from system import appearance, roles, description
+from utilities import util
 
 
 async def roles_page(channel: TextChannel, guild: Guild) -> None:

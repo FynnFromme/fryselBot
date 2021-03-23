@@ -1,7 +1,7 @@
-from discord import Message, Member, Embed, TextChannel, Guild, Forbidden, Client
-from fryselBot.system import appearance, permission
-from fryselBot.utilities import util, secret
-from fryselBot.system.moderation import moderation
+from discord import Message, Member, TextChannel, Guild, Client
+from system import appearance, permission
+from utilities import util, secret
+from system.moderation import moderation
 
 
 async def kick(member: Member, moderator: Member, client: Client, reason: str = None) -> None:

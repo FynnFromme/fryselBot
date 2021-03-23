@@ -1,9 +1,9 @@
 from discord import TextChannel, Guild, Embed, Message, Member
 
-from fryselBot.database import select, update
-from fryselBot.database.select import PrivateRoom
-from fryselBot.system import appearance
-from fryselBot.system.private_rooms import private_rooms, settings as pr_settings, settings
+from database import select, update
+from database.select import PrivateRoom
+from system import appearance
+from system.private_rooms import private_rooms, settings as pr_settings, settings
 
 
 async def private_rooms_page(channel: TextChannel, guild: Guild) -> None:

@@ -1,8 +1,8 @@
 from discord import Member, Client, Guild, Role
 from discord.ext.commands import Context
 
-from fryselBot.database import select
-from fryselBot.utilities import util, secret
+from database import select
+from utilities import util, secret
 
 
 def is_admin(ctx: Context = None, member: Member = None) -> bool:

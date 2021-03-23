@@ -2,11 +2,11 @@ from discord import Member, VoiceChannel, VoiceState, Guild, TextChannel, Messag
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot
 
-from fryselBot.database.manager import DatabaseEntryError
-from fryselBot.database.select import PrivateRoom
-from fryselBot.system import welcome, waiting_for_responses
-from fryselBot.system.private_rooms import private_rooms, settings
-from fryselBot.utilities import secret
+from database.manager import DatabaseEntryError
+from database.select import PrivateRoom
+from system import welcome, waiting_for_responses
+from system.private_rooms import private_rooms, settings
+from utilities import secret
 
 
 class PrivateRooms(commands.Cog):

@@ -1,8 +1,8 @@
 from discord.ext import commands
 from discord.ext.commands import Context, Bot, CheckFailure
 
-from fryselBot.system import cogs, description, error_messages
-from fryselBot.utilities import secret
+from system import cogs, description, error_messages
+from utilities import secret
 
 
 class Cogs(commands.Cog):

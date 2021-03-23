@@ -1,8 +1,8 @@
 from discord import TextChannel, Guild, Embed, Role, Message
 
-from fryselBot.system import appearance, description
-from fryselBot.system.moderation import moderation as mod, mute
-from fryselBot.utilities import util
+from system import appearance, description
+from system.moderation import moderation as mod, mute
+from utilities import util
 
 
 async def moderation_page(channel: TextChannel, guild: Guild):

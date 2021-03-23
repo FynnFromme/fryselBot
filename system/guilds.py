@@ -1,11 +1,11 @@
-from fryselBot.database import insert, delete, select
-from fryselBot.system import welcome, moderation
+from database import insert, delete, select
+from system import welcome, moderation
 
 from discord import Guild, Client, Role, VoiceChannel, Member
 
-from fryselBot.system import private_rooms as pr_sys
-from fryselBot.system.moderation import mute, moderation
-from fryselBot.system.private_rooms import private_rooms
+from system import private_rooms as pr_sys
+from system.moderation import mute, moderation
+from system.private_rooms import private_rooms
 
 
 def join_guild(guild: Guild) -> None:

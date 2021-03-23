@@ -3,12 +3,12 @@ import asyncio
 from discord import Guild, Role, Permissions, TextChannel, Member, Message, Embed, Client, NotFound
 from datetime import datetime, timedelta
 
-from fryselBot.database import delete, select, insert, update
-from fryselBot.database.manager import DatabaseEntryError
-from fryselBot.database.select import Mute
-from fryselBot.utilities import secret, util
-from fryselBot.system import appearance, permission
-from fryselBot.system.moderation import moderation
+from database import delete, select, insert, update
+from database.manager import DatabaseEntryError
+from database.select import Mute
+from utilities import secret, util
+from system import appearance, permission
+from system.moderation import moderation
 
 
 async def create_mute_role(guild: Guild) -> Role:
@@ -22,7 +22,7 @@ async def create_mute_role(guild: Guild) -> Role:
     permissions.update(send_messages=False)
 
     # Create mute role
-    mute_role = await guild.create_role(name='Muted', permissions=permissions, reason='Mute role for fryselBot.')
+    mute_role = await guild.create_role(name='Muted', permissions=permissions, reason='Mute role for ')
 
     # Set position of role
     position = guild.get_member(secret.bot_id).top_role.position - 1

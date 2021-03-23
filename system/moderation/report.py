@@ -1,11 +1,11 @@
 from discord import Message, Member, TextChannel, Guild, Embed, Client, User
 from datetime import datetime
 
-from fryselBot.database.select import Report
-from fryselBot.utilities import util, secret
-from fryselBot.system import permission, appearance
-from fryselBot.system.moderation import moderation
-from fryselBot.database import insert, select
+from database.select import Report
+from utilities import util, secret
+from system import permission, appearance
+from system.moderation import moderation
+from database import insert, select
 
 
 async def report_cmd(message: Message, member: Member, reason: str) -> None:

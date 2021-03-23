@@ -1,4 +1,4 @@
-from fryselBot.system import appearance
+from system import appearance
 from discord import Message, Guild, Member, TextChannel, Embed, Invite
 
 

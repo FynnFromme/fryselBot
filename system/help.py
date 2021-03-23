@@ -1,6 +1,6 @@
-from fryselBot.system.private_rooms import private_rooms
-from fryselBot.utilities import secret, util
-from fryselBot.system import description, appearance, permission
+from system.private_rooms import private_rooms
+from utilities import secret, util
+from system import description, appearance, permission
 from discord import Message, Guild, Member, TextChannel, Embed, Forbidden, VoiceChannel
 
 

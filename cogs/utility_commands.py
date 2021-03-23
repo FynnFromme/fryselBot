@@ -1,10 +1,10 @@
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 
-from fryselBot.database import manager
-from fryselBot.database.select import PrivateRoom
-from fryselBot.system import help, invite
-from fryselBot.utilities import secret
+from database import manager
+from database.select import PrivateRoom
+from system import help, invite
+from utilities import secret
 
 
 class UtilityCommands(commands.Cog):
@@ -37,7 +37,7 @@ class UtilityCommands(commands.Cog):
     @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
     async def test(self, ctx: Context, arg: int, arg2=None):
         """Test command that can onyl be executed by frysel"""
-        from fryselBot.system.private_rooms import private_rooms, settings
+        from system.private_rooms import private_rooms, settings
 
         if arg == 1:
             await private_rooms.delete_old_channels(ctx.message, ctx.guild)

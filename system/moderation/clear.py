@@ -1,7 +1,7 @@
 from discord import Message, TextChannel, Embed, Member
-from fryselBot.system import appearance
-from fryselBot.system.moderation import moderation
-from fryselBot.utilities import util
+from system import appearance
+from system.moderation import moderation
+from utilities import util
 
 
 async def clear_messages(message: Message, amount: int, ) -> None:
