@@ -8,7 +8,7 @@ from system.moderation import mute, moderation
 from system.private_rooms import private_rooms
 
 
-def join_guild(guild: Guild) -> None:
+async def join_guild(guild: Guild) -> None:
     """
     Handles joining a new guild.
     :param guild: Guild that is joined
@@ -17,7 +17,7 @@ def join_guild(guild: Guild) -> None:
     insert.guild_settings(guild_id=guild.id)
 
     # Setup mute
-    mute.setup_mute_in_guild(guild)
+    await mute.setup_mute_in_guild(guild)
 
 
 def remove_guild(guild: Guild) -> None:
