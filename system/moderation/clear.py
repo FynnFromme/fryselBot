@@ -1,18 +1,15 @@
-from discord import Message, TextChannel, Embed, Member
+from discord import Message, TextChannel, Embed, Member, Guild
 from system import appearance
 from system.moderation import moderation
 from utilities import util
 
 
-async def clear_messages(message: Message, amount: int, ) -> None:
+async def clear_messages(message: Message, amount: int) -> None:
     """
     Deletes the latest amount messages in the channel
     :param message: Message of command call
     :param amount: Amount of messages that should be deleted
     """
-    # Initialize varaibles
-    channel: TextChannel = message.channel
-
     # Delete message of member
     await util.delete_message(message)
 
@@ -23,6 +20,8 @@ async def clear_messages(message: Message, amount: int, ) -> None:
     if amount > 100:
         amount = 100
 
+    channel: TextChannel = message.channel
+    
     # Delete the latest amount messages in the channel that are not pinned
     deleted = []
     async for msg in channel.history(limit=amount + 50):

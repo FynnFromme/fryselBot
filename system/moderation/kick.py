@@ -13,7 +13,7 @@ async def kick(member: Member, moderator: Member, client: Client, reason: str = 
     :param reason: Reason for kick
     """
     guild: Guild = member.guild
-
+    
     # Send private message
     if permission.ban_kick_member(client, member):
         await moderation.private_message(member, f'You got kicked from {guild.name}', None, moderator, Reason=reason)
