@@ -12,7 +12,7 @@ async def invite_command(message: Message) -> None:
     channel: TextChannel = message.channel
     guild: Guild = message.guild
     member: Member = message.author
-
+    
     prefix = appearance.get_prefix(guild.id)
 
     # Fetch invite or create new one

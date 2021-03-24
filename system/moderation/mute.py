@@ -22,8 +22,8 @@ async def create_mute_role(guild: Guild) -> Role:
     permissions.update(send_messages=False)
 
     # Create mute role
-    mute_role = await guild.create_role(name='Muted', permissions=permissions, reason='Mute role for ')
-
+    mute_role: Role = await guild.create_role(name='Muted', permissions=permissions, reason='Mute role for ')
+    
     # Set position of role
     position = guild.get_member(secret.bot_id).top_role.position - 1
     await mute_role.edit(position=position)

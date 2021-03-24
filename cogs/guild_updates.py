@@ -25,7 +25,7 @@ class GuildUpdates(commands.Cog):
     async def on_guild_join(self, guild: Guild):
         """Is called when the client joined a new guild"""
         # Add guild to database
-        guilds.join_guild(guild)
+        await guilds.join_guild(guild)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: Guild):

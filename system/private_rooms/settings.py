@@ -4,12 +4,12 @@ from datetime import datetime
 from discord import VoiceChannel, Guild, Role, PermissionOverwrite, CategoryChannel, Member, NotFound, TextChannel, \
     Embed, Message, Forbidden, Client, Game
 
-from fryselBot.database import update, select
-from fryselBot.database.manager import DatabaseEntryError
-from fryselBot.database.select import PrivateRoom
-from fryselBot.system import appearance, waiting_for_responses
-from fryselBot.system.private_rooms import private_rooms
-from fryselBot.utilities import secret
+from database import update, select
+from database.manager import DatabaseEntryError
+from database.select import PrivateRoom
+from system import appearance, waiting_for_responses
+from system.private_rooms import private_rooms
+from utilities import secret
 
 default_name = f"<owner>'s Room"
 
@@ -44,6 +44,8 @@ async def set_name(name: str, guild: Guild, private_room: PrivateRoom) -> None:
     name.replace('<owner>', owner.mention)
 
     if pr_channel:
+        # Ignore if the gameactivity is shown
+
         if pr_channel.name != name:
             try:
                 await pr_channel.edit(name=name)
@@ -74,7 +76,10 @@ async def name_response(guild: Guild, private_room: PrivateRoom) -> None:
     if len(response) > 20:
         return
 
-    await set_name(response, guild, private_room)
+    pr_channel = guild.get_channel(private_room.room_channel_id)
+
+    if not(pr_channel.name.startswith('Playing') and private_room.game_activity):
+        await set_name(response, guild, private_room)
 
     update.pr_name(private_room.room_id, response)
 
@@ -87,10 +92,18 @@ async def handle_game_activity(client: Client) -> None:
     rooms: list[PrivateRoom] = [PrivateRoom(guild_id=g_id, room_channel_id=pr_id)
                                 for pr_id, g_id
                                 in select.all_private_rooms()]
-
-    for room in filter(lambda r: r.game_activity, rooms):
+    for room in rooms:
         guild: Guild = client.get_guild(room.guild_id)
-        await check_game_activity(guild, room)
+        if room.game_activity:
+            await check_game_activity(guild, room)
+        else:
+            if room.name:
+                await set_name(room.name, guild, room)
+            else:
+                owner = guild.get_member(room.owner_id)
+                name = get_name(guild, owner)
+                await set_name(name, guild, room)
+
 
 
 async def check_game_activity(guild: Guild, private_room: PrivateRoom) -> None:
@@ -122,7 +135,11 @@ async def check_game_activity(guild: Guild, private_room: PrivateRoom) -> None:
         game: Game = max(games, key=games.get)
         await set_name(f'Playing {game.name}', guild, private_room)
     else:
-        await set_name(get_name(guild, owner), guild, private_room)
+        if private_room.name:
+            await set_name(private_room.name, guild, private_room)
+        else:
+            name = get_name(guild, owner)
+            await set_name(name, guild, private_room)
 
 
 async def toggle_game_activity(guild: Guild, private_room: PrivateRoom):
@@ -136,7 +153,11 @@ async def toggle_game_activity(guild: Guild, private_room: PrivateRoom):
         # Disable game activity
         update.pr_game_activity(argument=private_room.room_id, value=False)
         owner: Member = guild.get_member(private_room.owner_id)
-        await set_name(get_name(guild, owner), guild, private_room)
+        if private_room.name:
+            await set_name(private_room.name, guild, private_room)
+        else:
+            name = get_name(guild, owner)
+            await set_name(name, guild, private_room)
     else:
         # Enable game activity
         update.pr_game_activity(argument=private_room.room_id, value=True)

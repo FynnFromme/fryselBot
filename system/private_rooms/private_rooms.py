@@ -178,8 +178,21 @@ async def create_private_room(owner: Member) -> None:
         pr_overwrites[guild.default_role] = PermissionOverwrite(view_channel=False)
         pr_overwrites[owner] = PermissionOverwrite(view_channel=True)
 
+    # Create name
+    name = None
+    if select.default_pr_game_activity(guild.id):
+        if isinstance(owner.activity, Game):
+            name = f'Playing {owner.activity.name}'
+        else:
+            games = list(filter(lambda a: isinstance(a, Game), owner.activities))
+            if games:
+                name = f'Playing {games[0].name}'
+
+    if not name:
+        name = settings.get_name(guild, owner)
+
     # Create private room
-    pr_channel = await guild.create_voice_channel(settings.get_name(guild, owner), category=category,
+    pr_channel = await guild.create_voice_channel(name=name, category=category,
                                                   overwrites=pr_overwrites,
                                                   user_limit=select.default_pr_user_limit(guild.id),
                                                   reason='Created private room')
@@ -216,7 +229,6 @@ async def create_private_room(owner: Member) -> None:
 
     if select.default_pr_game_activity(guild.id):
         await settings.toggle_game_activity(guild, private_room)
-        await settings.check_game_activity(guild, private_room)
 
     await asyncio.sleep(0.1)
     # Set the permissions for the owner

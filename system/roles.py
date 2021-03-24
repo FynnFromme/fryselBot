@@ -21,7 +21,7 @@ def add_admin_role(guild: Guild, role: Role) -> None:
 
     # Insert role to database
     insert.role(role.id, 'ADMIN', guild.id)
-
+    
 
 def remove_admin_role(role: Role) -> None:
     """
