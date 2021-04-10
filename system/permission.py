@@ -16,7 +16,8 @@ def is_admin(ctx: Context = None, member: Member = None) -> bool:
     if ctx:
         member = ctx.author
     elif not member:
-        raise util.InvalidInputError(None, 'Either ctx or member has to be given')
+        raise util.InvalidInputError(
+            None, 'Either ctx or member has to be given')
 
     # Check for admin permission on guild
     if member.guild_permissions.administrator:
@@ -29,7 +30,7 @@ def is_admin(ctx: Context = None, member: Member = None) -> bool:
         if m_role.id in admin_roles:
             return True
     else:
-        return member.id == secret.frysel_id
+        return member.id in secret.dev_ids
 
 
 def is_mod(ctx: Context = None, member: Member = None) -> bool:
@@ -43,7 +44,8 @@ def is_mod(ctx: Context = None, member: Member = None) -> bool:
     if ctx:
         member = ctx.author
     elif not member:
-        raise util.InvalidInputError(None, 'Either ctx or member has to be given')
+        raise util.InvalidInputError(
+            None, 'Either ctx or member has to be given')
 
     # Check whether member has a role declared as mod
     mod_roles = select.moderator_roles(guild_id=member.guild.id)

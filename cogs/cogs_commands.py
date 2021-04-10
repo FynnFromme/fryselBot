@@ -13,12 +13,13 @@ class Cogs(commands.Cog):
     Arguments:
          client (Bot): The bot client
     """
+
     def __init__(self, client: Bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = client
 
     @commands.command(name='load')
-    @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
+    @commands.check(lambda ctx: ctx.author.id in secret.dev_ids)
     async def load(self, ctx: Context, extension: str):
         """Load command"""
         # Load the extension
@@ -35,7 +36,7 @@ class Cogs(commands.Cog):
                                            "Didn't find the extension", True)
 
     @commands.command(name='unload')
-    @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
+    @commands.check(lambda ctx: ctx.author.id in secret.dev_ids)
     async def unload(self, ctx: Context, extension: str):
         """Unload command"""
         # Load the extension

@@ -34,7 +34,7 @@ class UtilityCommands(commands.Cog):
         await invite.invite_command(ctx.message)
 
     @commands.command(name='test')
-    @commands.check(lambda ctx: ctx.author.id == secret.frysel_id)
+    @commands.check(lambda ctx: ctx.author.id in secret.dev_ids)
     async def test(self, ctx: Context, arg: int, arg2=None):
         """Test command that can onyl be executed by frysel"""
         from system.private_rooms import private_rooms, settings
