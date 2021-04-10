@@ -12,15 +12,15 @@ version = '1.0'
 # Default values
 default_prefix = '+'
 
-default_color: hex = 0xf5c140
+default_color: hex = 0xf5c140  # EDAE49
 error_color: hex = 0xd61313
 success_color: hex = 0x3d9757
 moderation_color: hex = 0xa82020
 
 
-# Status of the bot                                                   # Newest function of the bot
-status = cycle(['Hey there!', f'v. {version} | {default_prefix}help', 'New: Private Rooms!'])
-
+# Status of the bot                                                # Newest function of the bot
+status = cycle(['Hey there!', f'v. {version} | {default_prefix}help',
+               'New: Private Rooms!', f'v. {version} | {default_prefix}help'])
 
 
 # Prefix functions
@@ -47,7 +47,8 @@ def set_prefix(guild_id: int, prefix=None) -> None:
     # Check whether the prefix is correct
     if prefix:
         if type(prefix) != str or len(prefix) != 1:
-            raise util.InvalidInputError(prefix, 'Prefix must be a string of length 1')
+            raise util.InvalidInputError(
+                prefix, 'Prefix must be a string of length 1')
 
     # Update prefix in database
     update.prefix(argument=guild_id, value=prefix)
@@ -75,6 +76,7 @@ def set_color(guild_id: int, color=None) -> None:
     :raises: InvalidInputError when the prefix is invalid
     """
     if color and type(color) != int:
-        raise util.InvalidInputError(color, 'primary_color has to be an integer')
+        raise util.InvalidInputError(
+            color, 'primary_color has to be an integer')
 
     update.color(argument=guild_id, value=color)

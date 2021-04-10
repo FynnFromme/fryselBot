@@ -50,10 +50,12 @@ async def log_message(operation: str, member: Union[User, Member], moderator: Me
         log_embed: Embed = Embed(colour=color, timestamp=datetime.utcnow())
 
         log_embed.set_author(name=operation, icon_url=member.avatar_url)
-        log_embed.set_footer(text=moderator.display_name, icon_url=moderator.avatar_url)
+        log_embed.set_footer(text=moderator.display_name,
+                             icon_url=moderator.avatar_url)
 
         log_embed.add_field(name='User', value=member.mention, inline=True)
-        log_embed.add_field(name='Moderator', value=moderator.mention, inline=True)
+        log_embed.add_field(
+            name='Moderator', value=moderator.mention, inline=True)
 
         for k, v in kwargs.items():
             log_embed.add_field(name=k, value=v, inline=True)
@@ -77,10 +79,13 @@ async def chat_message(channel: TextChannel, text: str, color: hex, moderator: M
     chat_embed: Embed = Embed(description=text, colour=color)
 
     if moderator:
-        chat_embed.set_footer(text=f'by {moderator.display_name}', icon_url=moderator.avatar_url)
+        chat_embed.set_footer(
+            text=f'by {moderator.display_name}', icon_url=moderator.avatar_url)
 
     chat_msg = await channel.send(embed=chat_embed)
-    await chat_msg.delete(delay=15)
+
+    if get_mod_log(channel.guild):
+        await chat_msg.delete(delay=15)
 
 
 async def private_message(member: Member, title: str = None, description: str = None, moderator: Member = None,
@@ -99,7 +104,8 @@ async def private_message(member: Member, title: str = None, description: str = 
 
     # Add moderator to footer
     if moderator:
-        embed.set_footer(text=f'by {moderator.display_name}', icon_url=moderator.avatar_url)
+        embed.set_footer(
+            text=f'by {moderator.display_name}', icon_url=moderator.avatar_url)
 
     # Add fields
     for name, value in kwargs.items():
@@ -123,7 +129,8 @@ def get_duration(duration_amount: int, duration_unit: str) -> tuple[timedelta, s
 
     # Duration time must be positive
     if duration_amount <= 0:
-        raise Exception('The duration must be a positive integer: Invalid Duration')
+        raise Exception(
+            'The duration must be a positive integer: Invalid Duration')
 
     # Get correct unit & Create timedelta
     if 'minutes'.startswith(duration_unit):

@@ -11,18 +11,20 @@ from system import appearance, waiting_for_responses
 from system.private_rooms import private_rooms
 from utilities import secret
 
+# The default name of private rooms
 default_name = f"<owner>'s Room"
 
 
-def get_name(guild: Guild, owner: Member) -> str:
+def get_name(owner: Member) -> str:
     """
-
-    :param guild:
-    :param owner:
-    :return:
+    Get the name for the private rooms of the owner
+    :param owner: Owner of the private room
+    :return: Name for the private room
     """
+    guild = owner.guild
     default_guild_name = select.default_pr_name(guild.id)
 
+    # Check for a default name for the guild
     if default_guild_name:
         name = default_guild_name.replace('<owner>', owner.display_name)
     else:
@@ -32,10 +34,10 @@ def get_name(guild: Guild, owner: Member) -> str:
 
 async def set_name(name: str, guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param name:
-    :param guild:
-    :param private_room:
+    Set the name for the private room
+    :param name: New name of the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to change name
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     text_channel: TextChannel = guild.get_channel(private_room.text_channel_id)
@@ -43,27 +45,32 @@ async def set_name(name: str, guild: Guild, private_room: PrivateRoom) -> None:
 
     name.replace('<owner>', owner.mention)
 
-    if pr_channel:
-        # Ignore if the gameactivity is shown
+    if not pr_channel:
+        # Ignore if channel does not exist anymore
+        return
 
-        if pr_channel.name != name:
-            try:
-                await pr_channel.edit(name=name)
-            except NotFound:
-                pass
+    if pr_channel.name == name:
+        # Ignore if the name has not changed
+        return
 
-            if text_channel:
-                try:
-                    await text_channel.edit(name=name)
-                except NotFound:
-                    pass
+    # Try to change the names of the room and channel
+    try:
+        await pr_channel.edit(name=name)
+    except NotFound:
+        pass
+
+    if text_channel:
+        try:
+            await text_channel.edit(name=name)
+        except NotFound:
+            pass
 
 
 async def name_response(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Handle setting a new name by waiting for a response in the settings channel
+    :param guild: Guild of private room
+    :param private_room: Private room to handle setting the new name
     """
     owner: Member = guild.get_member(private_room.owner_id)
     settings_channel: TextChannel = private_rooms.get_settings_channel(guild)
@@ -86,31 +93,33 @@ async def name_response(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def handle_game_activity(client: Client) -> None:
     """
-
-    :param client:
+    Refresh game activity for all active private rooms
+    :param client: Bot client
     """
+    # Get all active private rooms
     rooms: list[PrivateRoom] = [PrivateRoom(guild_id=g_id, room_channel_id=pr_id)
                                 for pr_id, g_id
                                 in select.all_private_rooms()]
     for room in rooms:
         guild: Guild = client.get_guild(room.guild_id)
         if room.game_activity:
+            # Refresh game activity
             await check_game_activity(guild, room)
         else:
-            if room.name:
+            # Set the name of the private room without game activity
+            if room.name:  # If there is a custom name for the private room
                 await set_name(room.name, guild, room)
             else:
                 owner = guild.get_member(room.owner_id)
-                name = get_name(guild, owner)
+                name = get_name(owner)
                 await set_name(name, guild, room)
-
 
 
 async def check_game_activity(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Check the main game activity of the private room and refresh the name
+    :param guild: Guild of private room
+    :param private_room: Private room to check game activity
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     owner: Member = guild.get_member(private_room.owner_id)
@@ -138,16 +147,15 @@ async def check_game_activity(guild: Guild, private_room: PrivateRoom) -> None:
         if private_room.name:
             await set_name(private_room.name, guild, private_room)
         else:
-            name = get_name(guild, owner)
+            name = get_name(owner)
             await set_name(name, guild, private_room)
 
 
-async def toggle_game_activity(guild: Guild, private_room: PrivateRoom):
+async def toggle_game_activity(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
-    :return:
+    Toggle that game activity is shown in the name of the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to toggle game activit
     """
     if private_room.game_activity:
         # Disable game activity
@@ -156,7 +164,7 @@ async def toggle_game_activity(guild: Guild, private_room: PrivateRoom):
         if private_room.name:
             await set_name(private_room.name, guild, private_room)
         else:
-            name = get_name(guild, owner)
+            name = get_name(owner)
             await set_name(name, guild, private_room)
     else:
         # Enable game activity
@@ -165,15 +173,16 @@ async def toggle_game_activity(guild: Guild, private_room: PrivateRoom):
 
 async def lock(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Lock the private room
+    :param guild: Guild of private room
+    :param private_room: Privte room to lock
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     default_role: Role = guild.default_role
 
     # Fetch category and owner
-    pr_category: CategoryChannel = guild.get_channel(select.pr_categroy_id(guild.id))
+    pr_category: CategoryChannel = guild.get_channel(
+        select.pr_categroy_id(guild.id))
     pr_owner: Member = guild.get_member(private_room.owner_id)
 
     await asyncio.sleep(0.2)
@@ -206,40 +215,44 @@ async def lock(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def unlock(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Unlock the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to unlock
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     default_role: Role = guild.default_role
 
-    if private_room.locked:  # Unlock room
-        # Set permission in pr_channel
-        if pr_channel:
-            overwrite: PermissionOverwrite = pr_channel.overwrites_for(default_role)
-            overwrite.update(connect=True)
-            try:
-                await pr_channel.set_permissions(default_role, overwrite=overwrite)
-            except NotFound:
-                pass
+    if not private_room.locked:  
+        # Ignore if the private room is already unlocked
+        return
+    
+    # Set permission in pr_channel
+    if pr_channel:
+        overwrite: PermissionOverwrite = pr_channel.overwrites_for(
+            default_role)
+        overwrite.update(connect=True)
+        try:
+            await pr_channel.set_permissions(default_role, overwrite=overwrite)
+        except NotFound:
+            pass
 
-        # Remove move channel
-        move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
-        if move_channel:
-            await move_channel.delete(reason='Unlocked private room')
+    # Remove move channel
+    move_channel: VoiceChannel = guild.get_channel(
+        private_room.move_channel_id)
+    if move_channel:
+        await move_channel.delete(reason='Unlocked private room')
 
-        # Update database
-        update.pr_locked(private_room.room_id, value=False)
-        update.pr_move_channel_id(private_room.room_id, value=None)
+    # Update database
+    update.pr_locked(private_room.room_id, value=False)
+    update.pr_move_channel_id(private_room.room_id, value=None)
 
 
-async def toggle_lock(guild: Guild, private_room: PrivateRoom) -> None:
+async def toggle_privacy(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Toggle privacy of private room
+    :param guild: Guild of private room
+    :param private_room: Private room to toggle privacy
     """
-
     if private_room.locked:
         # Unlock room
         await unlock(guild, private_room)
@@ -250,16 +263,19 @@ async def toggle_lock(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def set_user_limit(limit: int, guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param limit:
-    :param guild:
-    :param private_room:
+    Set the user limit of a private room
+    :param limit: New limit of the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to set user limit
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
 
-    if pr_channel:
-        if pr_channel.user_limit != limit:
-            await pr_channel.edit(user_limit=limit)
+    if not pr_channel:
+        # Ignore if the channel doesn't exist
+        return
+    
+    if pr_channel.user_limit != limit:
+        await pr_channel.edit(user_limit=limit)
 
     # Update database
     update.pr_user_limit(private_room.room_id, limit)
@@ -267,9 +283,9 @@ async def set_user_limit(limit: int, guild: Guild, private_room: PrivateRoom) ->
 
 async def limit_response(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Handle setting a new user limit by waiting for a response in the settings channel
+    :param guild: Guild of private room
+    :param private_room: Private room to handle setting the new user limit
     """
     owner: Member = guild.get_member(private_room.owner_id)
     settings_channel: TextChannel = private_rooms.get_settings_channel(guild)
@@ -294,9 +310,9 @@ async def limit_response(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def hide(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Hide the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to hide
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     default_role: Role = guild.default_role
@@ -307,8 +323,10 @@ async def hide(guild: Guild, private_room: PrivateRoom) -> None:
     await pr_channel.set_permissions(default_role, overwrite=overwrite)
 
     if private_room.locked:
-        move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
-        overwrite: PermissionOverwrite = move_channel.overwrites_for(default_role)
+        move_channel: VoiceChannel = guild.get_channel(
+            private_room.move_channel_id)
+        overwrite: PermissionOverwrite = move_channel.overwrites_for(
+            default_role)
         overwrite.update(view_channel=False)
         await move_channel.set_permissions(default_role, overwrite=overwrite)
 
@@ -318,9 +336,9 @@ async def hide(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def unhide(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Unhide the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to unhide
     """
     pr_channel: VoiceChannel = guild.get_channel(private_room.room_channel_id)
     default_role: Role = guild.default_role
@@ -331,8 +349,10 @@ async def unhide(guild: Guild, private_room: PrivateRoom) -> None:
     await pr_channel.set_permissions(default_role, overwrite=overwrite)
 
     if private_room.locked:
-        move_channel: VoiceChannel = guild.get_channel(private_room.move_channel_id)
-        overwrite: PermissionOverwrite = move_channel.overwrites_for(default_role)
+        move_channel: VoiceChannel = guild.get_channel(
+            private_room.move_channel_id)
+        overwrite: PermissionOverwrite = move_channel.overwrites_for(
+            default_role)
         overwrite.update(view_channel=True)
         await move_channel.set_permissions(default_role, overwrite=overwrite)
 
@@ -340,13 +360,12 @@ async def unhide(guild: Guild, private_room: PrivateRoom) -> None:
     update.pr_hidden(private_room.room_id, value=False)
 
 
-async def toggle_hide(guild: Guild, private_room: PrivateRoom) -> None:
+async def toggle_visibility(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
+    Toggle visibility of private room
+    :param guild: Guild of private room
+    :param private_room: Private room to change visibility
     """
-
     if private_room.hidden:
         # Unhide private room
         await unhide(guild, private_room)
@@ -357,10 +376,9 @@ async def toggle_hide(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def information_message(guild: Guild, private_room: PrivateRoom) -> None:
     """
-    
-    :param guild: 
-    :param private_room: 
-    :return: 
+    Send direct message to the owner about the current settings of the private room
+    :param guild: Guild of private room
+    :param private_room: Private room to send settings of
     """
     owner: Member = guild.get_member(private_room.owner_id)
 
@@ -369,27 +387,35 @@ async def information_message(guild: Guild, private_room: PrivateRoom) -> None:
 
     # Add information about game activity
     if private_room.game_activity:
-        embed.add_field(name='Game Activity', value='Game activity will be shown 🎮', inline=False)
+        embed.add_field(name='Game Activity',
+                        value='Game activity will be shown 🎮', inline=False)
     else:
-        embed.add_field(name='Game Activity', value='Game activity will not be shown', inline=False)
+        embed.add_field(name='Game Activity',
+                        value='Game activity will not be shown', inline=False)
 
     # Add information about privacy status
     if private_room.locked:
-        embed.add_field(name='Privacy', value='Currently locked 🔒', inline=False)
+        embed.add_field(
+            name='Privacy', value='Currently locked 🔒', inline=False)
     else:
-        embed.add_field(name='Privacy', value='Currently unlocked 🔓', inline=False)
+        embed.add_field(
+            name='Privacy', value='Currently unlocked 🔓', inline=False)
 
     # Add information about limit
     if private_room.user_limit == 0:
-        embed.add_field(name='Limit', value='There is no limit 🔄', inline=False)
+        embed.add_field(
+            name='Limit', value='There is no limit 🔄', inline=False)
     else:
-        embed.add_field(name='Limit', value=f'The limit is set to `{private_room.user_limit}`', inline=False)
+        embed.add_field(
+            name='Limit', value=f'The limit is set to `{private_room.user_limit}`', inline=False)
 
     # Add information about visibiltiy status
     if private_room.hidden:
-        embed.add_field(name='Visibility', value='The room is hidden at the moment 🚫', inline=False)
+        embed.add_field(
+            name='Visibility', value='The room is hidden at the moment 🚫', inline=False)
     else:
-        embed.add_field(name='Visibility', value='The room is visible at the moment 👀', inline=False)
+        embed.add_field(
+            name='Visibility', value='The room is visible at the moment 👀', inline=False)
 
     # Set footer
     embed.set_footer(text='Private Room', icon_url=owner.avatar_url)
@@ -403,8 +429,8 @@ async def information_message(guild: Guild, private_room: PrivateRoom) -> None:
 
 async def setup_settings(guild: Guild) -> None:
     """
-
-    :param guild:
+    Setup setting messages for the guild
+    :param guild: Guild to set up setting messages
     """
     old_channel: TextChannel = private_rooms.get_settings_channel(guild)
 
@@ -457,7 +483,8 @@ async def setup_settings(guild: Guild) -> None:
             lock_embed: Embed = Embed(title='Privacy', description='Decide whether members can join your private room or '
                                                                    'have to be moved',
                                       colour=appearance.get_color(guild.id))
-            lock_embed.add_field(name='Toggle Privacy', value='React with 🔒 to lock or unlock your private room')
+            lock_embed.add_field(
+                name='Toggle Privacy', value='React with 🔒 to lock or unlock your private room')
 
             lock_msg: Message = await settings_channel.send(embed=lock_embed)
             await lock_msg.add_reaction(emoji='🔒')
@@ -466,7 +493,8 @@ async def setup_settings(guild: Guild) -> None:
             # Send limit embed and add emojis
             limit_embed: Embed = Embed(title='Limit', description='Set how many users can join your channel',
                                        colour=appearance.get_color(guild.id))
-            limit_embed.add_field(name='No Limit', value='React with 🔄 to set no user limit', inline=False)
+            limit_embed.add_field(
+                name='No Limit', value='React with 🔄 to set no user limit', inline=False)
             limit_embed.add_field(name='Limit', value='React with 🔢 to set the user limit to a specific number\n'
                                                       'You have 10 seconds time to write the new limit in this text channel',
                                   inline=False)
@@ -479,7 +507,8 @@ async def setup_settings(guild: Guild) -> None:
             # Send hide embed and add emoji
             hide_embed: Embed = Embed(title='Visibility', description='Adjust whether your channel can be seen or not',
                                       colour=appearance.get_color(guild.id))
-            hide_embed.add_field(name='Toggle Visibility', value='React with 👀 to lock or unlock your private room')
+            hide_embed.add_field(
+                name='Toggle Visibility', value='React with 👀 to lock or unlock your private room')
 
             hide_msg: Message = await settings_channel.send(embed=hide_embed)
             await hide_msg.add_reaction(emoji='👀')
@@ -537,7 +566,7 @@ async def check_reactions(member: Member, guild: Guild, private_room: PrivateRoo
         elif title == 'Privacy':
             if emoji == '🔒':
                 # Toggle privacy
-                await toggle_lock(guild, private_room)
+                await toggle_privacy(guild, private_room)
 
         elif title == 'Limit':
             if emoji == '🔄':
@@ -550,17 +579,19 @@ async def check_reactions(member: Member, guild: Guild, private_room: PrivateRoo
         elif title == 'Visibility':
             if emoji == '👀':
                 # Deactivate moderation log
-                await toggle_hide(guild, private_room)
+                await toggle_visibility(guild, private_room)
 
 
 def set_default(guild: Guild, private_room: PrivateRoom) -> None:
     """
-
-    :param guild:
-    :param private_room:
-    :return:
+    Set the settings of the private room to the default ones of the guild
+    :param guild: Guild to set default settings
+    :param private_room: Private room to retrieve settings from
     """
-    update.default_pr_game_activity(argument=guild.id, value=private_room.game_activity)
+    # Set the default settings
+    update.default_pr_game_activity(
+        argument=guild.id, value=private_room.game_activity)
     update.default_pr_locked(argument=guild.id, value=private_room.locked)
-    update.default_pr_user_limit(argument=guild.id, value=private_room.user_limit)
+    update.default_pr_user_limit(
+        argument=guild.id, value=private_room.user_limit)
     update.default_pr_hidden(argument=guild.id, value=private_room.hidden)

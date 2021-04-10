@@ -18,9 +18,14 @@ async def color_page(channel: TextChannel, guild: Guild) -> None:
                          description='Setup your custom color!')
     embed.colour = appearance.get_color(guild.id)
 
+    # Fetch colorand format to hex color code
+    color = hex(appearance.get_color(guild.id))
+    color = '#' + str(color)[2:]
+
     # Setup the fields
-    embed.add_field(name='Current Color', value=f'`{hex(appearance.get_color(guild.id))}`', inline=False)
-    embed.add_field(name='Set Color', value=f'`{prefix}{description.get_command("color").syntax}`', inline=False)
+    embed.add_field(name='Current Color', value=f'`{color}`', inline=False)
+    embed.add_field(
+        name='Set Color', value=f'`{prefix}{description.get_command("color").syntax}`', inline=False)
 
     embed.add_field(name='Valid Color', value='HEX color code', inline=False)
     embed.add_field(name='Set To Default', value='React with 🟧️', inline=False)
@@ -57,7 +62,8 @@ async def setup_color(channel: TextChannel, guild: Guild, message: Message = Non
             # Set primary color of the server
             appearance.set_color(guild_id=guild.id, color=color)
         except TypeError:
-            raise util.InvalidInputError(color, "color has to be an hex-code or integer")
+            raise util.InvalidInputError(
+                color, "color has to be an hex-code or integer")
     else:
         # Set color to default
         appearance.set_color(guild.id)

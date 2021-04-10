@@ -11,10 +11,10 @@ from database.select import WaitingResponse
 
 def is_waiting_for_response(member: Member, channel: TextChannel) -> bool:
     """
-
-    :param member:
-    :param channel:
-    :return:
+    Check whether a response is expected for the member in the channel
+    :param member: Member to check
+    :param channel: Channel to check
+    :return: Whether a response is expected for the member in the channel
     """
     if (member.id, channel.id) in select.all_waiting_for_response():
         return True
@@ -24,19 +24,17 @@ def is_waiting_for_response(member: Member, channel: TextChannel) -> bool:
 
 def set_response(response: str, response_waiting: WaitingResponse) -> None:
     """
-    
-    :param response:
-    :param response_waiting: 
-    :return: 
+    Set the response of the member for the response_waiting
+    :param response: Response of member
+    :param response_waiting: WaitingResponse to set the response of the member
     """
     update.response(argument=response_waiting.id, value=response)
 
 
 def handle_response(message: Message) -> None:
     """
-
-    :param message:
-    :return:
+    Check whether a response is expected of this messaage and add the response
+    :param message: Message to check
     """
     channel: TextChannel = message.channel
     member = message.author
@@ -52,12 +50,12 @@ def handle_response(message: Message) -> None:
 async def wait_for_response(member: Member, channel: TextChannel, seconds: int,
                             handle_permission: bool = False) -> Optional[str]:
     """
-
-    :param member:
-    :param channel:
-    :param seconds:
-    :param handle_permission:
-    :return:
+    Wait for the response of the member in the channel
+    :param member: Member to wait for response
+    :param channel: Channel to wait for response
+    :param seconds: How long to wait for response
+    :param handle_permission: Whether to add send_message permission for the member during the waiting
+    :return: The response of the member
     """
     if handle_permission:
         overwrite: PermissionOverwrite = channel.overwrites_for(member)
@@ -99,4 +97,3 @@ async def wait_for_response(member: Member, channel: TextChannel, seconds: int,
     # Delete entry and return the response
     delete.waiting_for_response(id)
     return response
-

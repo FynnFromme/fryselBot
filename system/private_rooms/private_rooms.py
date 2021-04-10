@@ -65,7 +65,6 @@ def is_private_room(channel: VoiceChannel) -> bool:
     :param channel: Channel to check
     :return: Whether the channel is a private room
     """
-
     return (channel.id, channel.guild.id) in select.all_private_rooms()
 
 
@@ -75,18 +74,18 @@ def is_move_channel(channel: VoiceChannel) -> bool:
     :param channel: Channel to check
     :return: Whether the channel is a move channel
     """
-
     return (channel.id, channel.guild.id) in select.all_move_channels()
 
 
-def has_private_room(owner: Member) -> bool:
+def has_private_room(member: Member) -> bool:
     """
-
-    :param owner:
-    :return:
+    Check whether the member is the owner of a private room
+    :param member: Member to check
+    :return: Whether the member is the owner of a private room
     """
+    # Check whether there is an database entry
     try:
-        select.PrivateRoom(owner.guild.id, owner_id=owner.id)
+        select.PrivateRoom(member.guild.id, owner_id=member.id)
     except DatabaseEntryError:
         return False
     else:
@@ -96,7 +95,7 @@ def has_private_room(owner: Member) -> bool:
 async def setup_private_rooms(guild: Guild) -> None:
     """
     Setup private rooms for the guild
-    :param guild:
+    :param guild: Guild to setup private rooms
     """
     # Create private room category
     category: CategoryChannel = await guild.create_category('PRIVATE ROOMS', reason='Setup private rooms')
@@ -189,7 +188,7 @@ async def create_private_room(owner: Member) -> None:
                 name = f'Playing {games[0].name}'
 
     if not name:
-        name = settings.get_name(guild, owner)
+        name = settings.get_name(owner)
 
     # Create private room
     pr_channel = await guild.create_voice_channel(name=name, category=category,
@@ -207,7 +206,7 @@ async def create_private_room(owner: Member) -> None:
         for role in mod_roles:
             text_overwrites[role] = PermissionOverwrite(view_channel=True)
 
-        text_channel = await guild.create_text_channel(settings.get_name(guild, owner), category=category,
+        text_channel = await guild.create_text_channel(settings.get_name(owner), category=category,
                                                        overwrites=text_overwrites,
                                                        reason='Created private room')
 
@@ -237,9 +236,9 @@ async def create_private_room(owner: Member) -> None:
 
 async def join_private_room(member: Member, channel: VoiceChannel) -> None:
     """
-
-    :param member:
-    :param channel:
+    Handle a member joins a private room
+    :param member: Member that joins the room
+    :param channel: The channel that the memebr is joined
     """
     guild: Guild = member.guild
 
@@ -256,8 +255,8 @@ async def join_private_room(member: Member, channel: VoiceChannel) -> None:
 async def leave_private_room(member: Member, channel: VoiceChannel) -> None:
     """
     Handles when a member leaves a private room
-    :param member:
-    :param channel:
+    :param member: Member that leaves a private room
+    :param channel: Channel that the member left
     """
     guild: Guild = channel.guild
 
@@ -416,11 +415,12 @@ async def set_owner(owner: Member, private_room: PrivateRoom) -> None:
     await set_owner_permissions(owner, private_room)
 
     # Edit the name of the private room
-    name = settings.get_name(guild, owner)
+    name = settings.get_name(owner)
     await settings.set_name(name, guild, private_room)
 
 
 async def delete_old_channels(message: Message, guild: Guild):
+    """Delete old private rooms for test purpose"""
     await message.delete()
     for channel in guild.channels:
         channel: GuildChannel = channel
@@ -440,13 +440,15 @@ async def delete_old_channels(message: Message, guild: Guild):
 
 def get_gameactivity(member: Member) -> Optional[Activity]:
     """
-
-    :param member:
-    :return:
+    Get gameactivity of the member
+    :param member: Member to get the gameactivity of
+    :return: Gameactivity of member
     """
+    # Check whether the main activity is a game
     if isinstance(member.activity, Game):
         activity = member.activity
     else:
+        # Search through other activities for games
         for a in member.activities:
             if isinstance(a, Game):
                 activity = a

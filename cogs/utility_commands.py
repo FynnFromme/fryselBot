@@ -50,9 +50,9 @@ class UtilityCommands(commands.Cog):
         else:
             private_room = PrivateRoom(ctx.guild.id, ctx.author.id)
             if arg == 2:
-                await settings.toggle_hide(ctx.guild, private_room)
+                await settings.toggle_visibility(ctx.guild, private_room)
             elif arg == 3:
-                await settings.toggle_lock(ctx.guild, private_room)
+                await settings.toggle_privacy(ctx.guild, private_room)
             elif arg == 4 and arg2:
                 await settings.set_limit(int(arg2), ctx.guild, private_room)
             elif arg == 5 and arg2:
