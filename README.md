@@ -48,11 +48,11 @@ Once all members leave the channel, the private room will be deleted
 # **Usage**
 FryselBot is not public yet. But you can use the code and host fryselBot yourself! Just follow the steps below.
 
-1. Make sure you have installed [Python 3.9](https://www.python.org/downloads/) or higher.
-2. Install [discord.py](https://discordpy.readthedocs.io/en/latest/intro.html) in your Terminal.
-3. Create a bot account. Click [here](https://discordpy.readthedocs.io/en/latest/discord.html) for additional help.
-4. Activate both **Presence** and **Server Members Intents**. You can find further instructions [here](https://discordpy.readthedocs.io/en/latest/intents.html#privileged-intents).
-5. Download the source code by [downloading the zip](https://github.com/Fynn-F/fryselBot/archive/refs/heads/master.zip) or cloning the repository if you have git installed (recommended). Read [here](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository) for documentation.
+1. Make sure you have installed <a href="https://www.python.org/downloads/" target="_blank">Python 3.9</a>.
+2. Install <a href="https://discordpy.readthedocs.io/en/latest/intro.html" target="_blank">discord.py</a> in your Terminal.
+3. Create a bot account. Click <a href="https://discordpy.readthedocs.io/en/latest/discord.html" target="_blank">here</a> for additional help.
+4. Activate both **Presence** and **Server Members Intents**. You can find further instructions <a href="https://discordpy.readthedocs.io/en/latest/intents.html#privileged-intents" target="_blank">here</a>.
+5. Download the source code by [downloading the zip](https://github.com/Fynn-F/fryselBot/archive/refs/heads/master.zip) or cloning the repository if you have git installed (recommended). Read <a href="https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository" target="_blank">here</a> for documentation.
 6. Add the following file **`/utilities/secret.py`** and add this code:
     ```python
     # Put the Discord IDs of you and your team here
@@ -67,7 +67,7 @@ FryselBot is not public yet. But you can use the code and host fryselBot yoursel
     # Token of your bot client
     bot_token = "THE TOKEN OF YOUR BOT"
     ```
-7. Now you can open the Terminal or command promt, change the directory to the source code and run the bot with **`python3 bot.py`**
+7. Now you can open the Terminal or command prompt, change the directory to the source code and run the bot with **`python3 bot.py`**
 
 
 
