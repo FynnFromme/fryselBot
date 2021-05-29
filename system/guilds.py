@@ -170,7 +170,8 @@ async def check_members(client: Client) -> None:
         for member in guild.members:
             if mute.is_muted(member):
                 mute_role: Role = await mute.get_mute_role(guild)
-                await member.add_roles(mute_role, reason='Member is muted')
+                if mute_role not in member.roles:
+                    await member.add_roles(mute_role, reason='Member is muted')
 
 
 # Checks that can be done after rebooting to set database up to date

@@ -106,9 +106,6 @@ class GuildUpdates(commands.Cog):
             # Delete role out of database
             delete.role(role.id)
 
-    # TODO: Add cogs for events (Log various updates regarding bot_channels deleted, guild left/joined. later: roles,
-    #  etc.)
-
 
 def setup(client: Bot):
     client.add_cog(GuildUpdates(client))

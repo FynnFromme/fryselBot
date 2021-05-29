@@ -1,7 +1,11 @@
 # **fryselBot**
 
 Hello friends! 
+
 fryselBot is a great Discord bot with a lot of awesome features!
+
+![fryselBot](https://github.com/Fynn-F/fryselBot/blob/master/fryselBot-logo.png)
+
 - [Features](https://github.com/Fynn-F/fryselBot#features)
   - [Private Rooms](https://github.com/Fynn-F/fryselBot#private-rooms)
   - [Moderation](https://github.com/Fynn-F/fryselBot#moderation)
@@ -48,11 +52,11 @@ Once all members leave the channel, the private room will be deleted
 # **Usage**
 FryselBot is not public yet. But you can use the code and host fryselBot yourself! Just follow the steps below.
 
-1. Make sure you have installed [Python 3.9](https://www.python.org/downloads/) or higher.
-2. Install [discord.py](https://discordpy.readthedocs.io/en/latest/intro.html) in your Terminal.
-3. Create a bot account. Click [here](https://discordpy.readthedocs.io/en/latest/discord.html) for additional help.
-4. Activate both **Presence** and **Server Members Intents**. You can find further instructions [here](https://discordpy.readthedocs.io/en/latest/intents.html#privileged-intents).
-5. Download the source code by [downloading the zip](https://github.com/Fynn-F/fryselBot/archive/refs/heads/master.zip) or cloning the repository if you have git installed (recommended). Read [here](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository) for documentation.
+1. Make sure you have installed [Python 3.9](https://www.python.org/downloads/) or higher
+2. Install [discord.py](https://discordpy.readthedocs.io/en/latest/intro.html) in your Terminal
+3. Create a bot account. Click [here](https://discordpy.readthedocs.io/en/latest/discord.html) for additional help
+4. Activate both **Presence** and **Server Members Intents**. You can find further instructions [here](https://discordpy.readthedocs.io/en/latest/intents.html#privileged-intents)
+5. Download the source code by [downloading the zip](https://github.com/Fynn-F/fryselBot/archive/refs/heads/master.zip) or cloning the repository if you have git installed (recommended). Read [here](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository) for documentation
 6. Create the following file **`/utilities/secret.py`** and add this code:
     ```python
     # Put the Discord IDs of you and your team here
