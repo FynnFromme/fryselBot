@@ -8,7 +8,13 @@ from discord import Message
 from database import delete
 from system.private_rooms import private_rooms
 from system import cogs, guilds, appearance, help
-from utilities import secret
+
+try:
+    from utilities import secret
+except ModuleNotFoundError:
+    # /utilities/secrept.py is missing
+    print('\033[31mFatal Error: /utilities/secret.py is missing.\nPlease read step 6 of https://github.com/Fynn-F/fryselBot#usage\033[0m')
+    exit()
 
 
 async def get_prefix(_: Bot, message: Message):
@@ -41,7 +47,7 @@ async def on_ready():
     delete.all_waiting_for_responses()
 
     # States, that the bot is ready
-    print('\033[93m{} is logged in as user {}'.format(appearance.bot_name, client.user.name))
+    print(f'\033[93m{appearance.bot_name} is logged in as user {client.user.name}\033[0m')
 
 
 @tasks.loop(seconds=30)
