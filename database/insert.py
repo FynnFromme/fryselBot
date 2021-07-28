@@ -23,7 +23,7 @@ def generate_new_id(_c: Cursor, table: str, identifier: str) -> str:
         random_id = util.random_base_16_code()
 
         # Get entries that have the same ID
-        _c.execute("SELECT * FROM {} WHERE {}=='{}' LIMIT 1".format(table, identifier, random_id))
+        _c.execute("SELECT * FROM {} WHERE {}==? LIMIT 1".format(table, identifier), (random_id,))
         result = _c.fetchone()
 
         # Check whether the ID is already used

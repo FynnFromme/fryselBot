@@ -21,7 +21,8 @@ def _delete_by_keyword_factory(table: str, keyword: str) -> Callable[[Cursor, st
         :kwargs: Additional conditions
         """
         # Set up statement
-        statement = "DELETE FROM {} WHERE {}=='{}'".format(table, keyword, argument)
+        statement = "DELETE FROM {} WHERE {}=='{}'".format(
+            table, keyword, argument)
 
         for k, v in kwargs.items():
             statement += " AND {}=='{}'".format(k, v)
@@ -34,7 +35,8 @@ def _delete_by_keyword_factory(table: str, keyword: str) -> Callable[[Cursor, st
 
 guild = _delete_by_keyword_factory(table='guilds', keyword='guild_id')
 
-guild_settings = _delete_by_keyword_factory(table='guild_settings', keyword='guild_id')
+guild_settings = _delete_by_keyword_factory(
+    table='guild_settings', keyword='guild_id')
 
 role = _delete_by_keyword_factory(table='roles', keyword='role_id')
 
@@ -46,15 +48,19 @@ warn = _delete_by_keyword_factory(table='warns', keyword='warn_id')
 
 report = _delete_by_keyword_factory(table='reports', keyword='report_id')
 
-private_room = _delete_by_keyword_factory(table='private_rooms', keyword='room_id')
+private_room = _delete_by_keyword_factory(
+    table='private_rooms', keyword='room_id')
 
-pr_settings = _delete_by_keyword_factory(table='pr_settings', keyword='room_id')
+pr_settings = _delete_by_keyword_factory(
+    table='pr_settings', keyword='room_id')
 
-default_pr_settings = _delete_by_keyword_factory(table='default_pr_settings', keyword='guild_id')
+default_pr_settings = _delete_by_keyword_factory(
+    table='default_pr_settings', keyword='guild_id')
 
 ticket = _delete_by_keyword_factory(table='tickets', keyword='ticket_id')
 
-waiting_for_response = _delete_by_keyword_factory(table='waiting_for_responses', keyword='id')
+waiting_for_response = _delete_by_keyword_factory(
+    table='waiting_for_responses', keyword='id')
 
 
 @connection
@@ -66,7 +72,8 @@ def ticket_user(_c: Cursor, ticket_id: str, user_id: str) -> None:
     :param user_id: UserID of the ticket_user
     """
     # Delete entry
-    _c.execute("DELETE FROM ticket_users WHERE ticket_id=='{}' AND user_id=='{}'".format(ticket_id, user_id))
+    _c.execute(
+        "DELETE FROM ticket_users WHERE ticket_id==? AND user_id==?", (ticket_id, user_id))
 
 
 def mod_operation_of_member_factory(table: str) -> Callable[[Cursor, str, str], None]:
@@ -79,8 +86,8 @@ def mod_operation_of_member_factory(table: str) -> Callable[[Cursor, str, str], 
         :param guild_id: GuildID of the mod_operations
         """
         # Delete entries
-        statement = "DELETE FROM {} WHERE user_id=={} AND guild_id=={}".format(table, user_id, guild_id)
-        _c.execute(statement)
+        _c.execute("DELETE FROM ? WHERE user_id==? AND guild_id==?",
+                   (table, user_id, guild_id))
     return inner
 
 
@@ -103,22 +110,22 @@ def all_entries_of_guild(_c: Cursor, guild_id: str) -> None:
     _c.execute('''DELETE FROM pr_settings
                 WHERE room_id IN (
                     SELECT room_id FROM private_rooms
-                    WHERE guild_id=='{}'
-                )'''.format(guild_id))
+                    WHERE guild_id==?
+                )''', (guild_id,))
 
     # Delete all ticket_users
     _c.execute('''DELETE FROM ticket_users
                     WHERE ticket_id IN (
                         SELECT ticket_id FROM tickets
-                        WHERE guild_id=='{}'
-                    )'''.format(guild_id))
+                        WHERE guild_id==?
+                    )''', (guild_id,))
 
     # Delete all entries of tables with guild_id attribute
     tables = ['guilds', 'guild_settings', 'roles', 'bans', 'mutes', 'warns', 'reports', 'private_rooms', 'tickets',
               'waiting_for_responses', 'default_pr_settings']
 
     for table in tables:
-        _c.execute("DELETE FROM {} WHERE guild_id=='{}'".format(table, guild_id))
+        _c.execute("DELETE FROM ? WHERE guild_id==?", (table, guild_id))
 
 
 @connection

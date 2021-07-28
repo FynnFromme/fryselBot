@@ -29,7 +29,8 @@ def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = 
         :raises DatabaseEntryError: If couldn't find the entry
         """
         # Prepare sql statement
-        statement = "SELECT {} FROM {} WHERE guild_id=='{}'".format(attribute, table, guild_id)
+        statement = "SELECT {} FROM {} WHERE guild_id=={}".format(
+            attribute, table, guild_id)
 
         # Add further conditions of given by kwargs
         for k, v in kwargs.items():
@@ -53,7 +54,8 @@ def _select_by_guild_id_factory(table: str, attribute: str, all_entries: bool = 
                 value = _c.fetchone()[0]
 
         except TypeError:  # Throw error when there is no single value
-            raise DatabaseEntryError(table, attribute, guild_id, conditions=kwargs)
+            raise DatabaseEntryError(
+                table, attribute, guild_id, conditions=kwargs)
 
         return value
 
@@ -76,7 +78,8 @@ def _fetch_mod_operation_entry(_c: Cursor, table: str, guild_id: int = None, use
     """
     if operation_id:
         # Fetch entry by operation_id out of database
-        _c.execute("SELECT * FROM {} WHERE {}=='{}' LIMIT 1".format(table, id_identifier, operation_id))
+        _c.execute("SELECT * FROM {} WHERE {}=={} LIMIT 1".format(table,
+                   id_identifier, operation_id))
         entry = _c.fetchone()
         # Check if there was a operation on the user
         if not entry:
@@ -89,15 +92,11 @@ def _fetch_mod_operation_entry(_c: Cursor, table: str, guild_id: int = None, use
                     inner join (
                         SELECT {}, MAX(date) as MaxDate
                         FROM {}
-                        WHERE guild_id=='{}' AND user_id=='{}'
+                        WHERE guild_id==? AND user_id==?
                         GROUP BY guild_id
-                     ) tm on t.{} = tm.{} AND t.date = tm.MaxDate'''.format(table,
-                                                                            id_identifier,
-                                                                            table,
-                                                                            guild_id,
-                                                                            user_id,
-                                                                            id_identifier,
-                                                                            id_identifier))
+                     ) tm on t.{} = tm.{} AND t.date = tm.MaxDate'''.format(table, id_identifier, table, id_identifier, id_identifier), (
+            guild_id,
+            user_id))
         entry = _c.fetchone()
 
         # Check if there was a operation on the user
@@ -108,61 +107,88 @@ def _fetch_mod_operation_entry(_c: Cursor, table: str, guild_id: int = None, use
     return entry
 
 
-welcome_channel_id = _select_by_guild_id_factory(table='guilds', attribute='welcome_channel_id')
+welcome_channel_id = _select_by_guild_id_factory(
+    table='guilds', attribute='welcome_channel_id')
 
-cpr_channel_id = _select_by_guild_id_factory(table='guilds', attribute='cpr_channel_id')
+cpr_channel_id = _select_by_guild_id_factory(
+    table='guilds', attribute='cpr_channel_id')
 
-pr_settings_id = _select_by_guild_id_factory(table='guilds', attribute='pr_settings_id')
+pr_settings_id = _select_by_guild_id_factory(
+    table='guilds', attribute='pr_settings_id')
 
-pr_categroy_id = _select_by_guild_id_factory(table='guilds', attribute='pr_category_id')
+pr_categroy_id = _select_by_guild_id_factory(
+    table='guilds', attribute='pr_category_id')
 
-pr_text_channel_activated = _select_by_guild_id_factory(table='guild_settings', attribute='pr_text_channel')
+pr_text_channel_activated = _select_by_guild_id_factory(
+    table='guild_settings', attribute='pr_text_channel')
 
-pr_change_name = _select_by_guild_id_factory(table='guild_settings', attribute='pr_name')
+pr_change_name = _select_by_guild_id_factory(
+    table='guild_settings', attribute='pr_name')
 
-pr_change_privacy = _select_by_guild_id_factory(table='guild_settings', attribute='pr_privacy')
+pr_change_privacy = _select_by_guild_id_factory(
+    table='guild_settings', attribute='pr_privacy')
 
-pr_change_limit = _select_by_guild_id_factory(table='guild_settings', attribute='pr_limit')
+pr_change_limit = _select_by_guild_id_factory(
+    table='guild_settings', attribute='pr_limit')
 
-pr_change_visibility = _select_by_guild_id_factory(table='guild_settings', attribute='pr_visibility')
+pr_change_visibility = _select_by_guild_id_factory(
+    table='guild_settings', attribute='pr_visibility')
 
-default_pr_name = _select_by_guild_id_factory(table='default_pr_settings', attribute='name')
+default_pr_name = _select_by_guild_id_factory(
+    table='default_pr_settings', attribute='name')
 
-default_pr_game_activity = _select_by_guild_id_factory(table='default_pr_settings', attribute='game_activity')
+default_pr_game_activity = _select_by_guild_id_factory(
+    table='default_pr_settings', attribute='game_activity')
 
-default_pr_locked = _select_by_guild_id_factory(table='default_pr_settings', attribute='locked')
+default_pr_locked = _select_by_guild_id_factory(
+    table='default_pr_settings', attribute='locked')
 
-default_pr_user_limit = _select_by_guild_id_factory(table='default_pr_settings', attribute='user_limit')
+default_pr_user_limit = _select_by_guild_id_factory(
+    table='default_pr_settings', attribute='user_limit')
 
-default_pr_hidden = _select_by_guild_id_factory(table='default_pr_settings', attribute='hidden')
+default_pr_hidden = _select_by_guild_id_factory(
+    table='default_pr_settings', attribute='hidden')
 
-mod_log_id = _select_by_guild_id_factory(table='guilds', attribute='mod_log_id')
+mod_log_id = _select_by_guild_id_factory(
+    table='guilds', attribute='mod_log_id')
 
-support_log_id = _select_by_guild_id_factory(table='guilds', attribute='support_log_id')
+support_log_id = _select_by_guild_id_factory(
+    table='guilds', attribute='support_log_id')
 
-ticket_category_id = _select_by_guild_id_factory(table='guilds', attribute='ticket_category_id')
+ticket_category_id = _select_by_guild_id_factory(
+    table='guilds', attribute='ticket_category_id')
 
-mute_role_id = _select_by_guild_id_factory(table='guilds', attribute='mute_role_id')
+mute_role_id = _select_by_guild_id_factory(
+    table='guilds', attribute='mute_role_id')
 
-prefix = _select_by_guild_id_factory(table='guild_settings', attribute='prefix')
+prefix = _select_by_guild_id_factory(
+    table='guild_settings', attribute='prefix')
 
 color = _select_by_guild_id_factory(table='guild_settings', attribute='color')
 
-welcome_messages = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_messages')
+welcome_messages = _select_by_guild_id_factory(
+    table='guild_settings', attribute='welcome_messages')
 
-leave_messages = _select_by_guild_id_factory(table='guild_settings', attribute='leave_messages')
+leave_messages = _select_by_guild_id_factory(
+    table='guild_settings', attribute='leave_messages')
 
-welcome_dms = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_dms')
+welcome_dms = _select_by_guild_id_factory(
+    table='guild_settings', attribute='welcome_dms')
 
-welcome_dm = _select_by_guild_id_factory(table='guild_settings', attribute='welcome_dm')
+welcome_dm = _select_by_guild_id_factory(
+    table='guild_settings', attribute='welcome_dm')
 
-moderator_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='MODERATOR')
+moderator_roles = _select_by_guild_id_factory(
+    table='roles', attribute='role_id', all_entries=True, type='MODERATOR')
 
-support_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='SUPPORTER')
+support_roles = _select_by_guild_id_factory(
+    table='roles', attribute='role_id', all_entries=True, type='SUPPORTER')
 
-admin_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='ADMIN')
+admin_roles = _select_by_guild_id_factory(
+    table='roles', attribute='role_id', all_entries=True, type='ADMIN')
 
-auto_roles = _select_by_guild_id_factory(table='roles', attribute='role_id', all_entries=True, type='AUTOROLE')
+auto_roles = _select_by_guild_id_factory(
+    table='roles', attribute='role_id', all_entries=True, type='AUTOROLE')
 
 
 def _select_all_factory(table: str, attributes: list) -> Callable[[Cursor], list]:
@@ -198,25 +224,32 @@ def _select_all_factory(table: str, attributes: list) -> Callable[[Cursor], list
 
 all_guilds = _select_all_factory('guilds', ['guild_id'])
 
-all_cpr_channels = _select_all_factory('guilds', ['cpr_channel_id', 'guild_id'])
+all_cpr_channels = _select_all_factory(
+    'guilds', ['cpr_channel_id', 'guild_id'])
 
-all_pr_categories = _select_all_factory('guilds', ['pr_category_id', 'guild_id'])
+all_pr_categories = _select_all_factory(
+    'guilds', ['pr_category_id', 'guild_id'])
 
 all_pr_settings = _select_all_factory('guilds', ['pr_settings_id', 'guild_id'])
 
-all_welcome_channels = _select_all_factory('guilds', ['welcome_channel_id', 'guild_id'])
+all_welcome_channels = _select_all_factory(
+    'guilds', ['welcome_channel_id', 'guild_id'])
 
 all_moderation_logs = _select_all_factory('guilds', ['mod_log_id', 'guild_id'])
 
 all_roles = _select_all_factory('roles', ['role_id', 'guild_id'])
 
-all_private_rooms = _select_all_factory('private_rooms', ['room_channel_id', 'guild_id'])
+all_private_rooms = _select_all_factory(
+    'private_rooms', ['room_channel_id', 'guild_id'])
 
-all_move_channels = _select_all_factory('private_rooms', ['move_channel_id', 'guild_id'])
+all_move_channels = _select_all_factory(
+    'private_rooms', ['move_channel_id', 'guild_id'])
 
-all_pr_text_channels = _select_all_factory('private_rooms', ['text_channel_id', 'guild_id'])
+all_pr_text_channels = _select_all_factory(
+    'private_rooms', ['text_channel_id', 'guild_id'])
 
-all_waiting_for_response = _select_all_factory('waiting_for_responses', ['user_id', 'channel_id'])
+all_waiting_for_response = _select_all_factory(
+    'waiting_for_responses', ['user_id', 'channel_id'])
 
 
 class Ban:
@@ -240,7 +273,8 @@ class Ban:
     def __init__(self, guild_id: int = None, user_id: int = None, ban_id: str = None):
         # Check for parameters
         if (not guild_id or not user_id) and not ban_id:
-            raise DatabaseError('Ban: Provide either guild_id and user_id or the ban_id')
+            raise DatabaseError(
+                'Ban: Provide either guild_id and user_id or the ban_id')
         # Fetch ban entry out of database
         ban = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='bans', id_identifier='ban_id',
                                          operation_id=ban_id)
@@ -278,7 +312,7 @@ def expired_bans(_c: Cursor) -> list[Ban]:
 
     # Fetch all bans that are expired
     _c.execute("SELECT guild_id, user_id, ban_id FROM bans WHERE temp==1 AND until_date <= Datetime('{}')".format(
-        now.strftime('%Y-%m-%d %H:%M:%S')))
+        now.strftime('%Y-%m-%d %H:%M:%S'),))
     entries = _c.fetchall()
 
     # Create a list of expired Ban objects
@@ -309,7 +343,8 @@ class Mute:
     def __init__(self, guild_id: int = None, user_id: int = None, mute_id: str = None):
         # Check for parameters
         if (not guild_id or not user_id) and not mute_id:
-            raise DatabaseError('Mute: Provide either guild_id and user_id or the mute_id')
+            raise DatabaseError(
+                'Mute: Provide either guild_id and user_id or the mute_id')
 
         # Fetch mute entry out of database
         mute = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='mutes', id_identifier='mute_id',
@@ -378,7 +413,8 @@ class Warn:
     def __init__(self, guild_id: int = None, user_id: int = None, warn_id: str = None):
         # Check for parameters
         if (not guild_id or not user_id) and not warn_id:
-            raise DatabaseError('Warn: Provide either guild_id and user_id or the warn_id')
+            raise DatabaseError(
+                'Warn: Provide either guild_id and user_id or the warn_id')
         # Fetch warn entry out of database
         warn = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='warns', id_identifier='warn_id',
                                           operation_id=warn_id)
@@ -414,10 +450,12 @@ def warns_date(_c: Cursor, date: datetime, after: bool = True, guild_id: int = N
     # Prepare statement
     if after:
         # Fetch entries after date
-        statement = "SELECT warn_id FROM warns WHERE date >= Datetime('{}')".format(date.strftime('%Y-%m-%d %H:%M:%S'))
+        statement = "SELECT warn_id FROM warns WHERE date >= Datetime('{}')".format(
+            date.strftime('%Y-%m-%d %H:%M:%S'))
     else:
         # Fetch entries after date
-        statement = "SELECT warn_id FROM warns WHERE date <= Datetime('{}')".format(date.strftime('%Y-%m-%d %H:%M:%S'))
+        statement = "SELECT warn_id FROM warns WHERE date <= Datetime('{}')".format(
+            date.strftime('%Y-%m-%d %H:%M:%S'))
 
     if guild_id:
         statement += " AND guild_id == '{}'".format(guild_id)
@@ -445,7 +483,8 @@ def count_warns(_c: Cursor, user_id: int, guild_id: int) -> int:
     :param guild_id: Discord GuildID
     """
     # Fetch count
-    _c.execute("""SELECT COUNT(*) FROM warns WHERE guild_id=='{}' AND user_id=='{}'""".format(guild_id, user_id))
+    _c.execute(
+        """SELECT COUNT(*) FROM warns WHERE guild_id==? AND user_id==?""", (guild_id, user_id))
 
     return _c.fetchone()[0]
 
@@ -461,8 +500,8 @@ def warns_of_user(_c: Cursor, user_id: int, guild_id: int, limit: int = 5) -> li
     :return: List of the latest count warns of user_id on guild_id
     """
     # Fetch latest count warns of user_id on guild_id
-    _c.execute('''SELECT guild_id, user_id, warn_id FROM warns WHERE guild_id=='{}' AND user_id=='{}' 
-                ORDER BY Datetime(date) DESC LIMIT {}'''.format(guild_id, user_id, limit))
+    _c.execute('''SELECT guild_id, user_id, warn_id FROM warns WHERE guild_id==? AND user_id==?
+                ORDER BY Datetime(date) DESC LIMIT {}'''.format(limit), (guild_id, user_id))
 
     entries = _c.fetchall()
 
@@ -489,10 +528,12 @@ class Report:
         date        (datetime): Date of the report
         guild_id         (int): ID of the guild where the report took place
     """
+
     def __init__(self, guild_id: int = None, user_id: int = None, report_id: str = None):
         # Check for parameters
         if (not guild_id or not user_id) and not report_id:
-            raise DatabaseError('Report: Provide either guild_id and user_id or the report_id')
+            raise DatabaseError(
+                'Report: Provide either guild_id and user_id or the report_id')
         # Fetch report entry out of database
         report = _fetch_mod_operation_entry(guild_id=guild_id, user_id=user_id, table='reports',
                                             id_identifier='report_id', operation_id=report_id)
@@ -560,7 +601,8 @@ def count_reports(_c: Cursor, user_id: int, guild_id: int) -> int:
     :param guild_id: Discord GuildID
     """
     # Fetch count
-    _c.execute("""SELECT COUNT(*) FROM reports WHERE guild_id=='{}' AND user_id=='{}'""".format(guild_id, user_id))
+    _c.execute(
+        """SELECT COUNT(*) FROM reports WHERE guild_id==? AND user_id==?""", (guild_id, user_id))
 
     return _c.fetchone()[0]
 
@@ -576,15 +618,16 @@ def reports_of_user(_c: Cursor, user_id: int, guild_id: int, limit: int = 5) -> 
     :return: List of the latest limit reports of user_id on guild_id
     """
     # Fetch latest count warns of user_id on guild_id
-    _c.execute('''SELECT guild_id, user_id, report_id FROM reports WHERE guild_id=='{}' AND user_id=='{}' 
-                ORDER BY Datetime(date) DESC LIMIT {}'''.format(guild_id, user_id, limit))
+    _c.execute('''SELECT guild_id, user_id, report_id FROM reports WHERE guild_id==? AND user_id==? 
+                ORDER BY Datetime(date) DESC LIMIT {}'''.format(limit), (guild_id, user_id))
 
     entries = _c.fetchall()
 
     # Create list of Warn objects
     reports = []
     for report in entries:
-        reports.append(Report(guild_id=report[0], user_id=report[1], report_id=report[2]))
+        reports.append(
+            Report(guild_id=report[0], user_id=report[1], report_id=report[2]))
 
     return reports
 
@@ -621,7 +664,7 @@ class PrivateRoom:
             # Get private room entry by owner_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM private_rooms WHERE guild_id=='{}' AND owner_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM private_rooms WHERE guild_id==? AND owner_id==? LIMIT 1", (
                     guild_id,
                     owner_id))
                 return _c.fetchone()
@@ -636,7 +679,7 @@ class PrivateRoom:
             # Get private room entry by room_channel_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM private_rooms WHERE guild_id=='{}' AND room_channel_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM private_rooms WHERE guild_id==? AND room_channel_id==? LIMIT 1", (
                     guild_id,
                     room_channel_id))
                 return _c.fetchone()
@@ -651,7 +694,7 @@ class PrivateRoom:
             # Get private room entry by move_channel_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM private_rooms WHERE guild_id=='{}' AND move_channel_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM private_rooms WHERE guild_id==? AND move_channel_id==? LIMIT 1", (
                     guild_id,
                     move_channel_id))
                 return _c.fetchone()
@@ -666,7 +709,7 @@ class PrivateRoom:
             # Get private room entry by move_channel_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM private_rooms WHERE guild_id=='{}' AND text_channel_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM private_rooms WHERE guild_id==? AND text_channel_id==? LIMIT 1", (
                     guild_id,
                     text_channel_id))
                 return _c.fetchone()
@@ -694,7 +737,8 @@ class PrivateRoom:
             # Fetch private room settings entry
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM pr_settings WHERE room_id=='{}'LIMIT 1".format(self.room_id))
+                _c.execute(
+                    "SELECT * FROM pr_settings WHERE room_id==? LIMIT 1", (self.room_id,))
                 return _c.fetchone()
 
             settings = execution()
@@ -750,7 +794,7 @@ class Ticket:
             # Fetch ticket entry by ticket_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM tickets WHERE guild_id=='{}' AND ticket_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM tickets WHERE guild_id==? AND ticket_id==? LIMIT 1", (
                     guild_id,
                     ticket_id))
                 return _c.fetchone()
@@ -765,7 +809,7 @@ class Ticket:
             # Fetch ticket entry by text_channel_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM tickets WHERE guild_id=='{}' AND text_channel_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM tickets WHERE guild_id==? AND text_channel_id==? LIMIT 1", (
                     guild_id,
                     text_channel_id))
                 return _c.fetchone()
@@ -780,7 +824,7 @@ class Ticket:
             # Fetch ticket entry by voice_channel_id
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM tickets WHERE guild_id=='{}' AND voice_channel_id=='{}' LIMIT 1".format(
+                _c.execute("SELECT * FROM tickets WHERE guild_id==? AND voice_channel_id==? LIMIT 1", (
                     guild_id,
                     voice_channel_id))
                 return _c.fetchone()
@@ -807,7 +851,8 @@ class Ticket:
         # Fetch users of ticket
         @connection
         def execution(_c: Cursor):
-            _c.execute("SELECT user_id FROM ticket_users WHERE ticket_id=='{}' AND is_mod==0".format(self.ticket_id))
+            _c.execute("SELECT user_id FROM ticket_users WHERE ticket_id==? AND is_mod==0", (
+                self.ticket_id))
             return _c.fetchall()
 
         self._user_ids = list(map(lambda x: x[0], execution()))
@@ -815,7 +860,8 @@ class Ticket:
         # Fetch mods of ticket
         @connection
         def execution(_c: Cursor):
-            _c.execute("SELECT user_id FROM ticket_users WHERE ticket_id=='{}' AND is_mod==1".format(self.ticket_id))
+            _c.execute("SELECT user_id FROM ticket_users WHERE ticket_id==? AND is_mod==1", (
+                self.ticket_id))
             return _c.fetchall()
 
         self._mod_ids = list(map(lambda x: x[0], execution()))
@@ -845,19 +891,22 @@ class WaitingResponse:
         response         (str): The response given
         guild_id         (int): ID of the guild where waiting for the response
     """
+
     def __init__(self, channel_id: int = None, user_id: int = None, id: str = None):
         # Fetch entry out of database
         if id:
             @connection
             def execution(_c: Cursor):
-                _c.execute("SELECT * FROM waiting_for_responses WHERE id=? LIMIT 1", (id,))
+                _c.execute(
+                    "SELECT * FROM waiting_for_responses WHERE id=? LIMIT 1", (id,))
                 return _c.fetchone()
 
             entry = execution()
 
             # Check if there is a entry with the id
             if not entry:
-                raise DatabaseEntryError(table='waiting_for_responses', attribute='id', keyword=id)
+                raise DatabaseEntryError(
+                    table='waiting_for_responses', attribute='id', keyword=id)
         elif channel_id and user_id:
             @connection
             def execution(_c: Cursor):
@@ -872,7 +921,8 @@ class WaitingResponse:
                 raise DatabaseEntryError(table='waiting_for_responses', attribute='channel_id', keyword=channel_id,
                                          conditions={'user_id': user_id})
         else:
-            raise DatabaseError('Provide either channel_id and user_id or the id')
+            raise DatabaseError(
+                'Provide either channel_id and user_id or the id')
 
         self._id = entry[0]
         self._user_id = entry[1]

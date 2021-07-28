@@ -34,9 +34,11 @@ class DatabaseAttributeError(DatabaseError):
     def __init__(self, attribute_name: str, type_error: bool, argument, description: str = None, *args, **kwargs):
         # Different error messages for type errors
         if type_error:
-            error_message = "Wrong type given for {}. '{}' was given. {}".format(attribute_name, argument, description)
+            error_message = "Wrong type given for {}. '{}' was given. {}".format(
+                attribute_name, argument, description)
         else:
-            error_message = "Wrong argument for {}. '{}' was given. {}".format(attribute_name, argument, description)
+            error_message = "Wrong argument for {}. '{}' was given. {}".format(
+                attribute_name, argument, description)
 
         super().__init__(error_message, *args, **kwargs)
 
@@ -95,16 +97,20 @@ def connection(func) -> Callable:
     def inner(*args, **kwargs):
         """Calls the function with db connection"""
         # Setup db connection
-        _conn: Connection = sqlite3.connect('./database/bot.db')
+        _conn: Connection = sqlite3.connect(
+            './database/bot.db', isolation_level=None)
 
         # Create cursor to execute statements
         _c: Cursor = _conn.cursor()
-
-        with _conn:
-            # Call function
-            return_value = func(_c, *args, **kwargs)
-        _conn.close()
-
+        try:
+            with _conn:
+                # Call function
+                return_value = func(_c, *args, **kwargs)
+            _conn.close()
+        except sqlite3.Error as error:
+            print('SQLite error', error)
+        finally:
+            _conn.close()
         return return_value
 
     return inner

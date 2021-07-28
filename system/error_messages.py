@@ -112,3 +112,18 @@ async def error_handler(ctx: Context, error: Exception, command: Command,
     # Delete message
     if delete_message:
         await util.delete_message(ctx.message)
+
+
+async def custom_error(ctx: Context, title: str, description: str) -> None:
+    """
+    Error message for a custom reason
+    :param ctx: Context of error
+    :param title: Title for error message
+    :param description: Description of error
+    """
+    # Send error message and delete it after some time
+    error_message = await ctx.send(
+        embed=Embed(title=title,
+                    description=description,
+                    colour=appearance.error_color))
+    await error_message.delete(delay=15)

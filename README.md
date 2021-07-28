@@ -4,7 +4,7 @@ Hello friends!
 
 fryselBot is a great Discord bot with a lot of awesome features!
 
-<img src="https://github.com/Fynn-F/fryselBot/blob/master/fryselBot-logo.png" alt="fryselBot" width="200"/>
+<img src="https://github.com/Fynn-F/fryselBot/blob/master/fryselBot-logo.png" alt="" width="200"/>
 
 - [Features](https://github.com/Fynn-F/fryselBot#features)
   - [Private Rooms](https://github.com/Fynn-F/fryselBot#private-rooms)

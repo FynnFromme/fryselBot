@@ -40,8 +40,13 @@ class Moderation(commands.Cog):
     @clear.error
     async def clear_error(self, ctx: Context, error: Exception):
         """Handles exceptions while running the clear command"""
-        await error_messages.error_handler(ctx, error, description.get_command('clear'), 'Amount',
-                                           'The amount has to be a positive integer.', True)
+        if error.args[0] == 'Command raised an exception: HTTPException: 400 Bad Request (error code: 50034): You can only bulk delete messages that are under 14 days old.':
+            # Messages are to old to delete
+            await error_messages.custom_error(
+                ctx, 'Messages are to old', 'I cannot delete messages that are more than 14 days old')
+        else:
+            await error_messages.error_handler(ctx, error, description.get_command('clear'), 'Amount',
+                                               'The amount has to be a positive integer.', True)
 
     ####################################
 
