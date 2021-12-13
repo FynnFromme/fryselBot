@@ -11,7 +11,7 @@ class Cogs(commands.Cog):
     Attributes:
         client  (Bot): The bot client
     Arguments:
-         client (Bot): The bot client
+         client (Bot): The bot client 
     """
 
     def __init__(self, client: Bot, *args, **kwargs):
